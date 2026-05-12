@@ -1,0 +1,12 @@
+.edge-headless-profile*/
+.edge-smoke-profile*/
+.claude/
+.vscode/
+node_modules/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
+menu-desktop-check.png
+images/workbench/items/_old-green-residue-backup/

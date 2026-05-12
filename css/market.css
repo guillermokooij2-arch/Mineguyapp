@@ -1,0 +1,312 @@
+#marketplace-panel {
+  left:50%; top:50%; right:auto; bottom:auto;
+  width:min(1180px,96vw); height:min(790px,90vh);
+  padding:0; overflow:hidden; border-radius:12px;
+  color:#f4d08a;
+  background:#05070b;
+  border:3px solid #50351b;
+  box-shadow:inset 0 0 0 2px rgba(255,190,90,0.14),0 30px 80px rgba(0,0,0,0.72);
+  display:block;
+  transform:translate(-50%,-46%) scale(.92);
+}
+#marketplace-panel::before {
+  content:'';
+  position:absolute;
+  left:50%;
+  top:10%;
+  bottom:8%;
+  width:18px;
+  transform:translateX(-50%);
+  z-index:2;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(24,13,6,0),rgba(74,42,18,0.66) 20%,rgba(174,104,43,0.42) 50%,rgba(50,28,12,0.7) 82%,rgba(24,13,6,0)),
+    repeating-linear-gradient(180deg,rgba(255,180,72,0.10) 0 2px,rgba(0,0,0,0.05) 2px 12px);
+  box-shadow:0 0 22px rgba(0,0,0,0.38), inset 1px 0 rgba(255,183,76,0.18);
+  opacity:.72;
+}
+#marketplace-panel.open { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto; }
+#marketplace-panel .shop-head {
+  position:absolute; left:20px; top:18px; z-index:5;
+  width:52px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+#marketplace-panel .shop-head h2 { font-size:26px; color:#ffd28a; }
+#marketplace-panel .panel-kicker { color:#ffc164; }
+#market-close {
+  width:52px;
+  height:52px;
+  filter:drop-shadow(0 0 13px rgba(255,171,55,0.42));
+}
+#market-close::before {
+  inset:0;
+  background:radial-gradient(circle,rgba(255,193,83,0.42),transparent 68%);
+}
+#market-close .ui-btn-state {
+  inset:5px;
+  width:calc(100% - 10px);
+  height:calc(100% - 10px);
+}
+#market-close:hover,
+#market-close:focus-visible {
+  transform:scale(1.14) translateY(-2px);
+  filter:drop-shadow(0 0 22px rgba(255,199,86,0.72));
+}
+.market-hero {
+  position:absolute;
+  inset:0;
+  height:auto;
+  border-radius:0;
+  overflow:hidden;
+  border:0;
+  box-shadow:none;
+}
+.market-hero img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 54%;
+  display:block;
+}
+.market-hero::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg,rgba(2,3,6,0.18),rgba(2,3,6,0.08) 36%,rgba(2,3,6,0.46) 100%),
+    radial-gradient(ellipse at 50% 40%,transparent 38%,rgba(0,0,0,0.48) 100%);
+  pointer-events:none;
+}
+.market-trade-layout {
+  position:absolute;
+  left:38px;
+  right:38px;
+  top:112px;
+  bottom:30px;
+  z-index:3;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:56px;
+  align-items:end;
+}
+.market-side {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  gap:12px;
+}
+.market-shelf-action {
+  width:156px;
+  height:auto;
+  aspect-ratio:360 / 140;
+  padding:6px 18px 8px;
+  align-self:center;
+  border:0;
+  border-radius:0;
+  background:url('../images/ui/wood-plaque.png') center/contain no-repeat;
+  color:#fff0bd;
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:.7px;
+  text-shadow:0 2px 3px rgba(0,0,0,0.9),0 0 10px rgba(255,203,91,0.34);
+  box-shadow:none;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,0.38));
+}
+.market-shelf-action:hover:not(:disabled) {
+  filter:brightness(1.14) drop-shadow(0 0 14px rgba(255,190,82,0.34));
+  transform:scale(1.04) translateY(-2px);
+}
+.market-shelf-action:disabled {
+  opacity:.42;
+  filter:saturate(.62) brightness(.76);
+  box-shadow:none;
+}
+.market-list {
+  position:static;
+  transform:none;
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.market-section-head { grid-column:1/-1; margin-top:2px; color:#c79458; font-size:10px; letter-spacing:1.6px; text-transform:uppercase; border-top:1px solid rgba(96,58,25,0.52); padding-top:10px; text-shadow:0 1px 4px rgba(0,0,0,0.7); }
+.market-row {
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:82px 44px 32px;
+  gap:3px;
+  min-height:174px;
+  padding:13px 10px 12px;
+  background:url('../images/market/market-box-ore.png') center/100% 100% no-repeat;
+  border:0;
+  border-radius:0;
+  box-shadow:0 12px 18px rgba(0,0,0,0.34),0 0 14px rgba(255,159,54,0.05);
+}
+.market-row:hover {
+  filter:brightness(1.05);
+}
+.market-forged-row {
+  grid-template-rows:68px 38px 30px;
+  min-height:148px;
+  padding:11px 9px 10px;
+  background-image:url('../images/market/market-box-forged.png');
+}
+.market-ore-info { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:7px; min-width:0; text-align:center; }
+.market-ore-icon,.market-ore-icon-wrap {
+  width:70px;
+  height:70px;
+  border-radius:0;
+  flex-shrink:0;
+}
+.market-ore-icon-wrap {
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  transform:translateY(18px);
+  margin-bottom:18px;
+}
+.market-ore-icon-wrap::after {
+  content:'';
+  position:absolute;
+  left:50%;
+  bottom:1px;
+  width:82%;
+  height:12px;
+  transform:translateX(-50%);
+  z-index:-1;
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.62),rgba(61,31,12,0.26) 52%,transparent 74%);
+  filter:blur(5px);
+  opacity:.9;
+}
+.market-ore-img {
+  width:64px;
+  height:64px;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 10px 7px rgba(0,0,0,0.56))
+    drop-shadow(0 0 8px color-mix(in srgb,var(--ore-glow,#d0c0a0),transparent 66%));
+  transition:transform .16s ease,filter .16s ease;
+}
+.market-row-stone .market-ore-img { width:56px; height:56px; }
+.market-row-copper .market-ore-img { width:66px; height:66px; }
+.market-row-iron .market-ore-img { width:68px; height:68px; }
+.market-row-gold .market-ore-img { width:70px; height:70px; }
+.market-row:hover .market-ore-img {
+  transform:translateY(-3px) scale(1.06);
+  filter:
+    drop-shadow(0 18px 12px rgba(0,0,0,0.64))
+    drop-shadow(0 0 14px color-mix(in srgb,var(--ore-glow,#ffd080),transparent 50%));
+}
+.market-ore-name { font-weight:bold; color:#f3c981; font-size:11px; display:block; text-shadow:0 2px 4px rgba(0,0,0,0.84); line-height:1.05; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.market-ore-rarity { display:none; }
+.market-ore-meta {
+  min-height:38px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:3px;
+  padding:1px 6px 3px;
+  border-radius:0;
+  background:radial-gradient(ellipse at 50% 20%,rgba(38,19,7,0.42),rgba(5,3,2,0.06) 72%);
+  box-shadow:none;
+}
+.market-col { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; }
+.market-col-lbl { font-size:9px; letter-spacing:1.2px; text-transform:uppercase; color:#7a6650; }
+.market-ore-price { color:#ffdc74; font-size:18px; font-weight:bold; line-height:1; text-shadow:0 2px 4px rgba(0,0,0,0.88),0 0 14px rgba(255,184,64,0.44); }
+.market-bonus { color:#aee28c; font-size:11px; font-style:normal; vertical-align:middle; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
+.market-ore-count { color:#a99576; font-size:8px; font-weight:bold; line-height:1; letter-spacing:.7px; text-transform:uppercase; text-shadow:0 1px 3px rgba(0,0,0,0.75); }
+.market-sell-btn {
+  width:78px;
+  height:auto;
+  aspect-ratio:360 / 140;
+  padding:3px 11px 4px;
+  border:0;
+  border-radius:0;
+  background:url('../images/ui/wood-plaque.png') center/contain no-repeat;
+  color:#fff0be;
+  font-size:9px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:filter .14s,transform .14s,opacity .14s;
+  justify-self:center;
+  text-shadow:0 2px 3px rgba(0,0,0,0.9),0 0 9px rgba(255,200,90,0.30);
+  box-shadow:none;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,0.34));
+}
+.market-sell-btn:hover:not(:disabled) { filter:brightness(1.2) drop-shadow(0 7px 8px rgba(0,0,0,0.48)) drop-shadow(0 0 15px rgba(255,190,84,0.38)); transform:scale(1.05) translateY(-2px); }
+.market-sell-btn:disabled { opacity:.38; cursor:not-allowed; filter:saturate(.58) brightness(.72); }
+.market-forged-icon {
+  width:52px;
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:2px auto 0;
+  background:transparent;
+  filter:drop-shadow(0 8px 9px rgba(0,0,0,0.58)) drop-shadow(0 0 10px color-mix(in srgb,var(--item-glow),transparent 44%));
+}
+.market-forged-icon img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  clip-path:none;
+  border-radius:6px;
+}
+.market-empty-slot {
+  opacity:.42;
+  filter:saturate(.62) brightness(.78);
+}
+.market-empty-label {
+  grid-row:1 / -1;
+  align-self:center;
+  justify-self:center;
+  color:rgba(196,151,96,0.62);
+  font-size:9px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
+}
+.market-sell-pulse {
+  animation:marketSellPulse .58s ease-out;
+}
+.market-sell-forged-pulse {
+  animation:marketSellForgedPulse .68s ease-out;
+}
+.wallet-pulse {
+  animation:walletCoinPulse .52s ease-out;
+}
+@keyframes marketSellPulse {
+  0%{transform:scale(1);filter:brightness(1);}
+  44%{transform:scale(1.035);filter:brightness(1.22) drop-shadow(0 0 18px rgba(255,207,83,.42));}
+  100%{transform:scale(1);filter:brightness(1);}
+}
+@keyframes marketSellForgedPulse {
+  0%{transform:scale(1);filter:brightness(1);}
+  38%{transform:scale(1.045);filter:brightness(1.32) drop-shadow(0 0 22px rgba(180,120,255,.46));}
+  100%{transform:scale(1);filter:brightness(1);}
+}
+@keyframes walletCoinPulse {
+  0%{transform:scale(1);}
+  45%{transform:scale(1.12);text-shadow:0 0 16px rgba(255,215,88,.8);}
+  100%{transform:scale(1);}
+}
+

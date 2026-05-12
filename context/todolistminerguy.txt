@@ -1,0 +1,410 @@
+
+Phase 2A: Real Inventory System
+
+Goal: stop treating ore as just value, and make it a real inventory.
+
+To do
+Create ore data objects:
+Stone
+Copper
+Iron
+Gold
+Later: Diamond, Emerald, Ruby, etc.
+
+Example structure:
+
+const oreTypes = {
+  stone: {
+    name: "Stone",
+    value: 1,
+    maxStack: 99,
+    rarity: "common"
+  },
+  copper: {
+    name: "Copper",
+    value: 4,
+    maxStack: 50,
+    rarity: "common"
+  },
+  iron: {
+    name: "Iron",
+    value: 8,
+    maxStack: 40,
+    rarity: "uncommon"
+  },
+  gold: {
+    name: "Gold",
+    value: 25,
+    maxStack: 20,
+    rarity: "rare"
+  }
+};
+Functional checklist
+ Replace simple ore value counter with actual ore inventory.
+ Add ore stacks.
+ Respect each ore’s max stack.
+ Display inventory slots with ore type, icon placeholder, and amount.
+ When ore breaks, add specific ore type to inventory.
+ If a stack is full, create another stack.
+ If inventory is full, prevent pickup or show “Backpack Full.”
+ Keep coins separate from ore.
+ Save inventory to localStorage.
+Phase 2B: Selling System and Marketplace
+
+Goal: make selling ores feel like an actual game action instead of one generic sell button.
+
+Map location
+
+Clicking the map icon opens a location menu:
+
+Tavern
+Trader
+Workbench
+Marketplace
+Mineshaft / Minecart later
+Marketplace function
+
+The marketplace is where the player chooses what to sell.
+
+Functional checklist
+ Add Marketplace screen or panel.
+ Show all ores currently in inventory.
+ Let player sell:
+One ore stack
+All of one ore type
+All ores
+ Convert sold ores into coins.
+ Remove sold ores from inventory.
+ Show sale feedback:
+Sold 18 Copper for 72 coins
+ Add simple price display per ore.
+ Add future hook for demand modifiers.
+Optional later logic
+
+Do not build this yet unless the base selling system feels solid:
+
+const marketDemand = {
+  stone: 1.0,
+  copper: 1.2,
+  iron: 0.8,
+  gold: 1.5
+};
+
+This would allow prices like:
+
+finalValue = ore.value * marketDemand[oreId];
+Phase 2C: Upgrade Categories
+
+Goal: separate upgrades into clear types instead of keeping everything in the computer terminal placeholder.
+
+Upgrade locations
+
+You can split upgrades like this:
+
+Location	Purpose
+Computer Terminal	General progression, stats, automation later
+Trader	Buy tools, special items, temporary boosts
+Workbench	Craft pickaxes, minecart, backpack upgrades
+Tavern	Missions, contracts, NPC tasks
+Marketplace	Sell ores
+Minecart	Unlock new shafts and travel
+Functional checklist
+ Keep current terminal upgrades temporarily.
+ Refactor upgrade data so each upgrade has a category.
+ Add location field to each upgrade.
+ Display only relevant upgrades at each location.
+ Move Pickaxe upgrades to Workbench or Trader.
+ Move Backpack upgrades to Trader or Workbench.
+ Keep Power, Speed, and Luck as first functional upgrades.
+
+Example:
+
+const upgrades = {
+  pickaxePower: {
+    name: "Pickaxe Power",
+    location: "workbench",
+    baseCost: 25,
+    costMult: 1.65,
+    maxLevel: 20
+  },
+  swingSpeed: {
+    name: "Swing Speed",
+    location: "workbench",
+    baseCost: 40,
+    costMult: 1.8,
+    maxLevel: 10
+  },
+  backpackSize: {
+    name: "Backpack Size",
+    location: "trader",
+    baseCost: 100,
+    costMult: 2,
+    maxLevel: 8
+  },
+  oreLuck: {
+    name: "Ore Luck",
+    location: "terminal",
+    baseCost: 75,
+    costMult: 2,
+    maxLevel: 10
+  }
+};
+Phase 2D: Pickaxe and Yield Upgrades
+
+Goal: make upgrades directly affect mining rewards.
+
+Upgrade effects
+Upgrade	Effect
+Pickaxe Power	More damage per hit
+Better Pickaxe Tier	Higher ore yield
+Luck	Higher chance for bonus drops
+Backpack Size	More inventory slots
+Stack Compression	Larger max stacks
+Rare Finder	Higher chance for rare ores
+Functional checklist
+ Add yieldBonus from pickaxe upgrades.
+ Add damageBonus from power upgrades.
+ Add bonusDropChance from luck.
+ Add pickaxe tier levels.
+ Add upgrade cost scaling.
+ Add max levels.
+ Show upgrade effect text in UI.
+
+Example:
+
+function getOreYield(baseAmount) {
+  const pickaxeBonus = player.upgrades.pickaxeTier * 0.25;
+  const luckBonus = player.upgrades.luck * 0.05;
+
+  let amount = Math.floor(baseAmount * (1 + pickaxeBonus));
+
+  if (Math.random() < luckBonus) {
+    amount += 1;
+  }
+
+  return amount;
+}
+Phase 2E: Map and Location UI
+
+Goal: make the world feel bigger without needing to build a huge map yet.
+
+Map icon opens
+Mine Map
+- Tavern
+- Trader
+- Workbench
+- Marketplace
+- Minecart
+Functional checklist
+ Add map button.
+ Add map panel.
+ Add clickable location buttons.
+ Each location opens its own panel.
+ Only one location panel open at once.
+ Keep mining canvas visible in background.
+ Add close button.
+ Add simple locked state for future locations.
+
+Example location state:
+
+const locations = {
+  tavern: {
+    name: "Tavern",
+    unlocked: true
+  },
+  trader: {
+    name: "Trader",
+    unlocked: true
+  },
+  workbench: {
+    name: "Workbench",
+    unlocked: true
+  },
+  marketplace: {
+    name: "Marketplace",
+    unlocked: true
+  },
+  minecart: {
+    name: "Minecart",
+    unlocked: false
+  }
+};
+Phase 2F: Minecart Crafting and New Mineshaft
+
+Goal: introduce the first real progression gate.
+
+Minecart purpose
+
+The minecart unlocks the next mining area.
+
+Crafting cost example
+const recipes = {
+  minecart: {
+    name: "Minecart",
+    location: "workbench",
+    requires: {
+      stone: 50,
+      copper: 25,
+      iron: 10
+    },
+    unlocks: "deepMineshaft"
+  }
+};
+Functional checklist
+ Add recipe system.
+ Add minecart recipe.
+ Show required ores.
+ Check if player has enough materials.
+ Remove materials when crafted.
+ Unlock new mineshaft after crafting.
+ Add Minecart location button.
+ Let player travel to the new shaft.
+ Save unlocked mineshafts.
+Phase 3: New Mineshaft and New Ores
+
+Goal: make progression feel meaningful by adding a new mining zone.
+
+New mineshaft
+
+Example:
+
+const mineshafts = {
+  quarry: {
+    name: "Old Quarry",
+    unlocked: true,
+    ores: ["stone", "copper", "iron", "gold"]
+  },
+  deepMineshaft: {
+    name: "Deep Mineshaft",
+    unlocked: false,
+    ores: ["stone", "iron", "gold", "diamond"]
+  }
+};
+Functional checklist
+ Add current mineshaft state.
+ Change ore spawn table based on current mineshaft.
+ Add diamond ore.
+ Make diamond rarer, tougher, and more valuable.
+ Add new background or color tint for new mineshaft.
+ Add new zone label.
+ Add travel button from minecart UI.
+ Save current selected mineshaft.
+Phase 4: Missions and Tavern
+
+Goal: give players goals besides just selling everything.
+
+Tavern mission examples
+Mine 20 stone.
+Sell 10 copper.
+Break 5 gold rocks.
+Craft the minecart.
+Earn 500 coins.
+Functional checklist
+ Add mission data.
+ Add active mission slot.
+ Track mission progress.
+ Show mission progress in Tavern.
+ Claim mission rewards.
+ Add rewards:
+Coins
+Ores
+Temporary buffs
+Unlock hints
+ Save completed missions.
+
+Example:
+
+const missions = {
+  firstCopper: {
+    name: "A Trader's Request",
+    description: "Collect 10 Copper.",
+    requirement: {
+      type: "collectOre",
+      ore: "copper",
+      amount: 10
+    },
+    reward: {
+      coins: 100
+    }
+  }
+};
+Phase 5: Trader Items
+
+Goal: make the shop feel more interactive than just permanent upgrades.
+
+Trader can sell
+Bigger backpack
+Temporary luck boost
+Ore magnet boost
+Extra inventory slot
+Better lantern for deeper mines
+Rare ore scanner
+Functional checklist
+ Add item shop data.
+ Add buyable consumables.
+ Add permanent utility items.
+ Add item inventory or simple owned flags.
+ Add temporary boost timers.
+ Save owned permanent items.
+Phase 6: Crafting System
+
+Goal: make ores useful beyond selling.
+
+Workbench recipes
+Minecart
+Better pickaxe
+Reinforced backpack
+Ore crates
+Lantern
+Drill later
+Functional checklist
+ Add recipe list.
+ Add required materials display.
+ Add craft button.
+ Disable craft button if missing materials.
+ Remove materials on craft.
+ Add crafted item or unlock.
+ Save crafted items.
+Phase 7: Market Demand System
+
+Goal: add strategy to selling.
+
+Build this after the normal marketplace works.
+
+Simple version
+
+Each ore has a demand multiplier:
+
+stone: 0.8x to 1.2x
+copper: 0.7x to 1.4x
+iron: 0.6x to 1.6x
+gold: 0.5x to 2.0x
+diamond: 0.4x to 2.5x
+Functional checklist
+ Add demand multiplier per ore.
+ Refresh demand every few minutes or after selling.
+ Show price trend:
+Low
+Normal
+High
+Very High
+ Let player decide when to sell.
+ Add marketplace text like:
+Gold is in high demand today!
+ Save or regenerate demand carefully.
+Suggested Immediate Build Order
+
+For your current stage, I’d do this order:
+
+Inventory data system
+Ore stack logic
+Inventory UI display
+Marketplace sell selected ores
+Map button and location menu
+Workbench upgrade relocation
+Minecart crafting recipe
+New mineshaft unlock
+Diamond ore spawn table
+Tavern missions
+
+That gives you a clean path from your current Phase 2 into a real progression loop without overbuilding the commodity or mission systems too early.

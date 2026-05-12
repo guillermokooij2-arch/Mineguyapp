@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drunk Dwarf | 12pg</title>
+  <link rel="icon" type="image/webp" href="images/miner-portrait-bust.webp">
+  <link rel="apple-touch-icon" href="images/miner-portrait-bust.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ── START SCREEN ────────────────────────────────────────────────────── -->
+  <div id="start-screen" aria-label="Drunk Dwarf main menu">
+    <div class="menu-bg" aria-hidden="true">
+      <video class="menu-bg-video" autoplay muted loop playsinline preload="auto" poster="images/main-menu/mine-entrance-camp-bg.png">
+        <source src="images/main-menu/mine-entrance-camp-bg-animationloop.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="menu-fog menu-fog-a" aria-hidden="true"></div>
+    <div class="menu-fog menu-fog-b" aria-hidden="true"></div>
+    <div class="menu-dust" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="menu-lantern-glow glow-left" aria-hidden="true"></div>
+    <div class="menu-lantern-glow glow-right" aria-hidden="true"></div>
+
+    <div class="menu-loading" aria-live="polite">
+      <div class="menu-loading-studio">12PG</div>
+      <img class="menu-loading-logo" src="images/main-menu/mine-sign-logo-board.png" alt="Drunk Dwarf logo">
+      <div class="menu-loading-title">Drunk Dwarf</div>
+      <div class="menu-loading-bar" aria-hidden="true"><span></span></div>
+      <div class="menu-loading-copy">Loading the claim</div>
+      <div class="menu-loading-ore" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+
+    <div class="menu-desk" aria-hidden="true"></div>
+
+    <nav class="menu-props" aria-label="Main menu">
+      <button id="menu-continue" class="menu-prop prop-continue hidden" type="button" aria-label="Continue saved game" data-tooltip="Continue">
+        <img src="images/main-menu/miner-journal-closed.png" alt="">
+        <span class="prop-live-label">Continue</span>
+        <span id="menu-save-summary" class="save-summary" aria-live="polite"></span>
+      </button>
+      <button id="menu-new-game" class="menu-prop prop-new-game" type="button" aria-label="Start a new game" data-tooltip="New Game">
+        <img src="images/main-menu/mining-contract-parchment.png" alt="">
+        <span class="contract-mark">NEW CLAIM</span>
+      </button>
+      <button id="menu-settings" class="menu-prop prop-settings" type="button" aria-label="Open settings" data-tooltip="Settings">
+        <img src="images/main-menu/brass-gear-box-closed.png" alt="">
+      </button>
+      <button id="menu-credits" class="menu-prop prop-credits" type="button" aria-label="Open credits" data-tooltip="Credits">
+        <img src="images/main-menu/credits-plaque-notice.png" alt="">
+        <span class="plaque-mark">NOTICE</span>
+      </button>
+    </nav>
+
+    <div class="menu-hint" aria-hidden="true">Choose a claim from the desk</div>
+
+    <section id="menu-confirm-new" class="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-confirm-title" hidden>
+      <div class="modal-surface parchment-surface">
+        <h2 id="menu-confirm-title">Start a new claim?</h2>
+        <p>This clears the current single save and opens the mine from the beginning.</p>
+        <div class="modal-actions">
+          <button id="menu-confirm-start" type="button">Sign Contract</button>
+          <button class="menu-modal-close" type="button" data-menu-close>Keep Save</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="menu-settings-panel" class="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-settings-title" hidden>
+      <div class="modal-surface brass-surface">
+        <h2 id="menu-settings-title">Gear Box</h2>
+        <label class="menu-toggle">
+          <input id="menu-muted" type="checkbox">
+          <span>Mute sounds</span>
+        </label>
+        <label class="menu-toggle">
+          <input id="menu-reduced-motion" type="checkbox">
+          <span>Reduce motion</span>
+        </label>
+        <button class="menu-modal-close" type="button" data-menu-close>Close</button>
+      </div>
+    </section>
+
+    <section id="menu-credits-panel" class="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-credits-title" hidden>
+      <div class="modal-surface plaque-surface">
+        <h2 id="menu-credits-title">Mine Notice</h2>
+        <p>Drunk Dwarf is a painterly browser mining adventure by 12pg, built with vanilla HTML, CSS, and JavaScript.</p>
+        <p>Art direction: rugged mine camp, warm lanterns, contract desk, and tactile prop-based UI.</p>
+        <button class="menu-modal-close" type="button" data-menu-close>Close</button>
+      </div>
+    </section>
+
+    <div class="menu-transition" aria-hidden="true"></div>
+  </div>
+
+  <canvas id="game"></canvas>
+  <!-- Cursor overlay — always above all panels, pointer-events:none so clicks pass through -->
+  <canvas id="cursor-canvas"></canvas>
+
+  <!-- Chain combo display -->
+  <div id="chain-display">
+    <div id="chain-num">1</div>
+    <div id="chain-label">x CHAIN</div>
+  </div>
+
+  <button id="game-menu-button" class="game-menu-button" type="button" aria-label="Return to main menu">
+    <img src="images/main-menu/mine-sign-logo-board.png" alt="">
+  </button>
+
+  <!-- Miner HUD — below the miner, shows level + xp + stats, click for character panel -->
+  <div id="miner-hud" role="button" tabindex="0" aria-label="Open character stats">
+    <div class="mhud-level-badge" id="mhud-level">Lv 1</div>
+    <div class="mhud-xp-bar"><div class="mhud-xp-fill" id="mhud-xp-fill"></div></div>
+    <div class="mhud-stats-row">
+      <span class="mhud-stat">
+        <span class="mhud-icon-ph" data-sprite="coin">◈</span>
+        <span id="v-coins">0</span>
+      </span>
+      <span class="mhud-stat">
+        <span class="mhud-icon-ph" data-sprite="ore-bag">◆</span>
+        <span id="v-ore">0</span>
+      </span>
+      <span class="mhud-stat">
+        <span class="mhud-icon-ph" data-sprite="rock">⬡</span>
+        <span id="v-brk">0</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- BACKPACK BUTTON — at old miner position (left ~35%, ~67% from top) -->
+  <button id="backpack-toggle" class="backpack-btn" type="button" aria-label="Open backpack and map">
+    <img class="backpack-img backpack-img-closed" src="images/backpackicon.webp" alt="">
+    <img class="backpack-img backpack-img-open"   src="images/backpackiconopen.png" alt="">
+    <span class="backpack-fallback">Bag</span>
+  </button>
+
+  <div id="ui-backdrop"></div>
+
+  <!-- ── COMBINED BACKPACK + MAP PANEL (center modal) ───────────────────── -->
+  <div id="backpack-map-panel">
+    <div class="bmp-header">
+      <button class="back-btn ui-img-btn hidden" id="backpack-back" type="button" aria-label="Back">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+      <div class="bmp-title-wrap">
+        <div class="panel-kicker" id="backpack-kicker">Backpack</div>
+        <h2 id="backpack-title">Menu</h2>
+      </div>
+      <div></div>
+    </div>
+
+    <!-- INVENTORY TAB — inventoryui.png is the visual frame -->
+    <div class="bmp-section" id="bmp-inventory">
+      <div class="inventory-nav-row">
+        <button class="inventory-nav-btn ui-img-btn" id="backpack-map-close" type="button" aria-label="Close backpack">
+          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+        </button>
+        <button class="inventory-nav-btn ui-img-btn" data-bmp-go="map" type="button" aria-label="Open map">
+          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/map-normal.png" alt="">
+          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/map-hover.png" alt="">
+        </button>
+        <button class="inventory-nav-btn inventory-nav-sys ui-img-btn" data-bmp-go="terminal" type="button" aria-label="Open system terminal">
+          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/terminal-normal.png" alt="">
+          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/terminal-hover.png" alt="">
+        </button>
+      </div>
+      <div class="inv-ui-frame">
+        <div class="inventory-grid" id="inventory-grid"></div>
+      </div>
+      <!-- Storage capacity bar below the frame -->
+      <div class="storage-row">
+        <span class="storage-label">Storage</span>
+        <div class="storage-bar-wrap">
+          <div class="storage-bar-fill" id="storage-bar-fill"></div>
+        </div>
+        <span class="storage-count" id="storage-count">0 / 20</span>
+      </div>
+    </div>
+
+    <!-- TERMINAL TAB — power/speed/luck upgrades, moved from standalone button -->
+    <div class="bmp-section hidden" id="bmp-terminal">
+      <div class="bmp-term-wrap">
+        <div class="bmp-term-head">
+          <div class="pc-scanline"></div>
+          <div class="bmp-term-title">
+            <span class="pc-label">SYS</span>
+            <span class="pc-sub">MINE TERMINAL</span>
+            <div class="pc-dot"></div>
+          </div>
+          <div class="bmp-term-coins-row">
+            <span class="bmp-term-coins-lbl">Coins</span>
+            <strong id="terminal-coins">0</strong>
+          </div>
+        </div>
+        <div id="terminal-upgrade-list" class="upgrade-list"></div>
+      </div>
+    </div>
+
+    <!-- MAP TAB — image-backed travel map -->
+    <div class="bmp-section hidden" id="bmp-map">
+      <div class="travel-map" id="travel-map" aria-label="Travel map">
+        <img class="travel-map-bg" src="images/mineshaftmap-expanded.webp" alt="Mineshaft travel map">
+        <div class="travel-map-nodes" id="travel-map-nodes"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHARACTER PANEL (left side) ────────────────────────────────────── -->
+  <div id="character-panel">
+    <div class="shop-head">
+      <div>
+        <div class="panel-kicker">Miner</div>
+        <h2>Character</h2>
+      </div>
+      <button class="close-btn ui-img-btn" id="character-close" type="button" aria-label="Close character panel">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+    </div>
+    <div class="char-portrait-wrap">
+      <!-- Replace .char-portrait-placeholder with <img> when portrait sprite ready -->
+      <div class="char-portrait-placeholder" data-sprite="portrait">
+        <span class="portrait-ph-label">[portrait]</span>
+      </div>
+      <div class="char-name-level">
+        <div class="char-name">Miner</div>
+        <div class="char-level-badge" id="char-level-badge">Level 1</div>
+      </div>
+    </div>
+    <div class="char-xp-section">
+      <div class="char-xp-label">
+        <span id="char-xp-cur">0</span> / <span id="char-xp-needed">20</span> XP
+        <span class="char-xp-to-next">(to level <span id="char-xp-next-lv">2</span>)</span>
+      </div>
+      <div class="char-xp-bar"><div class="char-xp-fill" id="char-xp-fill"></div></div>
+    </div>
+    <div class="char-stats-list" id="char-stats-list"></div>
+  </div>
+
+  <!-- ── MARKETPLACE PANEL (right) ──────────────────────────────────────── -->
+  <div id="marketplace-panel">
+    <div class="shop-head">
+      <div>
+        <div class="panel-kicker">Trade</div>
+        <h2>Marketplace</h2>
+      </div>
+      <button class="back-btn panel-back-btn ui-img-btn" id="market-close" type="button" aria-label="Back">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+    </div>
+    <div class="market-hero" aria-hidden="true">
+      <img src="images/market/market-stall.webp" alt="">
+    </div>
+    <div class="market-trade-layout">
+      <section class="market-side market-ores-side" aria-label="Ore trading">
+        <button id="sell-all-ores" class="market-shelf-action" type="button">Sell All Ores</button>
+        <div id="market-ore-list" class="market-list market-ore-list"></div>
+      </section>
+      <section class="market-side market-forged-side" aria-label="Forged item trading">
+        <button id="sell-all-forged" class="market-shelf-action" type="button">Sell All Forged Items</button>
+        <div id="market-forged-list" class="market-list market-forged-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── WORKBENCH PANEL (right) ────────────────────────────────────────── -->
+  <div id="workbench-panel">
+    <div class="shop-head">
+      <div>
+        <div class="panel-kicker">Workbench</div>
+        <h2>Crafting</h2>
+      </div>
+      <button class="back-btn panel-back-btn ui-img-btn" id="workbench-close" type="button" aria-label="Back">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+    </div>
+    <p class="panel-desc">Offer mined ore by value. Richer ore and bigger offerings improve the roll, but the anvil still decides.</p>
+
+    <div id="craft-recipe-list" class="craft-recipe-list"></div>
+
+    <div id="craft-offering-section" class="craft-offering-section">
+      <div class="craft-owned-head">
+        <span>Crafting</span>
+        <strong>Ore Offering</strong>
+      </div>
+      <p class="craft-offering-copy">Higher value lowers junk. Higher-tier ore shifts chances toward stronger rarity bands.</p>
+    </div>
+
+    <div id="craft-forge" class="craft-forge hidden">
+      <div class="craft-forge-stage">
+        <video id="craft-forge-video" class="craft-forge-video" preload="auto" muted playsinline>
+          <source src="images/workbench/forginganimated.webm" type="video/webm">
+          <source src="images/workbench/forginganimated.mp4" type="video/mp4">
+          <source src="images/workbench/forginganimation.webm" type="video/webm">
+        </video>
+        <img id="craft-forge-hammer" class="craft-forge-hammer" src="images/workbench/hammer.png" alt="">
+        <div class="craft-spark craft-spark-a"></div>
+        <div class="craft-spark craft-spark-b"></div>
+        <div class="craft-spark craft-spark-c"></div>
+      </div>
+      <div id="craft-forge-label" class="craft-forge-label">HEATING...</div>
+    </div>
+
+    <div id="craft-result" class="craft-result hidden">
+      <div id="craft-result-inner"></div>
+      <button id="craft-result-ok" class="craft-result-ok" type="button">Continue</button>
+    </div>
+  </div>
+
+  <!-- ── TRADER PANEL (right) ───────────────────────────────────────────── -->
+  <div id="item-tooltip" class="item-tooltip hidden" role="tooltip"></div>
+
+  <div id="trader-panel">
+    <div class="shop-head">
+      <div>
+        <div class="panel-kicker">Shop</div>
+        <h2>Trader</h2>
+      </div>
+    </div>
+    <div class="trader-scene" id="trader-scene" aria-live="polite">
+      <button class="back-btn panel-back-btn ui-img-btn" id="trader-close" type="button" aria-label="Back">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+      <img class="trader-scene-bg" src="images/trader/trader-cart-bg.webp" alt="">
+      <button class="trader-character" id="trader-character" type="button" aria-label="Talk to trader" data-state="idle">
+        <img id="trader-character-img" src="images/trader/trader-idle.png" alt="">
+      </button>
+      <div class="trader-speech" id="trader-speech">Care to improve your fortune?</div>
+    </div>
+    <div id="trader-list" class="upgrade-list"></div>
+  </div>
+
+  <div id="tavern-panel">
+    <div class="tavern-bg-layer"></div>
+    <button class="back-btn panel-back-btn ui-img-btn" id="tavern-close" type="button" aria-label="Back">
+      <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+      <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+    </button>
+    <button class="tavern-station-back" id="tavern-station-back" type="button" hidden>Entrance</button>
+    <div class="tavern-scene" id="tavern-entrance">
+      <button class="tavern-hotspot tavern-hotspot-barkeep" data-tavern-hotspot="bar" type="button" aria-label="Walk to the bar">
+        <strong>Bar</strong><small>Drinks & buffs</small>
+      </button>
+      <button class="tavern-hotspot tavern-hotspot-missions" data-tavern-hotspot="missions" type="button" aria-label="Walk to the mission board">
+        <strong>Missions</strong><small>Contracts</small>
+      </button>
+      <button class="tavern-hotspot tavern-hotspot-slots" data-tavern-hotspot="slots" type="button" aria-label="Walk to the slot machines">
+        <strong>Slots</strong><small>Quick bets</small>
+      </button>
+      <button class="tavern-hotspot tavern-hotspot-cards" data-tavern-hotspot="tables" type="button" aria-label="Walk to the gambling tables">
+        <strong>Tables</strong><small>Cards & dice</small>
+      </button>
+    </div>
+    <div class="tavern-approach-layer" id="tavern-approach-layer" aria-hidden="true"></div>
+    <div class="tavern-barkeep-stage" aria-hidden="true">
+      <img id="tavern-barkeep-img" src="images/tavern/barkeep/barkeep-idle.png" alt="">
+    </div>
+    <div class="tavern-dialogue-wrap">
+      <div id="tavern-dialogue">Back from the rocks, are ya?</div>
+    </div>
+    <div class="tavern-hud">
+      <strong><span id="tavern-coins">0</span>c</strong>
+      <div id="tavern-buffs" class="tavern-buffs"></div>
+    </div>
+    <div id="tavern-content" class="tavern-content"></div>
+  </div>
+
+  <div id="zone-lbl" hidden></div>
+  <div id="hint">Mine ore · Hit the weak point to chain crits · Click miner for stats</div>
+
+  <script src="js/data/ores.js"></script>
+  <script src="js/data/upgrades.js"></script>
+  <script src="js/data/crafting.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/tavern.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/data/ui-data.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/ui/panels.js"></script>
+  <script src="js/ui/economy-upgrades.js"></script>
+  <script src="js/ui/workbench.js"></script>
+  <script src="js/ui/inventory-market.js"></script>
+  <script src="js/ui/init-ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

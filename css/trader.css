@@ -1,0 +1,317 @@
+#trader-panel { color:#d0e8f0; background:linear-gradient(145deg,rgba(14,26,38,0.97),rgba(8,16,28,0.98) 55%,rgba(10,20,32,0.98)); border:3px solid #1e4060; box-shadow:inset 0 0 0 2px rgba(60,130,180,0.15),0 24px 60px rgba(0,0,0,0.6); }
+#trader-panel .panel-kicker { color:#60a8d0; }
+#trader-panel .shop-head h2 { color:#90ccee; }
+#trader-panel .upgrade-row { border-color:rgba(60,120,180,0.3); background:rgba(6,14,28,0.5); }
+#trader-panel .upgrade-title { color:#90d8f0; }
+#trader-panel .upgrade-buy { border-color:rgba(80,160,220,0.5); background:#081828; color:#90ccee; }
+#trader-panel {
+  left:50%;
+  top:50%;
+  right:auto;
+  bottom:auto;
+  width:min(1060px,94vw);
+  height:min(720px,86vh);
+  display:flex;
+  flex-direction:column;
+  padding:24px 26px 28px;
+  overflow:hidden;
+  border-color:#3e2a16;
+  color:#f1d59d;
+  background:
+    radial-gradient(ellipse at 50% 8%,rgba(255,172,70,0.10),transparent 38%),
+    linear-gradient(145deg,rgba(30,18,9,0.97),rgba(10,8,7,0.98) 58%,rgba(20,12,6,0.98));
+  box-shadow:inset 0 0 0 2px rgba(236,166,72,0.14),0 30px 80px rgba(0,0,0,0.72);
+  transform:translate(-50%,-46%) scale(.92);
+}
+#trader-panel.open { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto; }
+#trader-panel .shop-head {
+  display:none;
+}
+#trader-panel .panel-desc {
+  margin:16px 0 14px;
+  color:#b39368;
+}
+.trader-scene {
+  position:relative;
+  height:clamp(160px,24vh,190px);
+  flex:0 0 auto;
+  margin:0 0 12px;
+  overflow:visible;
+  border-radius:10px;
+  isolation:isolate;
+}
+#trader-close {
+  position:absolute;
+  left:18px;
+  top:18px;
+  z-index:6;
+  width:60px;
+  height:60px;
+}
+.trader-scene-bg {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:10px;
+  opacity:.82;
+  filter:brightness(.78) contrast(1.1) saturate(.95);
+  box-shadow:inset 0 0 0 1px rgba(234,166,72,0.2),inset 0 -60px 80px rgba(0,0,0,0.48),0 14px 26px rgba(0,0,0,0.46);
+}
+.trader-scene::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  border-radius:10px;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 58% 34%,rgba(255,177,73,0.18),transparent 26%),
+    radial-gradient(ellipse at 50% 82%,rgba(0,0,0,0.72),transparent 54%),
+    linear-gradient(90deg,rgba(0,0,0,0.48),transparent 32%,transparent 68%,rgba(0,0,0,0.52));
+}
+.trader-character {
+  position:absolute;
+  left:50%;
+  bottom:-10px;
+  z-index:3;
+  width:248px;
+  height:220px;
+  padding:0;
+  border:0;
+  background:transparent;
+  transform:translateX(-50%);
+  cursor:pointer;
+}
+.trader-character::before {
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:10px;
+  width:190px;
+  height:34px;
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.72),rgba(0,0,0,0));
+  transform:translateX(-50%);
+  z-index:-1;
+}
+.trader-character img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 20px 18px rgba(0,0,0,0.68)) drop-shadow(0 0 14px rgba(255,165,64,0.18));
+  transition:transform .2s cubic-bezier(.2,.9,.18,1),filter .2s ease;
+}
+.trader-character:hover img {
+  transform:translateY(-5px) scale(1.035);
+  filter:drop-shadow(0 24px 18px rgba(0,0,0,0.72)) drop-shadow(0 0 22px rgba(255,188,82,0.34));
+}
+.trader-character:active img,
+.trader-character.ui-pressed img {
+  transform:translateY(-1px) scale(.96);
+}
+.trader-character[data-state="dangerous"] img {
+  filter:drop-shadow(0 22px 18px rgba(0,0,0,0.74)) drop-shadow(0 0 26px rgba(255,68,38,0.32));
+}
+.trader-speech {
+  position:absolute;
+  right:62px;
+  bottom:34px;
+  z-index:4;
+  width:min(306px,30%);
+  aspect-ratio:437 / 180;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px 25px;
+  text-align:center;
+  color:#fff0c8;
+  font-family:'Cinzel','Cormorant Garamond','Merriweather',Georgia,serif;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.18;
+  letter-spacing:.01em;
+  text-shadow:0 2px 3px rgba(37,18,5,0.92),0 0 10px rgba(255,194,102,0.18);
+  background:url('../images/trader/trader-speech-plaque.png') center/contain no-repeat;
+  filter:drop-shadow(0 10px 11px rgba(0,0,0,0.52));
+  pointer-events:none;
+  overflow:hidden;
+}
+#trader-list {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:0;
+  flex:1 1 auto;
+  min-height:0;
+  overflow:hidden;
+  padding:0 2px 8px;
+}
+#trader-panel .trader-upgrade-row {
+  min-height:0;
+  aspect-ratio:360 / 468;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:1fr;
+  justify-items:center;
+  align-items:center;
+  gap:0;
+  padding:24px 22px;
+  position:relative;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:url('../images/market/market-box-forged.png') center/100% 100% no-repeat;
+  box-shadow:none;
+  filter:drop-shadow(0 12px 16px rgba(0,0,0,0.46));
+}
+#trader-panel .trader-upgrade-row::before,
+#trader-panel .trader-upgrade-row::after { display:none; }
+#trader-panel .upgrade-copy { display:none; }
+#trader-panel .trader-upgrade-row:hover {
+  transform:translateY(-2px);
+  filter:brightness(1.07) drop-shadow(0 16px 18px rgba(0,0,0,0.5));
+}
+.trader-upgrade-art-button {
+  grid-row:1;
+  position:relative;
+  width:min(140px,82%);
+  aspect-ratio:1;
+  border:0;
+  border-radius:0;
+  padding:0;
+  background:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  filter:drop-shadow(0 12px 12px rgba(0,0,0,0.55));
+  transition:transform .16s ease,filter .16s ease;
+}
+.trader-upgrade-art-button:hover:not(:disabled),
+.trader-upgrade-art-button:focus-visible:not(:disabled) {
+  transform:translateY(-2px) scale(1.06);
+  filter:drop-shadow(0 14px 13px rgba(0,0,0,0.58)) drop-shadow(0 0 14px rgba(255,176,58,0.28));
+}
+.trader-upgrade-art-button:disabled { opacity:.52; cursor:not-allowed; }
+.trader-upgrade-art {
+  position:relative;
+  z-index:1;
+  width:90%;
+  height:90%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.trader-upgrade-img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.trader-pickaxe-tier-img {
+  transform:rotate(-10deg) scale(1.12);
+}
+.trader-upgrade-glyph {
+  width:66px;
+  height:66px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  border:1px solid rgba(242,183,84,0.34);
+  background:radial-gradient(circle at 38% 30%,rgba(255,211,116,0.22),rgba(91,48,15,0.72));
+  color:#ffd471;
+  font-size:16px;
+  font-weight:bold;
+  letter-spacing:1px;
+  box-shadow:inset 0 2px rgba(255,228,143,0.18),inset 0 -5px 12px rgba(0,0,0,0.42),0 0 14px rgba(255,177,60,0.15);
+}
+.upgrade-copy {
+  min-width:0;
+  align-self:center;
+  text-align:center;
+  display:grid;
+  gap:4px;
+}
+#trader-panel .upgrade-title {
+  color:#ffd98a;
+  font-size:clamp(13px,1.15vw,16px);
+  line-height:1.08;
+  text-shadow:0 2px 4px rgba(0,0,0,0.84),0 0 10px rgba(255,179,64,0.22);
+}
+#trader-panel .upg-level {
+  color:#bd9461;
+  font-size:13px;
+}
+#trader-panel .upgrade-desc {
+  color:#b58d64;
+  font-size:11px;
+  line-height:1.24;
+}
+#trader-panel .upgrade-effect {
+  color:#8ce49c;
+  font-size:11px;
+  line-height:1.25;
+}
+#trader-panel .upgrade-buy {
+  min-width:0;
+  grid-column:1;
+  grid-row:3;
+  justify-self:center;
+  width:min(148px,84%);
+  height:auto;
+  min-height:0;
+  aspect-ratio:360 / 140;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:5px 15px 7px;
+  border:0;
+  border-radius:0;
+  background:url('../images/ui/wood-plaque.png') center/contain no-repeat;
+  color:#fff0be;
+  box-shadow:none;
+  filter:drop-shadow(0 8px 9px rgba(0,0,0,0.38));
+}
+#trader-panel .upgrade-buy span {
+  font-size:17px;
+  line-height:1;
+}
+#trader-panel .upgrade-buy small {
+  color:#d3a46c;
+  font-size:8px;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+}
+#trader-panel .upgrade-buy:hover:not(:disabled) {
+  filter:brightness(1.16) drop-shadow(0 0 14px rgba(255,190,82,0.32));
+  transform:scale(1.04) translateY(-2px);
+}
+#trader-panel .upgrade-buy:disabled {
+  opacity:.38;
+  filter:saturate(.56) brightness(.7);
+}
+.upgrade-spark-burst {
+  position:absolute;
+  left:44%;
+  top:50%;
+  z-index:3;
+  width:220px;
+  height:220px;
+  pointer-events:none;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,rgba(255,238,155,0.95) 0 6%,rgba(255,171,54,0.48) 7% 16%,transparent 44%),
+    conic-gradient(from 12deg,transparent 0 7%,rgba(255,207,93,0.95) 8% 10%,transparent 11% 18%,rgba(255,132,44,0.82) 19% 21%,transparent 22% 100%);
+  transform:translate(-50%,-50%) scale(.6);
+  animation:upgradeSparkBurst .6s ease-out forwards;
+}
+@keyframes upgradeSparkBurst {
+  0%{opacity:1;transform:translate(-50%,-50%) scale(.6);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.4);}
+}
+

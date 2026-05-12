@@ -1,0 +1,1645 @@
+#tavern-panel {
+  position:fixed;
+  inset:0;
+  z-index:46;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+  color:#f5d09a;
+  background:#080403;
+  transform:scale(.985);
+  transition:opacity .24s ease,transform .28s cubic-bezier(.2,.9,.18,1);
+}
+#tavern-panel.open { opacity:1; pointer-events:auto; transform:scale(1); }
+#tavern-panel:not(.open) .tavern-content { pointer-events:none; }
+.tavern-bg-layer,
+.tavern-approach-layer {
+  position:absolute;
+  inset:0;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+.tavern-bg-layer {
+  background-image:
+    radial-gradient(circle at 48% 38%,rgba(255,139,42,0.12),transparent 26%),
+    linear-gradient(180deg,rgba(0,0,0,0.03),rgba(0,0,0,0.54)),
+    url('../images/tavern/tavern-background-v2.png');
+  filter:saturate(1.02) contrast(1.04);
+}
+.tavern-approach-layer {
+  z-index:1;
+  opacity:0;
+  transform:scale(1.03);
+  transition:opacity .28s ease,transform .32s cubic-bezier(.2,.9,.18,1);
+  pointer-events:none;
+}
+#tavern-panel.station-open .tavern-approach-layer {
+  opacity:1;
+  transform:scale(1);
+}
+#tavern-panel[data-tavern-station="bar"] .tavern-approach-layer {
+  background-image:linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.62)),url('../images/tavern/approach/bar-approach.png');
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-approach-layer {
+  background-image:linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.58)),url('../images/tavern/approach/missions-approach.png');
+}
+#tavern-panel[data-tavern-station="slots"] .tavern-approach-layer {
+  background-image:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.64)),url('../images/tavern/approach/slots-approach.png');
+}
+#tavern-panel[data-tavern-station="tables"] .tavern-approach-layer {
+  background-image:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.66)),url('../images/tavern/approach/tables-approach.png');
+}
+#tavern-close {
+  position:absolute;
+  left:20px;
+  top:18px;
+  z-index:10;
+  width:60px;
+  height:60px;
+}
+.tavern-station-back {
+  position:absolute;
+  left:94px;
+  top:27px;
+  z-index:10;
+  width:132px;
+  aspect-ratio:360/140;
+  border:0;
+  background:url('../images/ui/wood-plaque.png') center/contain no-repeat;
+  color:#ffe0a0;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:uppercase;
+  text-shadow:0 2px 3px rgba(0,0,0,0.9);
+  cursor:pointer;
+  transition:transform .15s ease,filter .15s ease;
+}
+.tavern-station-back:hover,
+.tavern-station-back:focus-visible {
+  transform:translateY(-1px) scale(1.04);
+  filter:brightness(1.14) drop-shadow(0 0 12px rgba(255,181,72,0.32));
+}
+.tavern-scene {
+  position:absolute;
+  inset:0;
+  z-index:2;
+  transition:opacity .24s ease,transform .32s cubic-bezier(.2,.9,.18,1);
+}
+#tavern-panel.station-open .tavern-scene {
+  opacity:0;
+  transform:scale(1.06);
+  pointer-events:none;
+}
+.tavern-hotspot {
+  position:absolute;
+  border:0;
+  width:150px;
+  aspect-ratio:360/140;
+  display:grid;
+  align-content:center;
+  justify-items:center;
+  padding:14px 18px;
+  background:url('../images/ui/wood-plaque.png') center/100% 100% no-repeat;
+  color:#ffd98a;
+  cursor:pointer;
+  transition:transform .18s cubic-bezier(.2,.9,.18,1),filter .18s ease;
+}
+.tavern-hotspot::before {
+  content:"";
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,190,86,0.34),rgba(255,155,42,0.12) 42%,transparent 70%);
+  opacity:.72;
+  filter:blur(12px);
+  transition:opacity .18s ease,transform .18s ease;
+  z-index:-1;
+}
+.tavern-hotspot:hover::before,
+.tavern-hotspot:focus-visible::before {
+  opacity:1;
+  transform:scale(1.08);
+}
+.tavern-hotspot:hover,
+.tavern-hotspot:focus-visible {
+  transform:scale(1.05) translateY(-3px);
+  filter:drop-shadow(0 0 18px rgba(255,177,61,0.42));
+}
+.tavern-hotspot:active,
+.tavern-hotspot.ui-pressed { transform:scale(.95); }
+.tavern-hotspot-barkeep {
+  left:36%;
+  top:42%;
+}
+.tavern-hotspot-missions {
+  right:9%;
+  top:33%;
+}
+.tavern-hotspot-slots {
+  left:8%;
+  bottom:31%;
+}
+.tavern-hotspot-cards {
+  right:24%;
+  bottom:25%;
+}
+.tavern-hotspot strong {
+  color:#ffe0a0;
+  font-size:13px;
+  line-height:1;
+  text-transform:uppercase;
+  text-shadow:0 2px 4px rgba(0,0,0,0.92);
+}
+.tavern-hotspot small {
+  margin-top:3px;
+  color:#c99b61;
+  font-size:10px;
+  line-height:1;
+  text-shadow:0 2px 4px rgba(0,0,0,0.92);
+}
+.tavern-barkeep-stage {
+  --barkeep-left:50%;
+  --barkeep-bottom:20%;
+  --barkeep-width:330px;
+  --barkeep-height:470px;
+  --barkeep-hide-bottom:27%;
+  position:absolute;
+  left:var(--barkeep-left);
+  bottom:var(--barkeep-bottom);
+  z-index:5;
+  width:var(--barkeep-width);
+  height:var(--barkeep-height);
+  opacity:0;
+  transform:translateX(-50%) translateY(18px);
+  transition:opacity .22s ease,transform .28s cubic-bezier(.2,.9,.18,1);
+  pointer-events:none;
+}
+#tavern-panel[data-tavern-station="bar"] .tavern-barkeep-stage {
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.tavern-barkeep-stage img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  clip-path:inset(0 0 var(--barkeep-hide-bottom) 0);
+  filter:drop-shadow(0 20px 18px rgba(0,0,0,0.72)) drop-shadow(0 0 18px rgba(255,164,68,0.22));
+}
+.tavern-dialogue-wrap {
+  --barkeep-speech-right:10%;
+  --barkeep-speech-bottom:62%;
+  --barkeep-speech-width:min(306px,26vw);
+  --barkeep-speech-padding:16px 25px;
+  position:absolute;
+  right:var(--barkeep-speech-right);
+  bottom:var(--barkeep-speech-bottom);
+  z-index:8;
+  width:var(--barkeep-speech-width);
+  aspect-ratio:437 / 180;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:var(--barkeep-speech-padding);
+  text-align:center;
+  color:#fff0c8;
+  font-family:'Cinzel','Cormorant Garamond','Merriweather',Georgia,serif;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.18;
+  letter-spacing:.01em;
+  background:url('../images/trader/trader-speech-plaque.png') center/contain no-repeat;
+  filter:drop-shadow(0 10px 11px rgba(0,0,0,0.52));
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .18s ease,transform .22s ease;
+  text-shadow:0 2px 3px rgba(37,18,5,0.92),0 0 10px rgba(255,194,102,0.18);
+  pointer-events:none;
+  overflow:hidden;
+}
+#tavern-dialogue {
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100%;
+}
+#tavern-panel[data-tavern-station="bar"] .tavern-dialogue-wrap {
+  opacity:1;
+  transform:translateY(0);
+}
+.tavern-hud {
+  position:absolute;
+  right:22px;
+  top:18px;
+  z-index:10;
+  display:grid;
+  gap:8px;
+  justify-items:end;
+}
+.tavern-hud strong {
+  padding:8px 14px;
+  border-radius:7px;
+  background:rgba(15,8,4,0.78);
+  color:#ffd46e;
+  border:1px solid rgba(218,151,72,0.34);
+}
+.tavern-buffs {
+  width:252px;
+  min-height:48px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:3px;
+  align-items:center;
+  padding:8px 10px;
+  background:url('../images/ui/command-buffs-frame.png') center/100% 100% no-repeat;
+  filter:drop-shadow(0 10px 14px rgba(0,0,0,0.46));
+}
+.tavern-buff-slot {
+  position:relative;
+  width:28px;
+  height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:5px;
+  background:rgba(9,5,3,0.48);
+  box-shadow:inset 0 0 0 1px rgba(255,196,96,0.13),inset 0 0 10px rgba(0,0,0,0.45);
+}
+.tavern-buff-slot.empty {
+  opacity:.42;
+}
+.tavern-buff-slot.active {
+  background:radial-gradient(circle at 50% 35%,rgba(255,210,110,0.2),rgba(12,6,3,0.64));
+}
+.tavern-buff-slot img {
+  width:23px;
+  height:23px;
+  object-fit:contain;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,0.55));
+}
+.tavern-buff-slot strong {
+  position:absolute;
+  left:50%;
+  bottom:-8px;
+  transform:translateX(-50%);
+  padding:1px 3px;
+  border-radius:999px;
+  color:#9ef08f;
+  background:rgba(5,3,2,0.82);
+  font-size:7px;
+  line-height:1;
+  white-space:nowrap;
+}
+.tavern-buff-slot em {
+  position:absolute;
+  right:-4px;
+  top:-5px;
+  min-width:15px;
+  height:15px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#2a1204;
+  background:#ffd76d;
+  font-size:8px;
+  font-style:normal;
+  font-weight:bold;
+  box-shadow:0 1px 4px rgba(0,0,0,.55);
+}
+.tavern-content {
+  position:absolute;
+  left:50%;
+  bottom:28px;
+  z-index:7;
+  width:min(1120px,94vw);
+  max-height:42vh;
+  overflow-y:auto;
+  transform:translateX(-50%);
+  padding:16px;
+  border:1px solid rgba(218,151,72,0.34);
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(38,20,9,0.9),rgba(9,5,3,0.92));
+  box-shadow:inset 0 1px rgba(255,220,142,0.12),0 18px 32px rgba(0,0,0,0.52);
+  transition:opacity .2s ease,transform .24s cubic-bezier(.2,.9,.18,1);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-content {
+  inset:96px 24px 24px;
+  width:auto;
+  max-height:none;
+  overflow:visible;
+  transform:none;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+#tavern-panel[data-tavern-station="slots"] .tavern-content {
+  inset:86px 24px 24px;
+  width:auto;
+  max-height:none;
+  overflow:visible;
+  transform:none;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+#tavern-panel[data-tavern-station="bar"] .tavern-content,
+#tavern-panel[data-tavern-station="tables"] .tavern-content {
+  inset:86px 24px 24px;
+  width:auto;
+  max-height:none;
+  overflow:visible;
+  transform:none;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+#tavern-panel:not(.station-open) .tavern-content {
+  width:auto;
+  max-height:none;
+  bottom:26px;
+  padding:12px 18px;
+  overflow:hidden;
+}
+.tavern-entrance-help {
+  display:grid;
+  gap:3px;
+  min-width:min(360px,86vw);
+  text-align:center;
+}
+.tavern-entrance-help strong {
+  color:#ffe0a0;
+  font-size:14px;
+  text-transform:uppercase;
+}
+.tavern-entrance-help span {
+  color:#c99b61;
+  font-size:12px;
+}
+.tavern-station-head {
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(218,151,72,0.24);
+}
+#tavern-panel[data-tavern-station="bar"] .tavern-station-head,
+#tavern-panel[data-tavern-station="tables"] .tavern-station-head,
+#tavern-panel[data-tavern-station="slots"] .tavern-station-head {
+  position:absolute;
+  left:50%;
+  top:10px;
+  z-index:3;
+  width:min(710px,76vw);
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  filter:none;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-station-head {
+  position:absolute;
+  left:28px;
+  top:0;
+  width:min(430px,42vw);
+  display:grid;
+  gap:5px;
+  padding:14px 18px;
+  border:1px solid rgba(218,151,72,0.25);
+  border-radius:8px;
+  background:rgba(14,7,3,0.66);
+  box-shadow:0 14px 22px rgba(0,0,0,0.34);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-station-head button {
+  justify-self:start;
+  width:132px;
+  aspect-ratio:360/140;
+  margin-top:3px;
+  font-size:10px;
+}
+.tavern-station-head span {
+  color:#ffe0a0;
+  font-size:18px;
+  font-weight:bold;
+}
+.tavern-station-head strong {
+  color:#c99b61;
+  font-size:12px;
+}
+.tavern-content button {
+  border:0;
+  background:url('../images/ui/wood-plaque.png') center/contain no-repeat;
+  color:#ffe0a0;
+  font-weight:bold;
+  text-shadow:0 2px 3px rgba(0,0,0,0.9);
+  cursor:pointer;
+  transition:transform .15s ease,filter .15s ease,opacity .15s ease;
+}
+.tavern-content button:hover:not(:disabled) {
+  transform:scale(1.06) translateY(-1px);
+  filter:brightness(1.16) drop-shadow(0 0 14px rgba(255,181,72,0.34));
+}
+.tavern-content button:disabled {
+  opacity:.42;
+  filter:saturate(.55) brightness(.72);
+  cursor:not-allowed;
+}
+.bar-counter-layout {
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:min(1050px,84vw);
+  height:min(360px,38vh);
+  transform:translateX(-50%);
+}
+.bar-counter-layout::before {
+  content:"";
+  position:absolute;
+  left:2%;
+  right:2%;
+  bottom:0;
+  height:42%;
+  border-radius:50% 50% 8px 8px / 34% 34% 8px 8px;
+  background:linear-gradient(180deg,rgba(104,55,21,0.3),rgba(28,13,5,0.66));
+  box-shadow:inset 0 2px rgba(255,205,118,0.12),0 -8px 28px rgba(0,0,0,0.34);
+  pointer-events:none;
+}
+.tavern-shop-grid {
+  position:absolute;
+  left:5%;
+  right:5%;
+  bottom:10%;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(116px,1fr));
+  gap:18px;
+  align-items:end;
+  justify-items:center;
+}
+.tavern-content .tavern-shop-item {
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:116px;
+  height:116px;
+  aspect-ratio:1;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  filter:drop-shadow(0 12px 14px rgba(0,0,0,0.44));
+  isolation:isolate;
+}
+.tavern-shop-item::before {
+  display:none;
+}
+.tavern-shop-item:nth-child(2n) {
+  transform:translateY(8px) rotate(.8deg);
+}
+.tavern-shop-item:nth-child(3n) {
+  transform:translateY(-4px) rotate(-.6deg);
+}
+.tavern-shop-icon {
+  width:110px;
+  height:110px;
+  display:grid;
+  place-items:center;
+  background:url('../images/inventory/inventory-slot.png') center/100% 100% no-repeat;
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,0.46));
+  transition:transform .16s ease,filter .16s ease;
+}
+.tavern-shop-icon img {
+  width:84px;
+  height:84px;
+  object-fit:contain;
+  filter:drop-shadow(0 7px 6px rgba(0,0,0,0.5));
+}
+.tavern-content .tavern-shop-item:hover:not(:disabled),
+.tavern-content .tavern-shop-item:focus-visible {
+  transform:translateY(-3px) scale(1.04);
+  filter:drop-shadow(0 0 16px rgba(255,185,72,0.36)) drop-shadow(0 14px 15px rgba(0,0,0,0.48));
+}
+.tavern-shop-item:hover .tavern-shop-icon,
+.tavern-shop-item:focus-visible .tavern-shop-icon {
+  transform:scale(1.06);
+  filter:brightness(1.13) drop-shadow(0 0 14px rgba(255,183,67,0.34));
+}
+.tavern-buy-pulse .tavern-shop-icon,
+.tavern-item-bought .tavern-shop-icon {
+  animation:tavernBuyPop .56s ease-out;
+}
+@keyframes tavernBuyPop {
+  0%{transform:scale(1) rotate(0);}
+  38%{transform:scale(1.13) rotate(-3deg);filter:brightness(1.28) drop-shadow(0 0 18px rgba(255,202,83,.54));}
+  72%{transform:scale(.97) rotate(2deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+.tavern-shop-tooltip {
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 10px);
+  z-index:20;
+  width:220px;
+  min-height:96px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:4px 8px;
+  align-content:center;
+  padding:21px 22px 19px;
+  color:#ffe0a0;
+  background:url('../images/market/market-box-ore.png') center/100% 100% no-repeat;
+  text-shadow:0 2px 4px rgba(0,0,0,0.9);
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%,8px) scale(.96);
+  transition:opacity .14s ease,transform .16s ease;
+}
+.tavern-shop-item:hover .tavern-shop-tooltip,
+.tavern-shop-item:focus-visible .tavern-shop-tooltip {
+  opacity:1;
+  transform:translate(-50%,0) scale(1);
+}
+.tavern-shop-tooltip strong {
+  min-width:0;
+  color:#ffd890;
+  font-size:14px;
+  line-height:1.05;
+}
+.tavern-shop-tooltip em {
+  color:#ffd76d;
+  font-size:13px;
+  font-style:normal;
+  font-weight:bold;
+}
+.tavern-shop-tooltip span {
+  grid-column:1 / -1;
+  color:#c99b61;
+  font-size:11px;
+  line-height:1.22;
+}
+.tavern-shop-tooltip small {
+  grid-column:1 / -1;
+  color:#8f7352;
+  font-size:9px;
+  text-transform:uppercase;
+}
+.tavern-shop-item h3,
+.tavern-game-card h3 { margin:0; color:#ffd890; font-size:15px; }
+.tavern-shop-item p,
+.tavern-game-card p { margin:3px 0; color:#c39a66; font-size:11px; line-height:1.25; }
+.tavern-shop-item button,
+.tavern-mission-note button,
+.tavern-game-card button {
+  width:82px;
+  aspect-ratio:360/140;
+  padding:5px 10px;
+  font-size:11px;
+}
+.tavern-mission-layout {
+  display:grid;
+  grid-template-columns:1.45fr .8fr;
+  gap:14px;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-layout {
+  position:absolute;
+  inset:0;
+  display:block;
+  pointer-events:none;
+}
+.tavern-mission-layout section {
+  min-width:0;
+  padding:12px;
+  border:1px solid rgba(214,146,62,0.18);
+  border-radius:8px;
+  background:rgba(20,10,4,0.5);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-layout section {
+  position:absolute;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  pointer-events:auto;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone {
+  right:10vw;
+  top:9vh;
+  width:min(760px,58vw);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone {
+  left:34px;
+  bottom:20px;
+  width:230px;
+}
+.tavern-section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.tavern-section-head h3 { margin:0; color:#ffd890; }
+.tavern-section-head span { color:#c99b61; font-weight:bold; }
+.tavern-mission-list {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-list {
+  position:relative;
+  min-height:430px;
+  display:block;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone .tavern-mission-list {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.tavern-mission-layout section:last-child .tavern-mission-list { grid-template-columns:1fr; }
+.tavern-mission-note {
+  min-height:142px;
+  display:grid;
+  align-content:start;
+  gap:5px;
+  padding:16px 15px 12px;
+  color:#4a2b13;
+  background:url('../images/tavern/missions/mission-note.png') center/100% 100% no-repeat;
+  filter:drop-shadow(0 8px 9px rgba(0,0,0,0.42));
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note {
+  position:absolute;
+  width:166px;
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(1) {
+  left:4%;
+  top:4%;
+  transform:rotate(-4deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(2) {
+  left:28%;
+  top:2%;
+  transform:rotate(2.5deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(3) {
+  left:52%;
+  top:6%;
+  transform:rotate(-1.5deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(4) {
+  right:2%;
+  top:3%;
+  transform:rotate(3deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(5) {
+  left:7%;
+  top:49%;
+  transform:rotate(2deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(6) {
+  left:31%;
+  top:44%;
+  transform:rotate(-3deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(7) {
+  left:55%;
+  top:51%;
+  transform:rotate(2.5deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(8) {
+  right:0;
+  top:45%;
+  transform:rotate(-2deg);
+}
+#tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone .tavern-mission-note {
+  width:190px;
+  min-height:132px;
+  justify-self:start;
+  padding:16px 13px 11px 25px;
+}
+.tavern-mission-note:nth-child(2) { transform:rotate(1.5deg); }
+.tavern-mission-note:nth-child(3) { transform:rotate(-1deg); }
+.tavern-mission-note.failed { filter:saturate(.5) brightness(.75); }
+.tavern-mission-note h4 { margin:4px 0 0; color:#3a1f0c; font-size:12px; line-height:1.02; }
+.tavern-mission-note p,
+.tavern-mission-note span { margin:0; font-size:9px; line-height:1.1; font-weight:bold; }
+.tavern-active-contract-zone .tavern-mission-note h4 { font-size:11px; }
+.tavern-active-contract-zone .tavern-mission-note p,
+.tavern-active-contract-zone .tavern-mission-note span { font-size:8.5px; line-height:1.05; }
+.tavern-mission-note button { justify-self:start; margin-top:1px; color:#ffe0a0; }
+.tavern-empty { color:#b8905d; font-size:12px; }
+.tavern-reward-popup {
+  position:fixed;
+  left:50%;
+  top:16%;
+  z-index:350;
+  width:min(420px,calc(100vw - 28px));
+  transform:translateX(-50%);
+  padding:16px;
+  border:2px solid rgba(255,206,110,0.76);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(42,22,9,0.98),rgba(15,8,4,0.98));
+  box-shadow:0 18px 42px rgba(0,0,0,0.58),0 0 34px rgba(255,180,72,0.18);
+  animation:tavernRewardPop 2.4s ease forwards;
+  cursor:pointer;
+}
+.tavern-reward-popup-title {
+  margin-bottom:10px;
+  color:#ffe19b;
+  font-size:15px;
+  font-weight:900;
+  text-align:center;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.tavern-reward-popup-items {
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.tavern-reward-popup-items span {
+  min-width:128px;
+  display:grid;
+  justify-items:center;
+  gap:6px;
+  padding:10px;
+  border:1px solid rgba(255,210,120,0.24);
+  border-radius:8px;
+  background:rgba(255,255,255,0.055);
+}
+.tavern-reward-popup-items img {
+  width:70px;
+  height:70px;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 9px rgba(0,0,0,0.45));
+}
+.tavern-reward-popup-items b {
+  max-width:150px;
+  color:#fff2c4;
+  font-size:12px;
+  line-height:1.15;
+  text-align:center;
+}
+.tavern-reward-popup-items .rarity-rare { box-shadow:inset 0 0 24px rgba(90,180,255,0.18); }
+.tavern-reward-popup-items .rarity-epic { box-shadow:inset 0 0 24px rgba(205,105,255,0.22); }
+@keyframes tavernRewardPop {
+  0% { opacity:0; transform:translate(-50%,-18px) scale(0.92); }
+  10% { opacity:1; transform:translate(-50%,0) scale(1); }
+  82% { opacity:1; transform:translate(-50%,0) scale(1); }
+  100% { opacity:0; transform:translate(-50%,-10px) scale(0.97); }
+}
+.tavern-gamble-layout,
+.tavern-table-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+#tavern-panel[data-tavern-station="tables"] .tavern-table-grid {
+  position:absolute;
+  inset:0;
+  display:block;
+}
+.slot-station-head {
+  width:min(710px,76vw);
+}
+.slot-station-shell {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+}
+.slot-cabinet {
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(560px,820px) minmax(160px,230px);
+  gap:22px;
+  align-items:center;
+  justify-content:center;
+  width:min(1120px,92vw);
+  min-height:560px;
+  margin-top:34px;
+}
+.slot-machine-shell {
+  --slot-reels-left:50%;
+  --slot-reels-top:34%;
+  --slot-reel-width:135px;
+  --slot-reel-height:155px;
+  --slot-reel-gap:40px;
+  --slot-bets-left:50%;
+  --slot-bets-bottom:10.2%;
+  --slot-bets-gap:60px;
+  --slot-bet-size:51px;
+  --slot-lever-right:calc(9.4% - 50px);
+  --slot-lever-top:20%;
+  --slot-lever-width:96px;
+  --slot-lever-height:238px;
+  position:relative;
+  height:min(590px,70vh);
+  overflow:hidden;
+  border:0;
+  border-radius:16px;
+  background:transparent;
+  filter:drop-shadow(0 24px 32px rgba(0,0,0,0.62));
+}
+.slot-console-foreground {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:.96;
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+.slot-cabinet-art {
+  position:absolute;
+  left:5%;
+  bottom:12%;
+  width:24%;
+  max-height:54%;
+  object-fit:contain;
+  opacity:0;
+  filter:drop-shadow(0 18px 18px rgba(0,0,0,0.62)) drop-shadow(0 0 20px rgba(255,173,70,0.2));
+  pointer-events:none;
+}
+.slot-lamp-row {
+  position:absolute;
+  left:43%;
+  top:65%;
+  display:flex;
+  gap:10px;
+  transform:translateX(-50%);
+}
+.slot-lamp-row i {
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffe69a,#b86018 58%,#3b1605);
+  box-shadow:0 0 9px rgba(255,178,65,0.5);
+  opacity:.62;
+}
+.slot-cabinet.spinning .slot-lamp-row i,
+.slot-cabinet.win .slot-lamp-row i,
+.slot-cabinet.jackpot .slot-lamp-row i {
+  animation:slotLamp .24s steps(2,end) infinite;
+}
+.slot-reels {
+  position:absolute;
+  left:var(--slot-reels-left);
+  top:var(--slot-reels-top);
+  display:grid;
+  grid-template-columns:repeat(3,var(--slot-reel-width));
+  gap:var(--slot-reel-gap);
+  transform:translateX(-50%);
+}
+.slot-reel {
+  position:relative;
+  width:var(--slot-reel-width);
+  min-height:var(--slot-reel-height);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border:2px solid rgba(221,151,72,0.46);
+  border-radius:10px;
+  background:
+    linear-gradient(180deg,rgba(255,209,120,0.08),transparent 28%),
+    #120905;
+  color:#ffd76d;
+  font-weight:bold;
+  box-shadow:inset 0 0 24px rgba(0,0,0,0.72),0 8px 14px rgba(0,0,0,0.36);
+  overflow:hidden;
+}
+.slot-reel::before {
+  content:"";
+  position:absolute;
+  inset:-35% 0;
+  opacity:0;
+  background:repeating-linear-gradient(180deg,rgba(255,217,116,0.14) 0 14px,rgba(0,0,0,0.18) 14px 28px);
+}
+.slot-reel.spinning::before {
+  opacity:1;
+  animation:slotReelBlur .18s linear infinite;
+}
+.slot-reel em {
+  position:relative;
+  z-index:1;
+  font-style:normal;
+  font-size:26px;
+  letter-spacing:1px;
+}
+.slot-reel img {
+  position:relative;
+  z-index:1;
+  width:82px;
+  height:82px;
+  object-fit:contain;
+  filter:drop-shadow(0 7px 6px rgba(0,0,0,0.7)) drop-shadow(0 0 8px rgba(255,183,67,0.16));
+  transform:translateZ(0);
+}
+.slot-reel.symbol-stone img,
+.slot-reel.symbol-copper img,
+.slot-reel.symbol-iron img,
+.slot-reel.symbol-gold img {
+  width:76px;
+  height:76px;
+}
+.slot-reel.symbol-lantern img {
+  width:88px;
+  height:88px;
+}
+.slot-reel.symbol-pickaxe img {
+  width:90px;
+  height:90px;
+  transform:rotate(-11deg);
+}
+.slot-reel.symbol-skull img {
+  width:90px;
+  height:90px;
+  border-radius:50%;
+}
+.slot-reel.winning {
+  border-color:rgba(255,219,108,0.9);
+  box-shadow:inset 0 0 24px rgba(0,0,0,0.72),0 0 22px rgba(255,198,68,0.5);
+  animation:slotWinPulse .65s ease-in-out infinite alternate;
+}
+.slot-reel.symbol-skull {
+  box-shadow:inset 0 0 24px rgba(0,0,0,0.78),0 0 14px rgba(166,45,32,0.18);
+}
+.slot-reel.symbol-gold,
+.slot-reel.symbol-pickaxe,
+.slot-reel.symbol-lantern {
+  box-shadow:inset 0 0 24px rgba(0,0,0,0.72),0 0 14px rgba(255,192,70,0.18);
+}
+.slot-result-plaque {
+  position:absolute;
+  left:50%;
+  top:71%;
+  width:min(390px,44vw);
+  min-height:0;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#ffe0a0;
+  text-align:center;
+  font-size:13px;
+  font-weight:bold;
+  text-shadow:0 2px 4px rgba(0,0,0,0.86);
+  filter:none;
+}
+.slot-bet-panel {
+  position:absolute;
+  left:var(--slot-bets-left);
+  bottom:var(--slot-bets-bottom);
+  display:flex;
+  gap:var(--slot-bets-gap);
+  transform:translateX(-50%);
+}
+.tavern-content .slot-bet-btn {
+  width:var(--slot-bet-size);
+  aspect-ratio:1;
+  border-radius:50%;
+  border:1px solid rgba(255,193,83,0.28);
+  background:
+    radial-gradient(circle at 42% 34%,rgba(255,221,126,0.28),rgba(155,85,31,0.16) 46%,rgba(22,8,3,0.12) 72%,rgba(0,0,0,0.04));
+  color:#ffe2a0;
+  font-size:12px;
+  font-weight:bold;
+  text-shadow:0 2px 4px #050100,0 0 8px rgba(255,188,74,0.28);
+  box-shadow:inset 0 2px 5px rgba(255,225,142,0.12),inset 0 -7px 11px rgba(0,0,0,0.26),0 0 0 1px rgba(56,25,7,0.36);
+  opacity:.86;
+}
+.tavern-content .slot-bet-btn:hover:not(:disabled) {
+  transform:translateY(-1px);
+  opacity:1;
+  filter:drop-shadow(0 0 8px rgba(255,190,78,0.35));
+}
+.tavern-content .slot-bet-btn.selected {
+  transform:translateY(2px);
+  opacity:1;
+  border-color:rgba(255,217,119,0.72);
+  background:
+    radial-gradient(circle at 42% 34%,rgba(255,230,145,0.48),rgba(184,92,30,0.3) 47%,rgba(29,10,3,0.22) 72%,rgba(0,0,0,0.06));
+  filter:brightness(1.12) drop-shadow(0 0 10px rgba(255,194,70,0.45));
+}
+.tavern-content .slot-lever {
+  position:absolute;
+  right:var(--slot-lever-right);
+  top:var(--slot-lever-top);
+  width:var(--slot-lever-width);
+  height:var(--slot-lever-height);
+  border:0;
+  padding:0;
+  background:url('../images/tavern/slots/slot-lever-normal.png') center/contain no-repeat;
+  cursor:pointer;
+  border-radius:999px;
+  color:transparent;
+  text-indent:-9999px;
+}
+.tavern-content .slot-lever:hover,
+.tavern-content .slot-lever:focus-visible {
+  transform:none;
+  background-image:url('../images/tavern/slots/slot-lever-hover.png');
+  filter:drop-shadow(0 0 13px rgba(255,181,72,0.34));
+}
+.slot-lever.pulled,
+.slot-lever.pulled:hover,
+.slot-lever.pulled:focus-visible {
+  background-image:url('../images/tavern/slots/slot-lever-pulled.png');
+}
+.slot-lever span { display:none; }
+.slot-heat {
+  position:absolute;
+  right:9.5%;
+  bottom:19.5%;
+  width:42px;
+  height:114px;
+  border:1px solid rgba(222,154,70,0.14);
+  border-radius:999px;
+  background:rgba(8,4,2,0.2);
+  overflow:hidden;
+  box-shadow:inset 0 0 12px rgba(0,0,0,0.42);
+  opacity:.56;
+  pointer-events:none;
+}
+.slot-heat span {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:0%;
+  background:linear-gradient(0deg,rgba(120,48,23,0.42),rgba(246,164,58,0.5),rgba(255,224,128,0.62));
+  transition:height .24s ease;
+}
+.slot-payout-plaque {
+  position:relative;
+  display:grid;
+  gap:5px;
+  align-content:center;
+  align-self:center;
+  max-height:360px;
+  min-height:270px;
+  padding:34px 24px 26px;
+  border:0;
+  background:url('../images/market/market-box-ore.png') center/100% 100% no-repeat;
+  filter:drop-shadow(0 14px 18px rgba(0,0,0,0.42));
+}
+.slot-payout-plaque strong {
+  color:#ffe0a0;
+  font-size:15px;
+}
+.slot-payout-plaque span {
+  display:flex;
+  justify-content:space-between;
+  gap:5px;
+  color:#c99b61;
+  font-size:11px;
+}
+.slot-payout-plaque b { color:#ffd76d; }
+.slot-fx-layer {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.slot-fx-layer i {
+  position:absolute;
+  top:66%;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:radial-gradient(circle,#fff4a8,#e0a12e 55%,#7a3a0a);
+  animation:slotCoinBurst .88s ease-out forwards;
+}
+.slot-fx-layer i.jackpot-spark {
+  background:radial-gradient(circle,#fff,#d998ff 45%,#6e2fd0);
+}
+.slot-cabinet.jackpot .slot-machine-shell {
+  animation:slotCabinetShake .06s linear 16, gamblingGoldBlast 1.1s ease-out;
+}
+.slot-cabinet.win .slot-machine-shell {
+  animation:gamblingGoldBlast .72s ease-out;
+}
+.slot-cabinet.loss .slot-reels {
+  animation:gamblingLossDim .38s ease-out;
+}
+.slot-cabinet.near-miss .slot-result-plaque {
+  color:#ffd76d;
+}
+.tavern-game-card img {
+  width:100%;
+  max-height:148px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+}
+.tavern-bet-row { display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+.tavern-result {
+  color:#d2ab76;
+  font-size:12px;
+  line-height:1.35;
+}
+.tavern-game-card {
+  position:absolute;
+  display:grid;
+  grid-template-columns:130px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  width:min(420px,30vw);
+  min-height:188px;
+  padding:17px 18px;
+  border:0;
+  background:transparent;
+  filter:drop-shadow(0 15px 18px rgba(0,0,0,0.48));
+}
+.tavern-game-card::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url('../images/market/market-box-forged.png') center/100% 100% no-repeat;
+  opacity:.86;
+  z-index:-1;
+}
+.tavern-game-card-blackjack {
+  left:7%;
+  top:31%;
+  transform:rotate(-1.2deg);
+}
+.tavern-game-card-dice {
+  left:38%;
+  top:39%;
+  transform:rotate(1deg);
+}
+.tavern-game-card-devil {
+  right:6%;
+  top:29%;
+  transform:rotate(-.5deg);
+}
+.tavern-game-card img {
+  width:118px;
+  height:118px;
+  justify-self:center;
+  object-fit:contain;
+  padding:13px;
+  background:url('../images/inventory/inventory-slot.png') center/100% 100% no-repeat;
+}
+.tavern-game-prop-copy {
+  display:grid;
+  gap:6px;
+}
+.tavern-game-card .tavern-bet-row {
+  gap:5px;
+}
+.tavern-game-card button {
+  width:68px;
+  padding:4px 8px;
+  font-size:10px;
+}
+.tavern-content .tavern-game-card {
+  color:#f5d09a;
+  text-align:left;
+  cursor:pointer;
+}
+.tavern-game-card span {
+  color:#ffe0a0;
+  font-size:11px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+.gambling-modal-backdrop {
+  position:absolute;
+  inset:-86px -24px -24px;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at 50% 45%,rgba(0,0,0,0.2),rgba(0,0,0,0.72));
+}
+.gambling-modal {
+  position:relative;
+  width:min(1120px,92vw);
+  height:min(720px,78vh);
+  color:#f5d09a;
+  filter:drop-shadow(0 28px 35px rgba(0,0,0,0.7));
+}
+.gambling-close-btn {
+  position:absolute;
+  right:14px;
+  top:8px;
+  z-index:20;
+  width:92px;
+  aspect-ratio:360/140;
+  font-size:10px;
+}
+.gambling-game-title {
+  position:absolute;
+  left:50%;
+  top:2px;
+  z-index:10;
+  transform:translateX(-50%);
+  color:#ffe0a0;
+  font-size:24px;
+  font-weight:bold;
+  text-shadow:0 3px 6px rgba(0,0,0,0.9),0 0 16px rgba(255,177,61,0.26);
+}
+.blackjack-table,
+.dice-table,
+.devils-table {
+  position:absolute;
+  inset:26px 0 0;
+}
+.gambling-table-art {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+}
+.gambling-message {
+  position:absolute;
+  left:50%;
+  top:43%;
+  z-index:5;
+  min-width:260px;
+  max-width:480px;
+  transform:translateX(-50%);
+  padding:8px 14px;
+  border-radius:8px;
+  color:#ffe0a0;
+  background:rgba(9,4,2,0.68);
+  text-align:center;
+  font-weight:bold;
+  text-shadow:0 2px 4px rgba(0,0,0,0.9);
+}
+.gambling-bet-rail {
+  position:absolute;
+  left:50%;
+  bottom:7%;
+  z-index:8;
+  display:grid;
+  gap:6px;
+  justify-items:center;
+  transform:translateX(-50%);
+  padding:11px 14px;
+  border-radius:999px;
+  background:rgba(20,9,3,0.68);
+  box-shadow:inset 0 1px rgba(255,220,142,0.12),0 10px 16px rgba(0,0,0,0.36);
+}
+.gambling-bet-rail strong {
+  color:#ffd76d;
+  font-size:12px;
+}
+.gambling-bet-rail > div {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+}
+.gambling-bet-rail button,
+.gambling-actions button,
+.dice-prediction-buttons button {
+  width:auto;
+  min-width:58px;
+  aspect-ratio:auto;
+  padding:7px 11px;
+  background:url('../images/ui/wood-plaque.png') center/100% 100% no-repeat;
+  font-size:10px;
+}
+.gambling-chip {
+  border-radius:50%;
+  min-width:48px !important;
+  height:48px;
+  padding:0 !important;
+  background:radial-gradient(circle at 35% 30%,#ffe5a0,#bf7426 44%,#55210a 74%,#180702) !important;
+  color:#2b1204 !important;
+  text-shadow:0 1px rgba(255,236,150,0.45) !important;
+}
+.gambling-chip.selected,
+.dice-prediction-buttons .selected {
+  filter:brightness(1.18) drop-shadow(0 0 12px rgba(255,194,70,0.45));
+}
+.gambling-actions {
+  position:absolute;
+  right:8%;
+  bottom:9%;
+  z-index:9;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:8px;
+  max-width:310px;
+}
+.blackjack-deck {
+  position:absolute;
+  right:17%;
+  top:21%;
+  z-index:3;
+  width:74px;
+  height:108px;
+  background:url('../images/tavern/gambling/blackjack/card-back.png') center/contain no-repeat;
+  filter:drop-shadow(0 9px 10px rgba(0,0,0,0.55));
+}
+.blackjack-dealer-zone,
+.blackjack-player-zone {
+  position:absolute;
+  left:50%;
+  z-index:4;
+  display:grid;
+  justify-items:center;
+  gap:7px;
+  transform:translateX(-50%);
+}
+.blackjack-dealer-zone { top:16%; }
+.blackjack-player-zone {
+  bottom:22%;
+  width:72%;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  align-items:end;
+}
+.blackjack-dealer-zone > span,
+.blackjack-player-hand > span {
+  color:#ffe0a0;
+  font-size:12px;
+  font-weight:bold;
+  text-shadow:0 2px 4px rgba(0,0,0,0.9);
+}
+.blackjack-player-hand {
+  display:grid;
+  gap:5px;
+  justify-items:center;
+  padding:8px;
+  border-radius:12px;
+}
+.blackjack-player-hand.active {
+  background:radial-gradient(circle,rgba(255,195,74,0.18),transparent 68%);
+}
+.blackjack-player-hand.win,
+.blackjack-player-hand.blackjack { filter:drop-shadow(0 0 22px rgba(255,202,76,0.7)); animation:gamblingGoldBlast .86s ease-out; }
+.blackjack-player-hand.lose { filter:saturate(.72) brightness(.78); animation:cardSlump .42s ease-out; }
+.blackjack-hand {
+  display:flex;
+  justify-content:center;
+  gap:8px;
+}
+.blackjack-card {
+  position:relative;
+  width:72px;
+  height:104px;
+  display:grid;
+  place-items:center;
+  color:#1b0c05;
+  font-weight:bold;
+  animation:cardSlideIn .28s ease both;
+}
+.blackjack-card.back {
+  background:url('../images/tavern/gambling/blackjack/card-back.png') center/contain no-repeat;
+}
+.blackjack-card.front {
+  background:url('../images/tavern/gambling/blackjack/card-front-frame.png') center/contain no-repeat;
+}
+.blackjack-card b {
+  position:absolute;
+  left:15px;
+  top:14px;
+  font-size:17px;
+}
+.blackjack-card em {
+  font-size:30px;
+  font-style:normal;
+}
+.blackjack-card.red { color:#922318; }
+.blackjack-card.black { color:#16110d; }
+.dice-cup {
+  position:absolute;
+  left:26%;
+  top:25%;
+  z-index:5;
+  width:150px;
+  cursor:pointer;
+  filter:drop-shadow(0 14px 13px rgba(0,0,0,0.58));
+}
+.dice-cup img {
+  width:100%;
+  height:auto;
+  pointer-events:none;
+}
+.dice-cup.is-shaking {
+  animation:diceCupShake .16s steps(2,end) infinite;
+}
+.dice-tray {
+  position:absolute;
+  left:50%;
+  top:42%;
+  z-index:4;
+  display:flex;
+  gap:24px;
+  transform:translateX(-50%);
+}
+.dice-tray.is-hidden {
+  opacity:0;
+  transform:translateX(-50%) translateY(10px) scale(.92);
+}
+.dice-tray.is-revealed {
+  animation:diceRevealPop .36s ease-out;
+}
+.dice-die {
+  width:94px;
+  height:94px;
+  display:grid;
+  place-items:center;
+  filter:drop-shadow(0 12px 12px rgba(0,0,0,0.54));
+}
+.dice-die img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.dice-die.is-rolling {
+  animation:diceTumble .18s linear infinite;
+}
+.dice-win .dice-die { filter:drop-shadow(0 0 24px rgba(255,210,86,.86)) drop-shadow(0 12px 12px rgba(0,0,0,0.54)); animation:diceWinBounce .62s ease-out; }
+.dice-loss .dice-die { filter:saturate(.65) brightness(.76) drop-shadow(0 12px 12px rgba(0,0,0,0.54)); }
+.dice-prediction-buttons {
+  position:absolute;
+  left:9%;
+  bottom:13%;
+  z-index:8;
+  display:flex;
+  gap:8px;
+}
+.devils-deck {
+  position:absolute;
+  left:50%;
+  top:18%;
+  z-index:5;
+  width:170px;
+  transform:translateX(-50%);
+  filter:drop-shadow(0 12px 13px rgba(0,0,0,0.62));
+}
+.devils-deck img {
+  width:100%;
+  height:auto;
+}
+.devils-deck.is-shuffling {
+  animation:devilShuffle .18s steps(2,end) infinite;
+}
+.devils-card-row {
+  position:absolute;
+  left:50%;
+  top:43%;
+  z-index:6;
+  display:flex;
+  gap:28px;
+  transform:translateX(-50%);
+}
+.tavern-content .devils-card {
+  position:relative;
+  width:118px;
+  height:170px;
+  border:0;
+  padding:0;
+  background:url('../images/tavern/gambling/devils-draw/cursed-card-back.png') center/contain no-repeat;
+  color:inherit;
+  text-indent:0;
+  filter:drop-shadow(0 12px 13px rgba(0,0,0,0.58));
+}
+.tavern-content .devils-card:disabled {
+  opacity:1;
+  filter:drop-shadow(0 12px 13px rgba(0,0,0,0.58));
+  cursor:default;
+}
+.devils-card::before {
+  content:none;
+}
+.devils-card:hover:not(:disabled),
+.devils-card:focus-visible {
+  animation:devilCardHoverBob .72s ease-in-out infinite;
+  filter:drop-shadow(0 0 16px rgba(190,33,24,0.42)) drop-shadow(0 12px 13px rgba(0,0,0,0.58));
+}
+.tavern-content .devils-card.is-selected {
+  animation:devilChosen 1.05s ease infinite alternate;
+}
+.tavern-content .devils-card.is-revealed {
+  background-image:url('../images/tavern/gambling/devils-draw/cursed-card-reveal-frame.png');
+  transform:translateY(-10px) rotateY(0deg);
+}
+.tavern-content .devils-card.is-revealed.devils-curse {
+  animation:devilCurseReveal 1.35s ease-out;
+  filter:drop-shadow(0 0 20px rgba(210,33,24,.55)) drop-shadow(0 12px 13px rgba(0,0,0,.58));
+}
+.tavern-content .devils-card.is-revealed.devils-boost {
+  animation:devilBoostReveal 1.2s ease-out;
+  filter:drop-shadow(0 0 20px rgba(255,120,40,.45)) drop-shadow(0 12px 13px rgba(0,0,0,.58));
+}
+.tavern-content .devils-card.rarity-epic,
+.tavern-content .devils-card.rarity-legendary { filter:drop-shadow(0 0 28px rgba(255,86,42,.64)) drop-shadow(0 12px 13px rgba(0,0,0,.58)); }
+.devils-card-result {
+  position:absolute;
+  inset:24px 18px;
+  display:grid;
+  place-items:center;
+  gap:4px;
+  color:#3a170d;
+  text-align:center;
+  text-indent:0;
+  text-shadow:none;
+}
+.devils-card-result strong { font-size:12px; }
+.devils-card-result em { font-size:9px; font-style:normal; }
+@keyframes cardSlideIn {
+  from { opacity:0; transform:translate(var(--fly-x,70px),var(--fly-y,-92px)) rotate(var(--fly-r,8deg)) scale(.82); }
+  62% { opacity:1; transform:translate(-5px,4px) rotate(calc(var(--fly-r,8deg) * -.16)) scale(1.04); }
+  to { opacity:1; transform:translate(0,0) rotate(0) scale(1); }
+}
+@keyframes diceCupShake {
+  from { transform:rotate(-5deg) translate(-3px,1px); }
+  to { transform:rotate(5deg) translate(3px,-1px); }
+}
+@keyframes diceTumble {
+  from { transform:translateY(-10px) rotate(-14deg); }
+  to { transform:translateY(8px) rotate(18deg); }
+}
+@keyframes diceRevealPop {
+  from { opacity:0; transform:translateX(-50%) translateY(16px) scale(.86); }
+  62% { opacity:1; transform:translateX(-50%) translateY(-4px) scale(1.08); }
+  to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes devilShuffle {
+  from { transform:translateX(-52%) rotate(-3deg); }
+  to { transform:translateX(-48%) rotate(3deg); }
+}
+@keyframes devilChosen {
+  from { filter:drop-shadow(0 0 8px rgba(160,28,22,0.36)); }
+  to { filter:drop-shadow(0 0 24px rgba(236,54,36,0.68)); }
+}
+@keyframes devilCardHoverBob {
+  0%,100% { transform:translateY(0) rotate(0deg); }
+  45% { transform:translateY(-10px) rotate(-1.5deg); }
+  70% { transform:translateY(-5px) rotate(1deg); }
+}
+@keyframes devilCurseReveal {
+  0% { transform:translateY(-10px) rotate(-2deg) scale(.96); }
+  35% { transform:translateY(-12px) rotate(2deg) scale(1.04); }
+  100% { transform:translateY(-10px) rotate(0) scale(1); }
+}
+@keyframes devilBoostReveal {
+  0% { transform:translateY(-10px) scale(.94); }
+  45% { transform:translateY(-14px) scale(1.06); }
+  100% { transform:translateY(-10px) scale(1); }
+}
+@keyframes slotReelBlur {
+  from { transform:translateY(-10%); }
+  to { transform:translateY(10%); }
+}
+@keyframes slotLamp {
+  0%,100% { opacity:.42; filter:brightness(.8); }
+  50% { opacity:1; filter:brightness(1.5); }
+}
+@keyframes slotWinPulse {
+  from { transform:translateY(0); }
+  to { transform:translateY(-3px); }
+}
+@keyframes slotCoinBurst {
+  from { opacity:1; transform:translate(0,0) scale(.8); }
+  to { opacity:0; transform:translate(var(--dx),var(--dy)) scale(1.25); }
+}
+@keyframes slotCabinetShake {
+  0%,100% { transform:translate(0,0); }
+  25% { transform:translate(3px,-1px); }
+  50% { transform:translate(-2px,2px); }
+  75% { transform:translate(2px,1px); }
+}
+@keyframes gamblingGoldBlast {
+  0% { filter:brightness(1); }
+  36% { filter:brightness(1.45) drop-shadow(0 0 36px rgba(255,208,74,.62)); }
+  100% { filter:brightness(1); }
+}
+@keyframes gamblingLossDim {
+  0%,100% { filter:none; }
+  48% { filter:saturate(.45) brightness(.58); transform:translateX(-50%) translateY(3px); }
+}
+@keyframes diceWinBounce {
+  0% { transform:translateY(0) scale(1); }
+  42% { transform:translateY(-12px) scale(1.12) rotate(-7deg); }
+  100% { transform:translateY(0) scale(1); }
+}
+@keyframes cardSlump {
+  0% { transform:translateY(0) rotate(0); }
+  55% { transform:translateY(8px) rotate(-2deg); }
+  100% { transform:translateY(0) rotate(0); }
+}

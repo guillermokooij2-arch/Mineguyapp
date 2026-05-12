@@ -1,0 +1,725 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width:760px) {
+  #backpack-map-panel { width:96vw; min-width:0; }
+  #backpack-map-panel.map-mode { width:100vw; height:100vh; }
+  #backpack-map-panel.map-mode .bmp-header { left:10px; top:10px; }
+  #backpack-map-panel.map-mode #backpack-back { width:50px; height:50px; min-width:50px; min-height:50px; }
+  .travel-map { --node-size:62px; --node-hit:92px; width:min(100vw,150vh); height:auto; min-height:0; }
+  .map-node-asset { border-radius:6px; font-size:10px; }
+  .map-node-label { top:calc(50% + 43px); max-width:96px; padding:4px 6px 5px; }
+  .map-node-name { font-size:10px; }
+  .map-node-sub { font-size:7px; }
+  .map-node[data-label-pos="top"] .map-node-label { bottom:calc(50% + 43px); }
+  .map-node[data-label-pos="left"] .map-node-label { right:calc(50% + 44px); }
+  .map-node[data-label-pos="right"] .map-node-label { left:calc(50% + 44px); }
+  #character-panel,#marketplace-panel,#workbench-panel,#trader-panel {
+    left:0; right:0; width:100%; border-radius:12px 12px 0 0;
+    bottom:0; top:auto; max-height:80vh;
+    transform:translateY(calc(100% + 20px));
+  }
+  #character-panel.open,#marketplace-panel.open,
+  #workbench-panel.open,#trader-panel.open { transform:translateY(0); }
+  #marketplace-panel {
+    left:50%; top:50%; right:auto; bottom:auto;
+    width:98vw; height:92vh; max-height:none;
+    border-radius:10px;
+    transform:translate(-50%,-46%) scale(.94);
+  }
+  #marketplace-panel::before { display:none; }
+  #marketplace-panel.open { transform:translate(-50%,-50%) scale(1); }
+  #workbench-panel {
+    left:50%; top:50%; right:auto; bottom:auto;
+    width:98vw; height:92vh; max-height:none;
+    padding:14px 12px 18px;
+    border-radius:10px;
+    transform:translate(-50%,-46%) scale(.94);
+  }
+  #workbench-panel.open { transform:translate(-50%,-50%) scale(1); }
+  #workbench-panel .shop-head {
+    left:10px;
+    top:10px;
+    width:50px;
+  }
+  #workbench-close { width:50px; height:50px; }
+  #workbench-panel .panel-desc { width:76%; margin-left:54px; font-size:11px; }
+  #workbench-panel .craft-recipe-list { height:calc(100% - 116px); margin-top:16px; overflow-y:auto; padding-bottom:12px; }
+  #workbench-panel .craft-card {
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "top"
+      "cost"
+      "offer"
+      "tier"
+      "rar"
+      "chance"
+      "anvil";
+    gap:8px;
+    padding:10px;
+    background:linear-gradient(180deg,rgba(28,15,8,0.88),rgba(20,10,5,0.58));
+  }
+  .craft-anvil-wrap { width:min(320px,78vw); margin:4px auto 0; }
+  #workbench-panel .craft-offer-row { grid-template-columns:1fr 1fr; font-size:10px; }
+  #workbench-panel .craft-cost-row,
+  #workbench-panel .craft-offer-row,
+  #workbench-panel .craft-tier-row,
+  #workbench-panel .craft-rar-row,
+  #workbench-panel .craft-chance-row { aspect-ratio:auto; padding:14px 16px; }
+  #workbench-panel .craft-card-name { font-size:16px; }
+  #workbench-panel .craft-offering-section { position:static; width:auto; margin-top:8px; }
+  #workbench-panel .craft-forge-stage { height:360px; }
+  #workbench-panel #craft-result-inner { width:94vw; }
+  #marketplace-panel .shop-head {
+    left:12px; top:12px;
+    width:48px;
+    padding:0;
+  }
+  #market-close { width:48px; height:48px; }
+  #marketplace-panel .shop-head h2 { font-size:20px; }
+  #trader-panel {
+    height:90vh;
+    max-height:90vh;
+    padding:14px 12px 18px;
+  }
+  .trader-scene {
+    height:176px;
+    margin:4px 0 10px;
+  }
+  .trader-character {
+    width:168px;
+    height:158px;
+    bottom:-6px;
+    left:42%;
+  }
+  .trader-speech {
+    right:8px;
+    bottom:16px;
+    width:min(218px,46%);
+    aspect-ratio:437 / 180;
+    padding:10px 17px;
+    font-size:10px;
+  }
+  #trader-list {
+    grid-template-columns:1fr;
+    gap:10px;
+    overflow-y:auto;
+    padding:0 2px 16px 0;
+  }
+  #trader-panel .trader-upgrade-row {
+    grid-template-columns:1fr;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    min-height:0;
+    aspect-ratio:360 / 468;
+    padding:22px 18px 24px;
+    row-gap:5px;
+    border-radius:7px;
+  }
+  .trader-upgrade-art-button { width:min(86px,72%); }
+  .trader-upgrade-art { height:68px; }
+  #trader-panel .upgrade-title { font-size:15px; }
+  #trader-panel .upgrade-desc,
+  #trader-panel .upgrade-effect { font-size:10px; }
+  #trader-panel .upgrade-buy { width:min(116px,88%); }
+  #trader-panel .upgrade-buy span { font-size:14px; }
+  #trader-panel .upgrade-buy small { font-size:7px; }
+  #tavern-close {
+    left:10px;
+    top:10px;
+    width:50px;
+    height:50px;
+  }
+  .tavern-station-back {
+    left:64px;
+    top:17px;
+    width:94px;
+    font-size:9px;
+  }
+  .tavern-dialogue-wrap {
+    --barkeep-speech-right:4vw;
+    --barkeep-speech-bottom:51vh;
+    --barkeep-speech-width:min(238px,58vw);
+    --barkeep-speech-padding:11px 18px;
+    font-size:10px;
+  }
+  .tavern-hud {
+    right:10px;
+    top:10px;
+    max-width:58vw;
+  }
+  .tavern-hud strong { padding:6px 10px; }
+  .tavern-buffs {
+    width:196px;
+    min-height:40px;
+    gap:2px;
+    padding:7px 8px;
+  }
+  .tavern-buff-slot {
+    width:22px;
+    height:22px;
+  }
+  .tavern-buff-slot img {
+    width:18px;
+    height:18px;
+  }
+  .tavern-buff-slot strong { font-size:6px; bottom:-7px; }
+  .tavern-hotspot-barkeep {
+    left:31%;
+    top:43%;
+  }
+  .tavern-hotspot-missions {
+    right:2%;
+    top:34%;
+  }
+  .tavern-hotspot-slots {
+    left:4%;
+    bottom:34%;
+  }
+  .tavern-hotspot-cards {
+    right:7%;
+    bottom:27%;
+  }
+  .tavern-hotspot { width:104px; padding:10px 12px; }
+  .tavern-hotspot strong { font-size:10px; }
+  .tavern-hotspot small { font-size:8px; }
+  .tavern-barkeep-stage {
+    --barkeep-left:48%;
+    --barkeep-bottom:42%;
+    --barkeep-width:210px;
+    --barkeep-height:300px;
+    --barkeep-hide-bottom:24%;
+  }
+  .tavern-station-head {
+    display:grid;
+    gap:3px;
+    margin-bottom:9px;
+  }
+  .tavern-station-head span { font-size:15px; }
+  .tavern-station-head strong { font-size:10px; }
+  #tavern-panel:not(.station-open) .tavern-content {
+    width:90vw;
+    bottom:10px;
+    padding:10px 12px;
+  }
+  .tavern-content {
+    width:96vw;
+    max-height:48vh;
+    bottom:12px;
+    padding:10px;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-content {
+    inset:112px 10px 10px;
+    overflow-y:auto;
+    padding-bottom:8px;
+  }
+  #tavern-panel[data-tavern-station="slots"] .tavern-content {
+    inset:96px 8px 8px;
+    overflow-y:auto;
+  }
+  #tavern-panel[data-tavern-station="bar"] .tavern-content,
+  #tavern-panel[data-tavern-station="tables"] .tavern-content {
+    inset:96px 8px 8px;
+    overflow-y:auto;
+  }
+  #tavern-panel[data-tavern-station="bar"] .tavern-station-head,
+  #tavern-panel[data-tavern-station="tables"] .tavern-station-head,
+  #tavern-panel[data-tavern-station="slots"] .tavern-station-head {
+    width:94vw;
+    min-height:0;
+    padding:0;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-station-head {
+    position:static;
+    width:auto;
+    margin-bottom:10px;
+    padding:10px 12px;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-mission-layout {
+    position:relative;
+    inset:auto;
+    display:grid;
+    gap:12px;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-mission-layout section {
+    position:static;
+    width:auto;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-list,
+  #tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone .tavern-mission-list {
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note {
+    position:static;
+    width:auto;
+  }
+  #tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone .tavern-mission-note {
+    min-height:138px;
+    width:auto;
+    padding:16px 15px 12px;
+  }
+  .tavern-mission-layout,
+  .tavern-mission-list {
+    grid-template-columns:1fr;
+  }
+  .bar-counter-layout {
+    position:relative;
+    left:auto;
+    bottom:auto;
+    width:auto;
+    height:auto;
+    transform:none;
+    padding-top:70px;
+  }
+  .bar-counter-layout::before {
+    display:none;
+  }
+  .tavern-shop-grid {
+    position:relative;
+    inset:auto;
+    left:auto;
+    right:auto;
+    bottom:auto;
+    grid-template-columns:repeat(auto-fit,minmax(82px,1fr));
+    gap:12px 8px;
+    align-content:start;
+  }
+  .tavern-shop-item {
+    width:86px;
+    height:86px;
+    min-height:0;
+    padding:0;
+    transform:none !important;
+  }
+  .tavern-shop-icon { width:82px; height:82px; }
+  .tavern-shop-icon img { width:62px; height:62px; }
+  .tavern-shop-tooltip {
+    left:50%;
+    bottom:calc(100% + 7px);
+    width:min(210px,76vw);
+    padding:19px 20px 17px;
+  }
+  .tavern-shop-item h3,
+  .tavern-game-card h3 { font-size:13px; }
+  .tavern-shop-item p,
+  .tavern-game-card p { font-size:10px; }
+  .tavern-shop-item button,
+  .tavern-mission-note button,
+  .tavern-game-card button {
+    width:76px;
+    font-size:10px;
+  }
+  .slot-cabinet {
+    grid-template-columns:1fr;
+    min-height:0;
+    width:100%;
+    margin-top:74px;
+    gap:10px;
+  }
+  .slot-station-shell {
+    position:relative;
+    display:block;
+  }
+  .slot-station-head {
+    width:94vw;
+  }
+  .slot-machine-shell {
+    --slot-reels-left:50%;
+    --slot-reels-top:33%;
+    --slot-reel-width:68px;
+    --slot-reel-height:82px;
+    --slot-reel-gap:6px;
+    --slot-bets-left:50%;
+    --slot-bets-bottom:17%;
+    --slot-bets-gap:15px;
+    --slot-bet-size:31px;
+    --slot-lever-right:calc(4.7% - 14px);
+    --slot-lever-top:26%;
+    --slot-lever-width:64px;
+    --slot-lever-height:165px;
+    height:430px;
+  }
+  .slot-console-foreground {
+    opacity:.92;
+  }
+  .slot-cabinet-art {
+    left:4%;
+    bottom:14%;
+    width:24%;
+    max-height:50%;
+  }
+  .slot-lamp-row {
+    left:48%;
+    top:20%;
+    gap:5px;
+  }
+  .slot-lamp-row i {
+    width:11px;
+    height:11px;
+  }
+  .slot-reels {
+    left:var(--slot-reels-left);
+    top:var(--slot-reels-top);
+    grid-template-columns:repeat(3,var(--slot-reel-width));
+    gap:var(--slot-reel-gap);
+  }
+  .slot-reel {
+    width:var(--slot-reel-width);
+    min-height:var(--slot-reel-height);
+    border-radius:7px;
+  }
+  .slot-reel em { font-size:16px; }
+  .slot-reel img {
+    width:44px;
+    height:44px;
+  }
+  .slot-reel.symbol-stone img,
+  .slot-reel.symbol-copper img,
+  .slot-reel.symbol-iron img,
+  .slot-reel.symbol-gold img {
+    width:40px;
+    height:40px;
+  }
+  .slot-reel.symbol-lantern img,
+  .slot-reel.symbol-pickaxe img,
+  .slot-reel.symbol-skull img {
+    width:48px;
+    height:48px;
+  }
+  .slot-result-plaque {
+    left:50%;
+    top:55%;
+    width:218px;
+    min-height:46px;
+    padding:7px 10px;
+    font-size:10px;
+  }
+  .slot-bet-panel {
+    left:var(--slot-bets-left);
+    bottom:var(--slot-bets-bottom);
+    gap:var(--slot-bets-gap);
+  }
+  .tavern-content .slot-bet-btn {
+    width:var(--slot-bet-size);
+    font-size:8px;
+  }
+  .tavern-content .slot-lever {
+    right:var(--slot-lever-right);
+    top:var(--slot-lever-top);
+    width:var(--slot-lever-width);
+    height:var(--slot-lever-height);
+  }
+  .slot-heat {
+    right:5.7%;
+    bottom:20%;
+    width:24px;
+    height:76px;
+  }
+  .slot-payout-plaque {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px 8px;
+    min-height:0;
+    padding:22px 16px 18px;
+  }
+  .slot-payout-plaque strong {
+    grid-column:1 / -1;
+    font-size:12px;
+  }
+  .slot-payout-plaque span {
+    font-size:9px;
+  }
+  #tavern-panel[data-tavern-station="tables"] .tavern-table-grid {
+    position:relative;
+    inset:auto;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    padding-top:70px;
+  }
+  .tavern-game-card {
+    position:relative;
+    left:auto;
+    right:auto;
+    top:auto;
+    width:auto;
+    min-height:160px;
+    grid-template-columns:92px minmax(0,1fr);
+    padding:14px;
+    transform:none !important;
+  }
+  .tavern-game-card img {
+    width:82px;
+    height:82px;
+    padding:9px;
+  }
+  .tavern-game-card .tavern-bet-row {
+    gap:4px;
+  }
+  .gambling-modal-backdrop {
+    position:fixed;
+    inset:0;
+    padding:76px 8px 12px;
+    align-items:start;
+    overflow-y:auto;
+  }
+  .gambling-modal {
+    width:100%;
+    height:690px;
+    min-height:690px;
+  }
+  .gambling-game-title {
+    top:0;
+    font-size:18px;
+  }
+  .gambling-close-btn {
+    right:6px;
+    top:4px;
+    width:78px;
+    font-size:9px;
+  }
+  .blackjack-table,
+  .dice-table,
+  .devils-table {
+    inset:30px 0 0;
+  }
+  .gambling-message {
+    top:40%;
+    min-width:0;
+    width:80%;
+    font-size:11px;
+  }
+  .gambling-bet-rail {
+    left:50%;
+    bottom:5%;
+    width:88%;
+    padding:9px 10px;
+  }
+  .gambling-chip {
+    min-width:38px !important;
+    height:38px;
+    font-size:9px !important;
+  }
+  .gambling-actions {
+    right:6%;
+    bottom:18%;
+    max-width:88%;
+    justify-content:center;
+  }
+  .gambling-bet-rail button,
+  .gambling-actions button,
+  .dice-prediction-buttons button {
+    min-width:50px;
+    padding:6px 9px;
+    font-size:9px;
+  }
+  .blackjack-deck {
+    right:10%;
+    top:18%;
+    width:52px;
+    height:76px;
+  }
+  .blackjack-dealer-zone {
+    top:14%;
+  }
+  .blackjack-player-zone {
+    bottom:28%;
+    width:92%;
+    grid-template-columns:1fr;
+  }
+  .blackjack-card {
+    width:48px;
+    height:70px;
+  }
+  .blackjack-card b {
+    left:10px;
+    top:9px;
+    font-size:12px;
+  }
+  .blackjack-card em {
+    font-size:20px;
+  }
+  .dice-cup {
+    left:12%;
+    top:24%;
+    width:108px;
+  }
+  .dice-tray {
+    top:42%;
+    gap:14px;
+  }
+  .dice-die {
+    width:66px;
+    height:66px;
+  }
+  .dice-prediction-buttons {
+    left:50%;
+    bottom:28%;
+    transform:translateX(-50%);
+    justify-content:center;
+  }
+  .devils-deck {
+    top:16%;
+    width:124px;
+  }
+  .devils-card-row {
+    top:38%;
+    gap:10px;
+  }
+  .devils-card {
+    width:82px;
+    height:118px;
+  }
+  .devils-card-result {
+    inset:16px 12px;
+  }
+  .devils-card-result strong { font-size:9px; }
+  .devils-card-result em { font-size:7px; }
+  .market-trade-layout {
+    left:12px;
+    right:12px;
+    top:76px;
+    bottom:12px;
+    grid-template-columns:1fr;
+    gap:14px;
+    overflow-y:auto;
+    align-items:start;
+  }
+  .market-side { gap:8px; }
+  .market-shelf-action {
+    width:148px;
+    height:auto;
+    font-size:10px;
+  }
+  .market-list {
+    width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+    padding:0;
+    max-height:none;
+    overflow:visible;
+  }
+  .market-ore-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .market-forged-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .market-row {
+    grid-template-rows:64px 34px 26px;
+    min-height:132px;
+    padding:9px 6px 7px;
+    gap:2px;
+  }
+  .market-forged-row {
+    grid-template-rows:58px 34px 26px;
+    min-height:126px;
+  }
+  .market-ore-icon,.market-ore-icon-wrap { width:88px; height:88px; }
+  .market-ore-icon-wrap {
+    width:46px;
+    height:46px;
+    transform:translateY(12px);
+    margin-bottom:12px;
+  }
+  .market-ore-icon-wrap::after { height:14px; bottom:2px; }
+  .market-ore-img { width:43px; height:43px; }
+  .market-row-stone .market-ore-img { width:38px; height:38px; }
+  .market-row-copper .market-ore-img { width:45px; height:45px; }
+  .market-row-iron .market-ore-img { width:46px; height:46px; }
+  .market-row-gold .market-ore-img { width:47px; height:47px; }
+  .market-forged-icon { width:42px; height:42px; margin-top:2px; }
+  .market-ore-name { font-size:9px; }
+  .market-ore-price { font-size:14px; }
+  .market-ore-count { font-size:7px; }
+  .market-sell-btn { width:70px; height:auto; font-size:8px; }
+  .backpack-btn {
+    left:50%; top:auto; bottom:180px; width:112px; height:112px;
+    transform:translateX(-50%) scale(calc(1 + var(--bag-load) * .16 + var(--bag-pop)));
+  }
+  .backpack-btn:hover, .backpack-btn.open {
+    transform:translateX(-50%) scale(calc(1.08 + var(--bag-load) * .16 + var(--bag-pop))) translateY(-5px);
+  }
+  .pc-terminal-btn { left:16px; bottom:16px; }
+  #miner-hud { left:50%; bottom:16%; }
+  #character-command-bar {
+    bottom:0;
+    width:100vw;
+    min-height:0;
+  }
+  #character-command-bar .backpack-btn {
+    left:auto;
+    bottom:auto;
+    width:60px;
+    height:60px;
+  }
+  #character-command-bar .backpack-img {
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  #character-command-bar #miner-hud {
+    left:auto;
+    bottom:auto;
+    width:min(330px,62vw);
+    min-height:104px;
+    grid-template-columns:92px minmax(0,1fr);
+    padding:16px 16px 16px 18px;
+  }
+  #character-command-bar #miner-hud::after { background-size:100% 100%; }
+  #character-command-bar .command-id-portrait { height:82px; }
+  #character-command-bar .command-id-portrait img {
+    width:62px;
+    margin-top:0;
+  }
+  #character-command-bar .command-id-progress {
+    gap:5px;
+    padding-right:4px;
+  }
+  #character-command-bar .mhud-level-label { font-size:8px; }
+  #character-command-bar .mhud-level-badge {
+    left:47px;
+    bottom:17px;
+    width:58px;
+    font-size:12px;
+  }
+  #character-command-bar .mhud-xp-bar { height:8px; }
+  #character-command-bar .mhud-xp-next { font-size:8px; }
+  #character-command-bar #command-resources {
+    min-height:0;
+    width:auto;
+    padding:2px 3px;
+  }
+  #character-command-bar .command-resource-row {
+    font-size:7px;
+    gap:5px;
+  }
+  #character-command-bar .command-resource-row strong {
+    font-size:10px;
+  }
+  #character-command-bar .command-buffs {
+    right:0;
+    bottom:62px;
+    width:min(190px,38vw);
+    min-height:42px;
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:2px;
+    overflow:hidden;
+    padding:8px 10px;
+    background-size:100% 100%;
+  }
+  #character-command-bar .command-buff,
+  #character-command-bar .command-buff-empty {
+    width:20px;
+    height:20px;
+    padding:0;
+  }
+  #character-command-bar .command-buff img {
+    width:16px;
+    height:16px;
+  }
+  #character-command-bar .command-buff em {
+    display:none;
+  }
+  .pc-terminal-btn { bottom:128px; }
+  #hint { display:none; }
+}

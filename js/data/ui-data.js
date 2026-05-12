@@ -1,0 +1,141 @@
+// Static UI data shared by classic browser scripts.
+const MARKET_ORE_ICONS={
+  hardstone:'images/ore-icons/mined-hardstone.png',
+  stone:'images/ore-icons/mined-stone.png',
+  copper:'images/ore-icons/mined-copper.png',
+  iron:'images/ore-icons/mined-iron.png',
+  gold:'images/ore-icons/mined-gold.png',
+  diamond:'images/ore-icons/mined-diamond.png',
+  ruby:'images/ore-icons/mined-ruby.png',
+  aether:'images/ore-icons/mined-aether.png',
+};
+const TRADER_UPGRADE_IMAGES={
+  rareFinder:'images/trader/upgrade-rare-finder.png',
+  stackSize:'images/trader/upgrade-stack-compression.png',
+  forgeSkill:'images/trader/upgrade-forge-skill.png',
+};
+const TRADER_STATES=[
+  {
+    id:"idle",
+    image:"images/trader/trader-idle.png",
+    text:"Light's bad in here. So are most of the deals."
+  },
+  {
+    id:"interested",
+    image:"images/trader/trader-interested.png",
+    text:"Oh - you've got an eye for it."
+  },
+  {
+    id:"persuasive",
+    image:"images/trader/trader-persuasive.png",
+    text:"I've held onto this longer than I should've."
+  },
+  {
+    id:"dangerous",
+    image:"images/trader/trader-dangerous.png",
+    text:"Some prices aren't paid in coin."
+  }
+];
+
+const MAP_LOCATIONS=[
+  {
+    id:'mineshaft',
+    name:'Mineshaft',
+    sub:'Current zone',
+    x:12.4,
+    y:28.1,
+    labelPos:'top',
+    state:'active',
+    assetLabel:'MINE',
+    action:'starter-mine',
+    asset:'images/map-icons/mineshaft.png',
+    animation:null,
+  },
+  {
+    id:'marketplace',
+    name:'Market',
+    sub:'Sell ores',
+    x:41,
+    y:22.6,
+    labelPos:'top',
+    assetLabel:'MKT',
+    action:'marketplace',
+    asset:'images/map-icons/market.png',
+    animation:null,
+  },
+  {
+    id:'workbench',
+    name:'Workbench',
+    sub:'Craft parts',
+    x:62.4,
+    y:44,
+    labelPos:'bottom',
+    assetLabel:'WRK',
+    action:'workbench',
+    asset:'images/map-icons/workbench.png',
+    animation:null,
+  },
+  {
+    id:'trader',
+    name:'Trader',
+    sub:'Buy items',
+    x:77.7,
+    y:22.7,
+    labelPos:'top',
+    assetLabel:'TRD',
+    action:'trader',
+    asset:'images/map-icons/trader.png',
+    animation:null,
+  },
+  {
+    id:'tavern',
+    name:'Tavern',
+    sub:'Missions & risk',
+    x:28.1,
+    y:67.5,
+    labelPos:'right',
+    assetLabel:'TAV',
+    action:'tavern',
+    asset:'images/map-icons/tavern.png',
+    animation:null,
+  },
+  {
+    id:'sys-terminal',
+    name:'SYS Terminal',
+    sub:'Permanent upgrades',
+    x:67.3,
+    y:71.7,
+    labelPos:'left',
+    assetLabel:'SYS',
+    action:'terminal',
+    asset:'images/map-icons/sys-terminal.png',
+    animation:null,
+  },
+  {
+    id:'deep-lift',
+    name:'Deep Lift',
+    sub:'Coming soon',
+    x:49.7,
+    y:90,
+    labelPos:'top',
+    state:'locked',
+    assetLabel:'LFT',
+    action:null,
+    asset:'images/map-icons/deep-lift.png',
+    animation:null,
+  },
+  {
+    id:'crystal-vein',
+    name:'Crystal Vein',
+    sub:'Unlocks at Lv 30',
+    x:89.3,
+    y:59,
+    labelPos:'left',
+    state:'levelLocked',
+    assetLabel:'GEM',
+    action:'crystal-vein',
+    asset:'images/map-icons/crystal-vein.png',
+    animation:null,
+  },
+];
+
