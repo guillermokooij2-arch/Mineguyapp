@@ -78,6 +78,7 @@ const DEFAULT_STATS = {
   totalRocksBroken: 0,
   highestCritChain: 0,
   totalXpEarned: 0,
+  totalCoinsEarned: 0,
   totalForgedItems: 0,
   bestForgedRarity: 'common',
 };
@@ -113,6 +114,7 @@ const AUTO_CRIT_LIMITS = {
 };
 
 const player = {
+  username: 'Miner',
   coins: 0,
   xp: 0,
   rareParts: 0,
@@ -336,6 +338,18 @@ function addPlayerXp(amount){
   player.stats={...DEFAULT_STATS,...(player.stats||{})};
   player.stats.totalXpEarned=(Number(player.stats.totalXpEarned)||0)+gain;
 }
+function addPlayerCoins(amount){
+  const gain=Math.max(0,Math.round(Number(amount)||0));
+  if(gain<=0)return;
+  player.coins+=gain;
+  player.stats={...DEFAULT_STATS,...(player.stats||{})};
+  player.stats.totalCoinsEarned=(Number(player.stats.totalCoinsEarned)||0)+gain;
+}
+function setPlayerUsername(name){
+  const clean=String(name||'').replace(/[^\w .'-]/g,'').trim().slice(0,18);
+  player.username=clean||'Miner';
+  saveGame();
+}
 function getBestPickaxeChainAbility(){
   const tierChance=pickaxeTierAutoCritChance();
   const tierHits=pickaxeTierAutoCritAmount();
@@ -425,6 +439,7 @@ function loadSave(){
     if(!raw)return;
     const data=JSON.parse(raw);
     player.coins=Number(data.coins)||0;
+    player.username=String(data.username||'Miner').slice(0,18)||'Miner';
     player.xp=Number(data.xp)||0;
     player.rareParts=Number(data.rareParts)||0;
     player.anvilTaps=Number(data.anvilTaps)||0;
@@ -477,6 +492,7 @@ function saveGame(){
   try{
     localStorage.setItem(SAVE_KEY,JSON.stringify({
       coins:player.coins, xp:player.xp,
+      username:player.username,
       rareParts:player.rareParts,
       anvilTaps:player.anvilTaps,
       currentMineZoneId,

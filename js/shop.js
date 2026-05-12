@@ -14,7 +14,7 @@ const marketplacePanel=document.getElementById('marketplace-panel'),marketClose=
 const workbenchPanel=document.getElementById('workbench-panel'),workbenchClose=document.getElementById('workbench-close');
 const traderPanel=document.getElementById('trader-panel'),traderClose=document.getElementById('trader-close'),traderList=document.getElementById('trader-list');
 const traderCharacterBtn=document.getElementById('trader-character'),traderCharacterImg=document.getElementById('trader-character-img'),traderSpeech=document.getElementById('trader-speech');
-const characterPanel=document.getElementById('character-panel'),characterClose=document.getElementById('character-close'),charStatsList=document.getElementById('char-stats-list');
+const characterPanel=document.getElementById('character-panel'),characterClose=document.getElementById('character-close'),charStatsList=document.getElementById('char-stats-list'),charRecordsList=document.getElementById('char-records-list'),charUsernameInput=document.getElementById('char-username'),charUsernameSave=document.getElementById('char-username-save');
 const minerHud=document.getElementById('miner-hud');
 let commandBuffsEl=null,mhudXpNext=null;
 const chainDisplay=document.getElementById('chain-display'),chainNum=document.getElementById('chain-num');

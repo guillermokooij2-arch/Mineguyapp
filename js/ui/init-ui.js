@@ -34,6 +34,8 @@ function initPanels(){
     traderCharacterBtn.addEventListener('click',advanceTraderState);
   }
   characterClose.addEventListener('click',()=>runUiAction(()=>toggleCharacter(false)));
+  if(charUsernameSave)charUsernameSave.addEventListener('click',()=>{ setPlayerUsername(charUsernameInput&&charUsernameInput.value); renderCharacter(); });
+  if(charUsernameInput)charUsernameInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setPlayerUsername(charUsernameInput.value); renderCharacter(); } });
   minerHud.addEventListener('click',()=>runUiAction(()=>toggleCharacter()));
   minerHud.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')runUiAction(()=>toggleCharacter());});
   sellAllOresBtn.addEventListener('click',sellAllOres);

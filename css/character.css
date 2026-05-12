@@ -71,6 +71,105 @@
 .char-name-level { position:relative; z-index:4; display:grid; justify-items:center; gap:2px; min-width:130px; padding-top:2px; }
 .char-name { font-size:17px; font-weight:bold; color:#ffe2a0; text-shadow:0 2px 3px rgba(0,0,0,0.9),0 0 10px rgba(255,180,60,0.28); }
 .char-level-badge { font-size:11px; color:#b0e890; letter-spacing:1px; margin-top:0; text-transform:uppercase; }
+.char-profile-card,
+.char-records-list {
+  position:relative;
+  margin-left:224px;
+  margin-right:24px;
+  border:0;
+  background:url('../images/tavern/missions/mission-note.png') center/100% 100% no-repeat;
+  color:#44230e;
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,0.24));
+}
+.char-profile-card {
+  min-height:104px;
+  margin-top:-204px;
+  padding:19px 24px 16px;
+}
+.char-profile-card label,
+.char-records-head span {
+  display:block;
+  color:#44230e;
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.char-username-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 88px;
+  gap:8px;
+  margin:7px 0 5px;
+}
+.char-username-row input {
+  min-width:0;
+  height:34px;
+  border:1px solid rgba(82,42,16,0.44);
+  border-radius:6px;
+  padding:0 10px;
+  background:rgba(255,236,184,0.58);
+  color:#2f1708;
+  font-family:Georgia,serif;
+  font-size:15px;
+  font-weight:bold;
+}
+.char-username-row button {
+  height:34px;
+  border:0;
+  background:url('../images/ui/wood-plaque.png') center/100% 100% no-repeat;
+  color:#ffe0a0;
+  font-weight:bold;
+  text-transform:uppercase;
+  text-shadow:0 2px 3px rgba(0,0,0,0.86);
+}
+.char-profile-card p {
+  margin:0;
+  color:#5b3217;
+  font-size:11px;
+  font-weight:bold;
+  line-height:1.25;
+}
+.char-records-list {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+  min-height:92px;
+  padding:18px 22px 16px;
+}
+.char-records-head {
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:2px;
+}
+.char-records-head strong {
+  color:#7a3b12;
+  font-size:12px;
+  text-transform:uppercase;
+}
+.char-record-row {
+  min-width:0;
+  display:grid;
+  gap:4px;
+  padding:8px 9px;
+  border:1px solid rgba(82,42,16,0.18);
+  border-radius:6px;
+  background:rgba(255,230,168,0.25);
+}
+.char-record-row span {
+  color:#5b3217;
+  font-size:10px;
+  font-weight:bold;
+  line-height:1.05;
+}
+.char-record-row strong {
+  color:#2c1609;
+  font-size:13px;
+  line-height:1;
+}
 .char-xp-section { position:absolute; left:224px; right:24px; top:72px; margin-bottom:16px; }
 .char-xp-label { font-size:11px; color:#8a9a70; margin-bottom:5px; display:flex; gap:4px; align-items:baseline; }
 .char-xp-to-next { color:#6a7a50; font-size:10px; }
@@ -81,7 +180,7 @@
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:8px;
   position:relative;
-  padding-top:2px;
+  padding-top:14px;
 }
 .char-stat-row {
   position:relative;

@@ -14,7 +14,7 @@ function sellOreType(type,target=null){
   }
   if(baseTotal<=0)return;
   const total=Math.round(baseTotal*(1+oreValueMult(type)));
-  player.coins+=total;
+  addPlayerCoins(total);
   playSellRewardEffect(target,total,'ore');
   floatTxt(W*0.5,H*0.22,`Sold ${count} ${ORE[type].lbl} for ${total} coins`,'#ffd76a',true);
   saveGame(); renderMarket(); renderInventory(); renderShop();
@@ -22,7 +22,7 @@ function sellOreType(type,target=null){
 function sellAllOres(e){
   const total=inventoryValue();
   if(total<=0)return;
-  player.coins+=total;
+  addPlayerCoins(total);
   playSellRewardEffect(e&&e.currentTarget,total,'ore');
   floatTxt(W*0.5,H*0.22,`+${total} COINS`,'#ffd76a',true);
   player.inventory=player.inventory.map(slot=>slot&&slot.kind==='item'?slot:null);
@@ -34,7 +34,7 @@ function forgedInventoryValue(){
 function sellAllForgedItems(e){
   const total=forgedInventoryValue();
   if(total<=0)return;
-  player.coins+=total;
+  addPlayerCoins(total);
   playSellRewardEffect(e&&e.currentTarget,total,'forged');
   player.inventory=player.inventory.map(slot=>slot&&slot.kind==='item'?null:slot);
   applyUpgradeStats();
@@ -48,7 +48,7 @@ function sellCraftedItem(idx,target=null){
   const def=CRAFT_ITEM_DEFS[itemId];
   if(!def){ player.inventory[idx]=null; saveGame(); renderMarket(); renderInventory(); return; }
   const total=forgedItemSellValue(itemId);
-  player.coins+=total;
+  addPlayerCoins(total);
   playSellRewardEffect(target,total,'forged');
   player.inventory[idx]=null;
   applyUpgradeStats();

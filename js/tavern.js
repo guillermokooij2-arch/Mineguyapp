@@ -563,7 +563,7 @@ function turnInMission(id){
   if(m.type==='mixed_value')consumeOreValue(m.requirement.oreValue);
   if(m.type==='crafted_delivery')consumeCraftedByRarity(m.requirement.craftedRarity,m.requirement.amount);
   if(m.type==='forge_any')consumeCraftedAny(m.requirement.craftedAny);
-  player.coins+=m.reward.coins||0;
+  addPlayerCoins(m.reward.coins||0);
   if(m.reward.rareParts)player.rareParts=(player.rareParts||0)+m.reward.rareParts;
   if(m.reward.buffItem==='Lucky Cigar')applyTavernBuff(TAVERN_ITEMS.find(i=>i.id==='cigar'));
   if(m.reward.barItemId)applyTavernBuff(TAVERN_ITEMS.find(i=>i.id===m.reward.barItemId));
@@ -741,7 +741,7 @@ function finishSlotSpin({bet,reels,payout,nearMiss,jackpot}){
   const lever=document.getElementById('slot-lever');
   const triple=reels[0]===reels[1]&&reels[1]===reels[2];
   if(payout>0){
-    player.coins+=payout;
+    addPlayerCoins(payout);
   }
   if(triple)trackTavernMission('slotTriple',{symbol:reels[0]});
   slotState.heat=Math.max(0,Math.min(1,slotState.heat+(payout>0?(jackpot?0.34:0.16):-0.08)));
@@ -946,7 +946,7 @@ function blackjackResolve(){
     if(value===dealerValue){h.result='push';payout+=h.bet;return;}
     h.result='lose';
   });
-  player.coins+=payout;
+  addPlayerCoins(payout);
   if(payout>0)trackTavernMission('gamblingWin',{game:'blackjack',amount:payout});
   blackjackState.phase='complete';
   blackjackState.message=payout>0?`Paid ${payout}c.`:['Debt bites. Deal again?','The table wins this round.','One more hand could turn it.'][Math.floor(Math.random()*3)];
@@ -1004,7 +1004,7 @@ function diceResolve(){
   const total=diceState.dice[0]+diceState.dice[1];
   const win=(diceState.prediction==='low'&&total<=6)||(diceState.prediction==='high'&&total>=8)||(diceState.prediction==='seven'&&total===7);
   const payout=win?diceState.bet*(diceState.prediction==='seven'?5:2):0;
-  player.coins+=payout; diceState.phase='complete'; diceState.message=`Rolled ${total}. ${win?`Paid ${payout}c.`:'House takes it.'}`;
+  addPlayerCoins(payout); diceState.phase='complete'; diceState.message=`Rolled ${total}. ${win?`Paid ${payout}c.`:'House takes it.'}`;
   if(payout>0)trackTavernMission('gamblingWin',{game:'dice',amount:payout});
   saveGame(); tavernMoneyText(); setBarkeepState(win?'gambling':'warning'); renderGamblingTables();
   requestAnimationFrame(()=>{

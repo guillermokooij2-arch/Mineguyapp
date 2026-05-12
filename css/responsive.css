@@ -21,6 +21,21 @@
   }
   #character-panel.open,#marketplace-panel.open,
   #workbench-panel.open,#trader-panel.open { transform:translateY(0); }
+  .char-profile-card,
+  .char-records-list {
+    margin-left:0;
+    margin-right:0;
+  }
+  .char-profile-card {
+    margin-top:8px;
+  }
+  .char-records-list {
+    grid-template-columns:1fr 1fr;
+  }
+  .char-xp-section {
+    position:static;
+    margin:12px 0;
+  }
   #marketplace-panel {
     left:50%; top:50%; right:auto; bottom:auto;
     width:98vw; height:92vh; max-height:none;

@@ -230,10 +230,19 @@
         <span class="portrait-ph-label">[portrait]</span>
       </div>
       <div class="char-name-level">
-        <div class="char-name">Miner</div>
+        <div class="char-name" id="char-name">Miner</div>
         <div class="char-level-badge" id="char-level-badge">Level 1</div>
       </div>
     </div>
+    <div class="char-profile-card">
+      <label for="char-username">Username</label>
+      <div class="char-username-row">
+        <input id="char-username" type="text" maxlength="18" autocomplete="off" spellcheck="false" value="Miner">
+        <button id="char-username-save" type="button">Save</button>
+      </div>
+      <p>Local profile for personal records. Global leaderboard can reuse these stats later.</p>
+    </div>
+    <div class="char-records-list" id="char-records-list"></div>
     <div class="char-xp-section">
       <div class="char-xp-label">
         <span id="char-xp-cur">0</span> / <span id="char-xp-needed">20</span> XP

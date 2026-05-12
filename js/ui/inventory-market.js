@@ -250,6 +250,11 @@ function renderCharacter(){
   const oreCount=player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'?slot.count:0),0);
   const activeBuffs=player.tavern&&Array.isArray(player.tavern.activeBuffs)?player.tavern.activeBuffs:[];
   const bestRarity=player.stats.bestForgedRarity||'common';
+  const displayName=player.username||'Miner';
+  const charName=document.getElementById('char-name');
+  if(charName)charName.textContent=displayName;
+  if(charUsernameInput)charUsernameInput.value=displayName;
+  renderPersonalRecords();
   const emptyDash='-';
   const stats=[
     {key:'coins',sprite:'coin',label:'Coins',val:player.coins,metric:player.coins,col:'#f4c84a'},
@@ -287,5 +292,29 @@ function renderCharacter(){
     row.innerHTML=`<span class="char-stat-icon-ph" data-sprite="${s.sprite}" style="color:${s.col}">${s.sprite[0].toUpperCase()}</span><span class="char-stat-label">${s.label}</span><span class="char-stat-rank">${tier.rank}</span><span class="char-stat-val" style="color:${s.col}">${s.val}</span>`;
     charStatsList.appendChild(row);
   });
+}
+
+function leaderboardSnapshot(){
+  player.stats={...DEFAULT_STATS,...(player.stats||{})};
+  return {
+    username:player.username||'Miner',
+    deepestMine:currentMineZone().name,
+    totalRocksBroken:Number(player.stats.totalRocksBroken)||0,
+    highestCritChain:Number(player.stats.highestCritChain)||0,
+    bestForgedRarity:player.stats.bestForgedRarity||'common',
+    totalCoinsEarned:Number(player.stats.totalCoinsEarned)||0,
+  };
+}
+function renderPersonalRecords(){
+  if(!charRecordsList)return;
+  const s=leaderboardSnapshot();
+  const records=[
+    {label:'Deepest Mine',value:s.deepestMine},
+    {label:'Total Rocks',value:s.totalRocksBroken},
+    {label:'Highest Crit Chain',value:s.highestCritChain},
+    {label:'Best Forged',value:RARITY_LABELS[s.bestForgedRarity]||s.bestForgedRarity},
+    {label:'Total Coins Earned',value:s.totalCoinsEarned},
+  ];
+  charRecordsList.innerHTML=`<div class="char-records-head"><span>Personal Records</span><strong>${s.username}</strong></div>${records.map(r=>`<div class="char-record-row"><span>${r.label}</span><strong>${r.value}</strong></div>`).join('')}`;
 }
 
