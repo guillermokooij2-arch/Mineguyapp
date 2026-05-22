@@ -31,7 +31,7 @@ const BARKEEP_STATES={
   warning:{image:'images/tavern/barkeep/barkeep-warning-v2.png',text:'Come back when your pockets weigh more.'},
 };
 
-const SLOT_BETS=[50,100,250,500];
+const SLOT_BETS=[100,250,500,1000];
 const SLOT_SYMBOLS=['stone','copper','iron','gold','skull','lantern','pickaxe'];
 const SLOT_SYMBOL_LABELS={stone:'Stone',copper:'Copper',iron:'Iron',gold:'Gold',skull:'Skull',lantern:'Lantern',pickaxe:'Pickaxe'};
 const SLOT_SYMBOL_IMAGES={
@@ -62,14 +62,14 @@ const DEVILS_DRAW_OUTCOMES=[
   {id:'forge_whisper',label:'Forge Whisper',type:'boost',rarity:'epic',effect:'Forge luck spikes for 2 minutes.',buff:{id:'forge_whisper',name:'Forge Whisper',duration:120000,stacking:'additive',modifiers:{forgeLuckBonus:0.25,rareDropChanceBonus:0.12,gamblingLuckMultiplier:1.25}}},
   {id:'black_vein_blessing',label:'Black Vein Blessing',type:'boost',rarity:'legendary',effect:'Rare ore and yield surge for 2 minutes.',buff:{id:'black_vein_blessing',name:'Black Vein Blessing',duration:120000,stacking:'additive',modifiers:{rareDropChanceBonus:0.35,oreYieldMultiplier:1.45}}},
   {id:'drunken_oracle',label:'Drunken Oracle',type:'boost',rarity:'rare',effect:'Luck and weak-point windows swell for 2 minutes.',buff:{id:'drunken_oracle',name:'Drunken Oracle',duration:120000,stacking:'additive',modifiers:{luckBonus:0.18,weakPointWindowMultiplier:1.45}}},
-  {id:'blood_pact',label:'Blood Pact',type:'curse',rarity:'rare',effect:'Gain 1600 coins, but ore yield crashes for 2 minutes.',value:1600,buff:{id:'blood_pact_tax',name:'Blood Pact Tax',duration:120000,stacking:'additive',modifiers:{oreYieldMultiplier:0.55}}},
-  {id:'rust_curse',label:'Rust Curse',type:'curse',rarity:'common',effect:'Pickaxe damage is heavily reduced for 2 minutes.',buff:{id:'rust_curse',name:'Rust Curse',duration:120000,stacking:'additive',modifiers:{damageMultiplier:0.55}}},
-  {id:'heavy_hands',label:'Heavy Hands',type:'curse',rarity:'common',effect:'Swing speed drops hard for 2 minutes.',buff:{id:'heavy_hands',name:'Heavy Hands',duration:120000,stacking:'additive',modifiers:{swingSpeedMultiplier:0.62}}},
-  {id:'bad_omen',label:'Bad Omen',type:'curse',rarity:'uncommon',effect:'Gambling luck is cut down for 3 minutes.',buff:{id:'bad_omen',name:'Bad Omen',duration:180000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.55}}},
-  {id:'cracked_vision',label:'Cracked Vision',type:'curse',rarity:'uncommon',effect:'Weak points shrink badly for 90 seconds.',buff:{id:'cracked_vision',name:'Cracked Vision',duration:90000,stacking:'additive',modifiers:{weakPointWindowMultiplier:0.55}}},
-  {id:'debt_mark',label:'Debt Mark',type:'curse',rarity:'rare',effect:'Lose 350 coins and gain worse gambling luck.',value:-350,buff:{id:'debt_mark',name:'Debt Mark',duration:120000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.70}}},
-  {id:'blackout_swing',label:'Blackout Swing',type:'curse',rarity:'epic',effect:'Damage and swing speed are badly cut for 90 seconds.',buff:{id:'blackout_swing',name:'Blackout Swing',duration:90000,stacking:'additive',modifiers:{damageMultiplier:0.42,swingSpeedMultiplier:0.55}}},
-  {id:'empty_pockets',label:'Empty Pockets',type:'curse',rarity:'rare',effect:'Lose 900 coins and carry a bad omen.',value:-900,buff:{id:'empty_pockets',name:'Empty Pockets',duration:120000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.60}}},
+  {id:'blood_pact',label:'Blood Pact',type:'curse',rarity:'rare',effect:'Gain 1600 coins, but ore yield crashes for 4 minutes.',value:1600,buff:{id:'blood_pact_tax',name:'Blood Pact Tax',duration:240000,stacking:'additive',modifiers:{oreYieldMultiplier:0.42}}},
+  {id:'rust_curse',label:'Rust Curse',type:'curse',rarity:'common',effect:'Pickaxe damage is gutted for 4 minutes.',buff:{id:'rust_curse',name:'Rust Curse',duration:240000,stacking:'additive',modifiers:{damageMultiplier:0.45}}},
+  {id:'heavy_hands',label:'Heavy Hands',type:'curse',rarity:'common',effect:'Swing speed drags for 4 minutes.',buff:{id:'heavy_hands',name:'Heavy Hands',duration:240000,stacking:'additive',modifiers:{swingSpeedMultiplier:0.52}}},
+  {id:'bad_omen',label:'Bad Omen',type:'curse',rarity:'uncommon',effect:'Gambling luck is cut down for 5 minutes.',buff:{id:'bad_omen',name:'Bad Omen',duration:300000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.45}}},
+  {id:'cracked_vision',label:'Cracked Vision',type:'curse',rarity:'uncommon',effect:'Weak points shrink badly for 3 minutes.',buff:{id:'cracked_vision',name:'Cracked Vision',duration:180000,stacking:'additive',modifiers:{weakPointWindowMultiplier:0.42}}},
+  {id:'debt_mark',label:'Debt Mark',type:'curse',rarity:'rare',effect:'Lose 900 coins and gain worse gambling luck for 4 minutes.',value:-900,buff:{id:'debt_mark',name:'Debt Mark',duration:240000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.58}}},
+  {id:'blackout_swing',label:'Blackout Swing',type:'curse',rarity:'epic',effect:'Damage and swing speed collapse for 3.5 minutes.',buff:{id:'blackout_swing',name:'Blackout Swing',duration:210000,stacking:'additive',modifiers:{damageMultiplier:0.34,swingSpeedMultiplier:0.46}}},
+  {id:'empty_pockets',label:'Empty Pockets',type:'curse',rarity:'rare',effect:'Lose 1800 coins and carry a bad omen for 4 minutes.',value:-1800,buff:{id:'empty_pockets',name:'Empty Pockets',duration:240000,stacking:'additive',modifiers:{gamblingLuckMultiplier:0.48}}},
   {id:'jackpot',label:'Soul Jackpot',type:'boost',rarity:'legendary',effect:'Gain 3500 coins.',value:3500},
 ];
 const MISSION_REFRESH_TIME=10*60*1000;
@@ -87,10 +87,58 @@ let blackjackState=null;
 let activeGamblingGame=null;
 let diceState=null;
 let devilsDrawState=null;
-let slotState={spinning:false,lastBet:50,heat:0};
-const GAMBLING_CHIPS=[5,10,25,50,100];
+let slotState={spinning:false,lastBet:SLOT_BETS[0],heat:0};
+const GAMBLING_CHIPS=[25,50,100,250,500];
+const DEVILS_DRAW_BASE_COST=450;
 const CARD_SUITS=['hearts','diamonds','clubs','spades'];
 const CARD_RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const GAMBLING_GAME_LABELS={
+  blackjack:'Blackjack',
+  dice:'Dice Table',
+  devilsDraw:"Devil's Draw",
+};
+const GAMBLING_BUSY_PHASES={
+  blackjack:['dealing','playerTurn','dealerTurn','resolving'],
+  dice:['rolling','resolving'],
+  devilsDraw:['shuffling','choosing','revealing'],
+};
+const BLACKJACK_LOSS_MESSAGES=[
+  'Debt bites. Deal again?',
+  'The table wins this round.',
+  'One more hand could turn it.',
+];
+const BLACKJACK_SUIT_SYMBOLS={
+  hearts:'&hearts;',
+  diamonds:'&diams;',
+  clubs:'&clubs;',
+  spades:'&spades;',
+};
+const GAMBLING_TABLE_CARDS=[
+  {
+    gameKey:'blackjack',
+    className:'blackjack',
+    image:'images/tavern/gambling/blackjack-table.png',
+    title:'Blackjack',
+    description:'Build a bet, then face the dealer.',
+    cta:'Play Blackjack',
+  },
+  {
+    gameKey:'dice',
+    className:'dice',
+    image:'images/tavern/gambling/dice-table.png',
+    title:'Dice Table',
+    description:'Low, seven, or high. Shake the cup.',
+    cta:'Roll Dice',
+  },
+  {
+    gameKey:'devilsDraw',
+    className:'devil',
+    image:'images/tavern/gambling/devils-draw-table.png',
+    title:"Devil's Draw",
+    description:'Pay the cost. Choose one cursed card.',
+    cta:'Draw',
+  },
+];
 
 function ensureTavernState(){
   if(!player.tavern)player.tavern={};
@@ -365,83 +413,119 @@ function missionOreAmount(type,level,kind='delivery'){
   const maxByRarity=ore.rarity==='legendary'?3:ore.rarity==='epic'?5:ore.rarity==='rare'?8:ore.rarity==='uncommon'?18:45;
   return Math.max(1,Math.min(maxByRarity,Math.ceil(targetValue/Math.max(1,ore.val))));
 }
-function missionTemplate(type,level){
-  const oreByLevel=weightedMissionOre(level);
-  const ore=ORE[oreByLevel];
-  const id=`${type}_${oreByLevel}_${Date.now()}_${Math.floor(Math.random()*9999)}`;
-  if(type==='ore_delivery'){
-    const amount=missionOreAmount(oreByLevel,level,'delivery');
-    return {id,type,title:`${ore.lbl} for the Rail Crew`,description:`Deliver ${amount} ${ore.lbl}.`,requirement:{ore:oreByLevel,amount},reward:{coins:Math.round(ore.val*amount*(2.6+level*0.08))}};
-  }
-  if(type==='mixed_value'){
-    const amount=Math.round(90+level*18);
-    return {id,type,title:'Mixed Ore Tab',description:`Deliver any mined ore worth ${amount} value.`,requirement:{oreValue:amount},reward:{coins:Math.round(amount*1.75),rareParts:level>=8?1:0}};
-  }
-  if(type==='break_rocks'){
-    const amount=ore.rarity==='legendary'?4:ore.rarity==='epic'?7:ore.rarity==='rare'?12:ore.rarity==='uncommon'?28:70;
-    return {id,type,title:`Clear the ${ore.lbl} Shaft`,description:`Break ${amount} ${ore.lbl} rocks.`,requirement:{rockType:oreByLevel,amount},progress:0,reward:{coins:Math.round(80+ore.val*amount*1.6)}};
-  }
-  if(type==='timed_contract'){
-    const amount=missionOreAmount(oreByLevel,level,'rush');
-    const limit=150000;
-    return {id,type,title:`${ore.lbl} Rush`,description:`Mine ${amount} ${ore.lbl} within ${Math.round(limit/60000)} minutes.`,timeLimit:limit,requirement:{ore:oreByLevel,amount},progress:0,reward:{coins:Math.round(140+ore.val*amount*4.2)}};
-  }
-  if(type==='rare_find')return {id,type:'rare_find',title:'Something Shiny',description:`Find ${level>=12?5:3} rare ore drops while mining.`,requirement:{rareDrops:level>=12?5:3},progress:0,reward:{coins:level>=12?520:250,buffItem:'Lucky Cigar'}};
-  if(type==='crafted_delivery'){
-    const rarity=level>=16?'rare':level>=9?'uncommon':'common';
-    const amount=rarity==='rare'?1:level>=12?2:1;
-    return {id,type:'crafted_delivery',title:'Parts for the Wagon',description:`Deliver ${amount} ${RARITY_LABELS[rarity]} forged part${amount>1?'s':''}.`,requirement:{craftedRarity:rarity,amount},reward:{coins:rarity==='rare'?1200:rarity==='uncommon'?650:300,rareParts:rarity==='common'?1:2}};
-  }
-  if(type==='forge_any'){
-    const amount=level>=10?3:2;
-    return {id,type:'forge_any',title:'Fresh From the Anvil',description:`Deliver ${amount} forged item${amount>1?'s':''} of any rarity.`,requirement:{craftedAny:amount},reward:{coins:Math.round(420+level*55),rareParts:1}};
-  }
-  if(type==='blackjack_winnings'){
-    const amount=Math.round(1800+level*400);
-    const rarity=level>=14?'epic':'rare';
-    return {id,type,title:'Blackjack Marker',description:`Win ${amount} total coins at Blackjack. It can happen across many hands.`,requirement:{gamblingGame:'blackjack',amount},progress:0,reward:{coins:Math.round(260+level*30),itemRarity:rarity}};
-  }
-  if(type==='dice_winnings'){
-    const amount=Math.round(900+level*260);
-    const rarity=level>=10?'rare':'common';
-    return {id,type,title:'Dice Cup Debt',description:`Win ${amount} total coins at the Dice Table.`,requirement:{gamblingGame:'dice',amount},progress:0,reward:{coins:Math.round(180+level*24),itemRarity:rarity}};
-  }
-  if(type==='slots_winnings'){
-    const amount=level>=16?5:level>=9?4:3;
-    const rarity=level>=16?'epic':'rare';
-    return {id,type,title:'Three-of-a-Kind Tab',description:`Hit ${amount} three-of-a-kind slot results. Any symbol counts, even skulls.`,requirement:{slotTriples:amount},progress:0,reward:{coins:Math.round(500+level*58),itemRarity:rarity}};
-  }
-  if(type==='devil_curses'){
-    const amount=level>=13?5:3;
-    const rarity=level>=13?'epic':'rare';
-    return {id,type,title:'Curse Collector',description:`Take ${amount} curses from Devil's Draw and bring proof you survived.`,requirement:{devilCurses:amount},progress:0,reward:{coins:Math.round(320+level*32),itemRarity:rarity}};
-  }
-  if(type==='devil_boosts'){
-    const amount=level>=12?6:4;
-    const rarity=level>=12?'rare':'common';
-    return {id,type,title:'Good Cards Only',description:`Reveal ${amount} helpful Devil's Draw cards.`,requirement:{devilBoosts:amount},progress:0,reward:{coins:Math.round(240+level*26),itemRarity:rarity,barItemId:'joint'}};
-  }
-  const riskOre=level>=30?oreByLevel:(level>=5?'iron':'copper');
-  const risk=ORE[riskOre];
-  const amount=missionOreAmount(riskOre,level,'risk');
-  return {id,type:'risk_contract',title:'Double or Dust',description:`Pay ${80+level*5}c. Mine ${amount} ${risk.lbl} within 3 minutes.`,entryCost:80+level*5,timeLimit:180000,requirement:{ore:riskOre,amount},progress:0,reward:{coins:Math.round(260+risk.val*amount*5)}};
+function missionContext(type,level){
+  const oreType=weightedMissionOre(level);
+  return {
+    id:`${type}_${oreType}_${Date.now()}_${Math.floor(Math.random()*9999)}`,
+    type,
+    level,
+    oreType,
+    ore:ORE[oreType],
+  };
 }
+function buildOreDeliveryMission(ctx){
+  const amount=missionOreAmount(ctx.oreType,ctx.level,'delivery');
+  return {id:ctx.id,type:ctx.type,title:`${ctx.ore.lbl} for the Rail Crew`,description:`Deliver ${amount} ${ctx.ore.lbl}.`,requirement:{ore:ctx.oreType,amount},reward:{coins:Math.round(ctx.ore.val*amount*(2.6+ctx.level*0.08))}};
+}
+function buildMixedValueMission(ctx){
+  const amount=Math.round(90+ctx.level*18);
+  return {id:ctx.id,type:ctx.type,title:'Mixed Ore Tab',description:`Deliver any mined ore worth ${amount} value.`,requirement:{oreValue:amount},reward:{coins:Math.round(amount*1.75),barItemId:ctx.level>=8?'cigarettes':'pint'}};
+}
+function buildBreakRocksMission(ctx){
+  const amount=ctx.ore.rarity==='legendary'?4:ctx.ore.rarity==='epic'?7:ctx.ore.rarity==='rare'?12:ctx.ore.rarity==='uncommon'?28:70;
+  return {id:ctx.id,type:ctx.type,title:`Clear the ${ctx.ore.lbl} Shaft`,description:`Break ${amount} ${ctx.ore.lbl} rocks.`,requirement:{rockType:ctx.oreType,amount},progress:0,reward:{coins:Math.round(80+ctx.ore.val*amount*1.6)}};
+}
+function buildTimedContractMission(ctx){
+  const amount=missionOreAmount(ctx.oreType,ctx.level,'rush');
+  const limit=150000;
+  return {id:ctx.id,type:ctx.type,title:`${ctx.ore.lbl} Rush`,description:`Mine ${amount} ${ctx.ore.lbl} within ${Math.round(limit/60000)} minutes.`,timeLimit:limit,requirement:{ore:ctx.oreType,amount},progress:0,reward:{coins:Math.round(140+ctx.ore.val*amount*4.2)}};
+}
+function buildRareFindMission(ctx){
+  return {id:ctx.id,type:'rare_find',title:'Something Shiny',description:`Find ${ctx.level>=12?5:3} rare ore drops while mining.`,requirement:{rareDrops:ctx.level>=12?5:3},progress:0,reward:{coins:ctx.level>=12?520:250,buffItem:'Lucky Cigar'}};
+}
+function buildCraftedDeliveryMission(ctx){
+  const rarity=ctx.level>=16?'rare':ctx.level>=9?'uncommon':'common';
+  const amount=rarity==='rare'?1:ctx.level>=12?2:1;
+  const rewardRarity=rarity==='rare'?'rare':rarity==='uncommon'?'uncommon':'common';
+  return {id:ctx.id,type:'crafted_delivery',title:'Forge Stock for the Wagon',description:`Deliver ${amount} ${RARITY_LABELS[rarity]} forged item${amount>1?'s':''}.`,requirement:{craftedRarity:rarity,amount},reward:{coins:rarity==='rare'?1200:rarity==='uncommon'?650:300,itemRarity:rewardRarity}};
+}
+function buildForgeAnyMission(ctx){
+  const amount=ctx.level>=10?3:2;
+  return {id:ctx.id,type:'forge_any',title:'Fresh From the Anvil',description:`Deliver ${amount} forged item${amount>1?'s':''} of any rarity.`,requirement:{craftedAny:amount},reward:{coins:Math.round(420+ctx.level*55),itemRarity:ctx.level>=12?'rare':'common'}};
+}
+function buildBlackjackWinningsMission(ctx){
+  const amount=Math.round(1800+ctx.level*400);
+  const rarity=ctx.level>=14?'epic':'rare';
+  return {id:ctx.id,type:ctx.type,title:'Blackjack Marker',description:`Win ${amount} total coins at Blackjack. It can happen across many hands.`,requirement:{gamblingGame:'blackjack',amount},progress:0,reward:{coins:Math.round(260+ctx.level*30),itemRarity:rarity}};
+}
+function buildDiceWinningsMission(ctx){
+  const amount=Math.round(900+ctx.level*260);
+  const rarity=ctx.level>=10?'rare':'common';
+  return {id:ctx.id,type:ctx.type,title:'Dice Cup Debt',description:`Win ${amount} total coins at the Dice Table.`,requirement:{gamblingGame:'dice',amount},progress:0,reward:{coins:Math.round(180+ctx.level*24),itemRarity:rarity}};
+}
+function buildSlotsWinningsMission(ctx){
+  const amount=ctx.level>=16?5:ctx.level>=9?4:3;
+  const rarity=ctx.level>=16?'epic':'rare';
+  return {id:ctx.id,type:ctx.type,title:'Three-of-a-Kind Tab',description:`Hit ${amount} three-of-a-kind slot results. Any symbol counts, even skulls.`,requirement:{slotTriples:amount},progress:0,reward:{coins:Math.round(500+ctx.level*58),itemRarity:rarity}};
+}
+function buildDevilCursesMission(ctx){
+  const amount=ctx.level>=13?5:3;
+  const rarity=ctx.level>=13?'epic':'rare';
+  return {id:ctx.id,type:ctx.type,title:'Curse Collector',description:`Take ${amount} curses from Devil's Draw and bring proof you survived.`,requirement:{devilCurses:amount},progress:0,reward:{coins:Math.round(320+ctx.level*32),itemRarity:rarity}};
+}
+function buildDevilBoostsMission(ctx){
+  const amount=ctx.level>=12?6:4;
+  const rarity=ctx.level>=12?'rare':'common';
+  return {id:ctx.id,type:ctx.type,title:'Good Cards Only',description:`Reveal ${amount} helpful Devil's Draw cards.`,requirement:{devilBoosts:amount},progress:0,reward:{coins:Math.round(240+ctx.level*26),itemRarity:rarity,barItemId:'joint'}};
+}
+function buildRiskContractMission(ctx){
+  const riskOre=ctx.level>=30?ctx.oreType:(ctx.level>=5?'iron':'copper');
+  const risk=ORE[riskOre];
+  const amount=missionOreAmount(riskOre,ctx.level,'risk');
+  return {id:ctx.id,type:'risk_contract',title:'Double or Dust',description:`Pay ${80+ctx.level*5}c. Mine ${amount} ${risk.lbl} within 3 minutes.`,entryCost:80+ctx.level*5,timeLimit:180000,requirement:{ore:riskOre,amount},progress:0,reward:{coins:Math.round(260+risk.val*amount*5)}};
+}
+const TAVERN_MISSION_BUILDERS={
+  ore_delivery:buildOreDeliveryMission,
+  mixed_value:buildMixedValueMission,
+  break_rocks:buildBreakRocksMission,
+  timed_contract:buildTimedContractMission,
+  rare_find:buildRareFindMission,
+  crafted_delivery:buildCraftedDeliveryMission,
+  forge_any:buildForgeAnyMission,
+  blackjack_winnings:buildBlackjackWinningsMission,
+  dice_winnings:buildDiceWinningsMission,
+  slots_winnings:buildSlotsWinningsMission,
+  devil_curses:buildDevilCursesMission,
+  devil_boosts:buildDevilBoostsMission,
+  risk_contract:buildRiskContractMission,
+};
+function missionTemplate(type,level){
+  const builder=TAVERN_MISSION_BUILDERS[type]||buildRiskContractMission;
+  return builder(missionContext(type,level));
+}
+const TAVERN_BASE_MISSION_TYPES=[
+  'ore_delivery',
+  'mixed_value',
+  'break_rocks',
+  'timed_contract',
+  'blackjack_winnings',
+  'dice_winnings',
+  'slots_winnings',
+  'devil_curses',
+  'devil_boosts',
+];
+const TAVERN_UNLOCKED_MISSION_TYPES=[
+  {level:3,type:'rare_find'},
+  {level:5,type:'crafted_delivery'},
+  {level:6,type:'forge_any'},
+  {level:7,type:'risk_contract'},
+];
 function generateTavernMissions(level){
-  const pool=[
-    missionTemplate('ore_delivery',level),
-    missionTemplate('mixed_value',level),
-    missionTemplate('break_rocks',level),
-    missionTemplate('timed_contract',level),
-    missionTemplate('blackjack_winnings',level),
-    missionTemplate('dice_winnings',level),
-    missionTemplate('slots_winnings',level),
-    missionTemplate('devil_curses',level),
-    missionTemplate('devil_boosts',level),
+  const missionTypes=[
+    ...TAVERN_BASE_MISSION_TYPES,
+    ...TAVERN_UNLOCKED_MISSION_TYPES.filter(entry=>level>=entry.level).map(entry=>entry.type),
   ];
-  if(level>=3)pool.push(missionTemplate('rare_find',level));
-  if(level>=5)pool.push(missionTemplate('crafted_delivery',level));
-  if(level>=6)pool.push(missionTemplate('forge_any',level));
-  if(level>=7)pool.push(missionTemplate('risk_contract',level));
+  const pool=missionTypes.map(type=>missionTemplate(type,level));
   return pool.sort(()=>Math.random()-0.5).slice(0,Math.min(8,pool.length));
 }
 function refreshTavernMissions(force=false){
@@ -473,7 +557,7 @@ function missionRequirementText(m){
   if(m.type==='break_rocks')return `${ORE[m.requirement.rockType].lbl} rocks: ${m.progress||0}/${m.requirement.amount}`;
   if(m.type==='timed_contract'||m.type==='risk_contract')return `${ORE[m.requirement.ore].lbl}: ${m.progress||0}/${m.requirement.amount} - ${formatTime((m.startedAt||Date.now())+m.timeLimit-Date.now())}`;
   if(m.type==='rare_find')return `Rare drops: ${m.progress||0}/${m.requirement.rareDrops}`;
-  if(m.type==='crafted_delivery')return `${RARITY_LABELS[m.requirement.craftedRarity]} forged part: ${inventoryCraftedCount(m.requirement.craftedRarity)}/${m.requirement.amount}`;
+  if(m.type==='crafted_delivery')return `${RARITY_LABELS[m.requirement.craftedRarity]} forged item: ${inventoryCraftedCount(m.requirement.craftedRarity)}/${m.requirement.amount}`;
   if(m.type==='forge_any')return `Forged items: ${inventoryCraftedAnyCount()}/${m.requirement.craftedAny}`;
   if(['blackjack_winnings','dice_winnings'].includes(m.type))return `${gamblingGameLabel(m.requirement.gamblingGame)} winnings: ${m.progress||0}/${m.requirement.amount}c`;
   if(m.type==='slots_winnings')return `Three of a kind: ${m.progress||0}/${m.requirement.slotTriples||m.requirement.amount||3}`;
@@ -482,7 +566,11 @@ function missionRequirementText(m){
   return '';
 }
 function missionRewardText(m){
-  return `${m.reward.coins||0} coins${m.reward.buffItem?`, ${m.reward.buffItem}`:''}${m.reward.barItemId?`, ${barItemName(m.reward.barItemId)}`:''}${m.reward.itemRarity?`, random ${RARITY_LABELS[m.reward.itemRarity]} forged item`:''}${m.reward.rareParts?', rare part':''}`;
+  const legacyRarity=m.reward.rareParts&&!m.reward.itemRarity&&!m.reward.barItemId&&!m.reward.buffItem
+    ? (m.reward.rareParts>1?'uncommon':'common')
+    : null;
+  const itemRarity=m.reward.itemRarity||legacyRarity;
+  return `${m.reward.coins||0} coins${m.reward.buffItem?`, ${m.reward.buffItem}`:''}${m.reward.barItemId?`, ${barItemName(m.reward.barItemId)}`:''}${itemRarity?`, random ${RARITY_LABELS[itemRarity]} forged item`:''}`;
 }
 function gamblingGameLabel(game){return game==='blackjack'?'Blackjack':game==='dice'?'Dice':game==='slots'?'Slots':game;}
 function barItemName(id){const item=TAVERN_ITEMS.find(i=>i.id===id);return item?item.name:id;}
@@ -545,14 +633,18 @@ function turnInMission(id){
   if(idx<0)return;
   const m=player.tavern.activeMissions[idx];
   if(!isMissionComplete(m))return;
+  const reward={...m.reward};
+  if(reward.rareParts&&!reward.itemRarity&&!reward.barItemId&&!reward.buffItem){
+    reward.itemRarity=reward.rareParts>1?'uncommon':'common';
+  }
   let rewardItemId=null;
-  if(m.reward.itemRarity){
-    if(!player.inventory.some((s,slotIdx)=>slotIdx<activeInventorySize()&&s===null)){
+  if(reward.itemRarity){
+    if(!hasInventorySpace()){
       setBarkeepState('warning');
       if(tavernDialogue)tavernDialogue.textContent='Make room in your backpack before I hand over that forged item.';
       return;
     }
-    rewardItemId=randomCraftedItemByRarity(m.reward.itemRarity);
+    rewardItemId=randomCraftedItemByRarity(reward.itemRarity);
     if(!rewardItemId){
       setBarkeepState('warning');
       if(tavernDialogue)tavernDialogue.textContent='The reward crate came up empty. Try another contract.';
@@ -563,10 +655,9 @@ function turnInMission(id){
   if(m.type==='mixed_value')consumeOreValue(m.requirement.oreValue);
   if(m.type==='crafted_delivery')consumeCraftedByRarity(m.requirement.craftedRarity,m.requirement.amount);
   if(m.type==='forge_any')consumeCraftedAny(m.requirement.craftedAny);
-  addPlayerCoins(m.reward.coins||0);
-  if(m.reward.rareParts)player.rareParts=(player.rareParts||0)+m.reward.rareParts;
-  if(m.reward.buffItem==='Lucky Cigar')applyTavernBuff(TAVERN_ITEMS.find(i=>i.id==='cigar'));
-  if(m.reward.barItemId)applyTavernBuff(TAVERN_ITEMS.find(i=>i.id===m.reward.barItemId));
+  addPlayerCoins(reward.coins||0);
+  if(reward.buffItem==='Lucky Cigar')applyTavernBuff(TAVERN_ITEMS.find(i=>i.id==='cigar'));
+  if(reward.barItemId)applyTavernBuff(TAVERN_ITEMS.find(i=>i.id===reward.barItemId));
   if(rewardItemId){
     const added=addCraftedItem(rewardItemId);
     if(!added){
@@ -576,45 +667,20 @@ function turnInMission(id){
   }
   player.tavern.activeMissions.splice(idx,1);
   if(window.GameAudio)GameAudio.playPurchase();
-  floatTxt(W*0.5,H*0.22,`Contract paid +${m.reward.coins||0}c`,'#ffd76a',true);
-  showMissionRewardPopup(m,rewardItemId);
+  floatTxt(W*0.5,H*0.22,`Contract paid +${reward.coins||0}c`,'#ffd76a',true);
+  showMissionRewardPopup({...m,reward},rewardItemId);
   saveGame();
   tavernMoneyText();
   renderInventory();
   renderMissionBoard();
 }
-function inventoryOreCount(type){return player.inventory.reduce((sum,s)=>sum+(s&&s.kind!=='item'&&s.type===type?s.count:0),0);}
-function inventoryCraftedCount(rarity){return player.inventory.reduce((sum,s)=>{const d=s&&s.kind==='item'&&CRAFT_ITEM_DEFS[s.itemId];return sum+(d&&d.rarity===rarity?1:0);},0);}
-function inventoryCraftedAnyCount(){return player.inventory.reduce((sum,s)=>sum+(s&&s.kind==='item'&&CRAFT_ITEM_DEFS[s.itemId]?1:0),0);}
-function consumeOre(type,amount){
-  let rem=amount;
-  for(const slot of player.inventory){if(rem<=0)break;if(slot&&slot.kind!=='item'&&slot.type===type){const take=Math.min(rem,slot.count);slot.count-=take;rem-=take;}}
-  player.inventory=player.inventory.map(s=>s&&s.count<=0?null:s);
-}
-function consumeOreValue(valueNeeded){
-  let paid=0;
-  const oreSlots=player.inventory
-    .map((slot,idx)=>slot&&slot.kind!=='item'&&ORE[slot.type]?{idx,type:slot.type,value:ORE[slot.type].val}:null)
-    .filter(Boolean)
-    .sort((a,b)=>a.value-b.value);
-  for(const part of oreSlots){
-    const slot=player.inventory[part.idx];
-    while(slot&&slot.count>0&&paid<valueNeeded){
-      paid+=part.value;
-      slot.count--;
-    }
-    if(slot&&slot.count<=0)player.inventory[part.idx]=null;
-    if(paid>=valueNeeded)break;
-  }
-}
-function consumeCraftedByRarity(rarity,amount){
-  let rem=amount;
-  for(let i=0;i<player.inventory.length&&rem>0;i++){const s=player.inventory[i],d=s&&s.kind==='item'&&CRAFT_ITEM_DEFS[s.itemId];if(d&&d.rarity===rarity){player.inventory[i]=null;rem--;}}
-}
-function consumeCraftedAny(amount){
-  let rem=amount;
-  for(let i=0;i<player.inventory.length&&rem>0;i++){const s=player.inventory[i],d=s&&s.kind==='item'&&CRAFT_ITEM_DEFS[s.itemId];if(d){player.inventory[i]=null;rem--;}}
-}
+function inventoryOreCount(type){return countInventoryOre(type);}
+function inventoryCraftedCount(rarity){return countInventoryCraftedByRarity(rarity);}
+function inventoryCraftedAnyCount(){return countInventoryCraftedAny();}
+function consumeOre(type,amount){consumeInventoryOre(type,amount);}
+function consumeOreValue(valueNeeded){consumeInventoryOreValue(valueNeeded);}
+function consumeCraftedByRarity(rarity,amount){consumeInventoryCraftedByRarity(rarity,amount);}
+function consumeCraftedAny(amount){consumeInventoryCraftedAny(amount);}
 function randomCraftedItemByRarity(rarity){
   const pool=Object.entries(CRAFT_ITEM_DEFS)
     .filter(([,def])=>def.rarity===rarity&&def.rarity!=='junk')
@@ -627,12 +693,14 @@ function showMissionRewardPopup(m,itemId){
   const old=document.querySelector('.tavern-reward-popup');
   if(old)old.remove();
   const item=itemId&&CRAFT_ITEM_DEFS[itemId];
+  const barItem=m.reward.barItemId&&TAVERN_ITEMS.find(i=>i.id===m.reward.barItemId);
   const wrap=document.createElement('div');
   wrap.className='tavern-reward-popup';
   wrap.innerHTML=`<div class="tavern-reward-popup-title">Contract Paid</div>
     <div class="tavern-reward-popup-items">
       <span><img src="images/workbench/items/coin_bag_reward.png" alt=""><b>${m.reward.coins||0}c</b></span>
       ${item?`<span class="rarity-${item.rarity}"><img src="${itemIconPath(itemId)}" alt=""><b>${item.name}</b></span>`:''}
+      ${barItem?`<span><img src="${TAVERN_ITEM_ICONS[barItem.id]}" alt=""><b>${barItem.name}</b></span>`:''}
     </div>`;
   wrap.addEventListener('click',()=>wrap.remove());
   document.body.appendChild(wrap);
@@ -732,7 +800,7 @@ function playSlots(bet){
       el.setAttribute('aria-label',SLOT_SYMBOL_LABELS[symbol]);
       el.innerHTML=`<img src="${SLOT_SYMBOL_IMAGES[symbol]}" alt="">`;
       if(i===2)finishSlotSpin({bet,reels,payout,nearMiss,jackpot});
-    },620+i*430+(nearMiss&&i===2?360:0));
+    },780+i*560+(nearMiss&&i===2?520:0));
   });
 }
 function finishSlotSpin({bet,reels,payout,nearMiss,jackpot}){
@@ -752,8 +820,8 @@ function finishSlotSpin({bet,reels,payout,nearMiss,jackpot}){
   const heat=document.querySelector('.slot-heat span');
   if(heat)heat.style.height=`${Math.round(slotState.heat*100)}%`;
   spawnSlotFx(payout>0?28:nearMiss?8:3,jackpot);
-  if(typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(result,jackpot?'jackpot':payout>0?'win':'loss');
-  if(payout>0&&typeof spawnCoinBurst==='function')spawnCoinBurst(cabinet,{amount:jackpot?32:20,spread:jackpot?340:230,lift:jackpot?240:160});
+  if(typeof playGamblingResultEffect==='function')playGamblingResultEffect(cabinet,result,jackpot?'jackpot':payout>0?'win':'loss');
+  else if(typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(result,jackpot?'jackpot':payout>0?'win':'loss');
   setBarkeepState(payout>0?'gambling':'warning');
   saveGame(); tavernMoneyText();
   setTimeout(()=>{slotState.spinning=false;},320);
@@ -773,12 +841,21 @@ function spawnSlotFx(count,jackpot=false){
   }
   setTimeout(()=>{if(layer)layer.innerHTML='';},1200);
 }
+function gamblingTableCardHtml(card){
+  return `<button type="button" class="tavern-game-card tavern-game-card-${card.className}" data-open-gambling="${card.gameKey}">
+    <img src="${card.image}" alt="">
+    <div class="tavern-game-prop-copy">
+      <h3>${card.title}</h3>
+      <p>${card.description}</p>
+      <span>${card.cta}</span>
+    </div>
+  </button>`;
+}
+function gamblingTableGridHtml(){
+  return `<div class="tavern-table-grid">${GAMBLING_TABLE_CARDS.map(gamblingTableCardHtml).join('')}</div>`;
+}
 function renderGamblingTables(){
-  tavernContent.innerHTML=`<div class="tavern-station-head"><span>Gambling Tables</span><strong>Cards, dice, and cursed draws</strong></div><div class="tavern-table-grid">
-    <button type="button" class="tavern-game-card tavern-game-card-blackjack" data-open-gambling="blackjack"><img src="images/tavern/gambling/blackjack-table.png" alt=""><div class="tavern-game-prop-copy"><h3>Blackjack</h3><p>Build a bet, then face the dealer.</p><span>Play Blackjack</span></div></button>
-    <button type="button" class="tavern-game-card tavern-game-card-dice" data-open-gambling="dice"><img src="images/tavern/gambling/dice-table.png" alt=""><div class="tavern-game-prop-copy"><h3>Dice Table</h3><p>Low, seven, or high. Shake the cup.</p><span>Roll Dice</span></div></button>
-    <button type="button" class="tavern-game-card tavern-game-card-devil" data-open-gambling="devilsDraw"><img src="images/tavern/gambling/devils-draw-table.png" alt=""><div class="tavern-game-prop-copy"><h3>Devil's Draw</h3><p>Pay the cost. Choose one cursed card.</p><span>Draw</span></div></button>
-  </div>${renderGamblingPopup()}`;
+  tavernContent.innerHTML=`<div class="tavern-station-head"><span>Gambling Tables</span><strong>Cards, dice, and cursed draws</strong></div>${gamblingTableGridHtml()}${renderGamblingPopup()}`;
   attachGamblingListeners();
 }
 function attachGamblingListeners(){
@@ -810,20 +887,39 @@ function closeGamblingGame(){
   devilsDrawState=null;
   renderGamblingTables();
 }
+function gamblingGameState(gameKey){
+  if(gameKey==='blackjack')return blackjackState;
+  if(gameKey==='dice')return diceState;
+  if(gameKey==='devilsDraw')return devilsDrawState;
+  return null;
+}
+function gamblingGameRenderer(gameKey){
+  if(gameKey==='blackjack')return renderBlackjackPopup;
+  if(gameKey==='dice')return renderDicePopup;
+  if(gameKey==='devilsDraw')return renderDevilsDrawPopup;
+  return null;
+}
+function gamblingModalHtml(gameKey,body){
+  const title=GAMBLING_GAME_LABELS[gameKey]||'Gambling';
+  return `<div class="gambling-modal-backdrop"><section class="gambling-modal ${gameKey}-popup" aria-label="${title}"><button type="button" class="gambling-close-btn" data-gambling-close ${gamblingPopupBusy()?'disabled':''}>Close</button>${body}</section></div>`;
+}
 function gamblingPopupBusy(){
-  return (blackjackState&&['dealing','playerTurn','dealerTurn','resolving'].includes(blackjackState.phase))||(diceState&&['rolling','resolving'].includes(diceState.phase))||(devilsDrawState&&['shuffling','choosing','revealing'].includes(devilsDrawState.phase));
+  return Object.keys(GAMBLING_BUSY_PHASES).some(gameKey=>{
+    const state=gamblingGameState(gameKey);
+    return state&&GAMBLING_BUSY_PHASES[gameKey].includes(state.phase);
+  });
 }
 function renderGamblingPopup(){
   if(!activeGamblingGame)return '';
-  const title=activeGamblingGame==='blackjack'?'Blackjack':activeGamblingGame==='dice'?'Dice Table':"Devil's Draw";
-  const body=activeGamblingGame==='blackjack'?renderBlackjackPopup():activeGamblingGame==='dice'?renderDicePopup():renderDevilsDrawPopup();
-  return `<div class="gambling-modal-backdrop"><section class="gambling-modal ${activeGamblingGame}-popup" aria-label="${title}"><button type="button" class="gambling-close-btn" data-gambling-close ${gamblingPopupBusy()?'disabled':''}>Close</button>${body}</section></div>`;
+  const render=gamblingGameRenderer(activeGamblingGame);
+  return render?gamblingModalHtml(activeGamblingGame,render()):'';
 }
 function chipButtons(prefix,selected=0,locked=false){
   return GAMBLING_CHIPS.map(c=>`<button type="button" class="gambling-chip ${selected===c?'selected':''}" data-${prefix}-chip="${c}" ${locked||player.coins<c?'disabled':''}>${c}c</button>`).join('');
 }
 function removeChipButtons(prefix,bet,locked=false){
-  return `<button type="button" data-${prefix}-remove="5" ${locked||bet<=0?'disabled':''}>-5c</button><button type="button" data-${prefix}-remove="${bet}" ${locked||bet<=0?'disabled':''}>Clear</button>`;
+  const step=GAMBLING_CHIPS[0];
+  return `<button type="button" data-${prefix}-remove="${step}" ${locked||bet<=0?'disabled':''}>-${step}c</button><button type="button" data-${prefix}-remove="${bet}" ${locked||bet<=0?'disabled':''}>Clear</button>`;
 }
 function createBlackjackDeck(){
   const deck=[];
@@ -865,14 +961,54 @@ function blackjackDeal(){
   blackjackState.phase='dealing';
   blackjackState.message='Cards slide across the felt...';
   saveGame(); tavernMoneyText(); renderGamblingTables();
-  setTimeout(()=>{if(!blackjackState||activeGamblingGame!=='blackjack')return; blackjackState.phase='playerTurn'; blackjackState.message='Your move.'; if(blackjackIsNatural(blackjackState.playerHands[0].cards))blackjackDealerPlay(); else renderGamblingTables();},850);
+  setTimeout(()=>{if(!blackjackState||activeGamblingGame!=='blackjack')return; blackjackState.phase='playerTurn'; blackjackState.message='Your move.'; if(blackjackIsNatural(blackjackState.playerHands[0].cards))blackjackDealerPlay(); else renderGamblingTables();},1120);
 }
-function blackjackCardScore(card){return card.rank==='A'?11:['J','Q','K'].includes(card.rank)?10:Number(card.rank);}
-function blackjackHandValue(cards){let total=cards.reduce((s,c)=>s+blackjackCardScore(c),0),aces=cards.filter(c=>c.rank==='A').length;while(total>21&&aces>0){total-=10;aces--;}return total;}
-function blackjackIsNatural(cards){return cards.length===2&&blackjackHandValue(cards)===21;}
-function blackjackCurrentHand(){return blackjackState&&blackjackState.playerHands[blackjackState.activeHandIndex];}
-function blackjackCanDouble(){const h=blackjackCurrentHand();return blackjackState&&blackjackState.phase==='playerTurn'&&h&&h.cards.length===2&&!h.doubled&&player.coins>=h.bet;}
-function blackjackCanSplit(){const h=blackjackCurrentHand();return blackjackState&&blackjackState.phase==='playerTurn'&&h&&h.cards.length===2&&h.cards[0].rank===h.cards[1].rank&&player.coins>=h.bet&&blackjackState.playerHands.length<2;}
+function blackjackCardScore(card){
+  if(card.rank==='A')return 11;
+  return ['J','Q','K'].includes(card.rank)?10:Number(card.rank);
+}
+function blackjackHandValue(cards){
+  let total=cards.reduce((sum,card)=>sum+blackjackCardScore(card),0);
+  let aces=cards.filter(card=>card.rank==='A').length;
+  while(total>21&&aces>0){
+    total-=10;
+    aces--;
+  }
+  return total;
+}
+function blackjackIsNatural(cards){
+  return cards.length===2&&blackjackHandValue(cards)===21;
+}
+function blackjackHandOutcome(hand,dealerValue,isSingleHand){
+  const value=blackjackHandValue(hand.cards);
+  if(hand.busted)return {result:'lose',payout:0};
+  if(blackjackIsNatural(hand.cards)&&isSingleHand)return {result:'blackjack',payout:Math.round(hand.bet*2.5)};
+  if(dealerValue>21||value>dealerValue)return {result:'win',payout:hand.bet*2};
+  if(value===dealerValue)return {result:'push',payout:hand.bet};
+  return {result:'lose',payout:0};
+}
+function blackjackCurrentHand(){
+  return blackjackState&&blackjackState.playerHands[blackjackState.activeHandIndex];
+}
+function blackjackCanDouble(){
+  const h=blackjackCurrentHand();
+  return blackjackState&&
+    blackjackState.phase==='playerTurn'&&
+    h&&
+    h.cards.length===2&&
+    !h.doubled&&
+    player.coins>=h.bet;
+}
+function blackjackCanSplit(){
+  const h=blackjackCurrentHand();
+  return blackjackState&&
+    blackjackState.phase==='playerTurn'&&
+    h&&
+    h.cards.length===2&&
+    h.cards[0].rank===h.cards[1].rank&&
+    player.coins>=h.bet&&
+    blackjackState.playerHands.length<2;
+}
 function blackjackHit(){
   const h=blackjackCurrentHand();
   if(!h||blackjackState.phase!=='playerTurn')return;
@@ -925,37 +1061,41 @@ function blackjackDealerPlay(){
   blackjackState.message='Dealer reveals.';
   renderGamblingTables();
   const liveHands=blackjackState.playerHands.filter(h=>!h.busted);
-  if(!liveHands.length)return setTimeout(blackjackResolve,450);
+  if(!liveHands.length)return setTimeout(blackjackResolve,640);
   const step=()=>{
     if(!blackjackState||activeGamblingGame!=='blackjack')return;
-    if(blackjackHandValue(blackjackState.dealerHand)<17){blackjackState.dealerHand.push(blackjackDraw());blackjackState.message='Dealer hits.';renderGamblingTables();setTimeout(step,520);}
-    else blackjackResolve();
+    if(blackjackHandValue(blackjackState.dealerHand)<17){
+      blackjackState.dealerHand.push(blackjackDraw());
+      blackjackState.message='Dealer hits.';
+      renderGamblingTables();
+      setTimeout(step,700);
+      return;
+    }
+    blackjackResolve();
   };
-  setTimeout(step,620);
+  setTimeout(step,840);
 }
 function blackjackResolve(){
   if(!blackjackState)return;
   blackjackState.phase='resolving';
   const dealerValue=blackjackHandValue(blackjackState.dealerHand);
   let payout=0;
+  const isSingleHand=blackjackState.playerHands.length===1;
   blackjackState.playerHands.forEach(h=>{
-    const value=blackjackHandValue(h.cards);
-    if(h.busted){h.result='lose';return;}
-    if(blackjackIsNatural(h.cards)&&blackjackState.playerHands.length===1){h.result='blackjack';payout+=Math.round(h.bet*2.5);return;}
-    if(dealerValue>21||value>dealerValue){h.result='win';payout+=h.bet*2;return;}
-    if(value===dealerValue){h.result='push';payout+=h.bet;return;}
-    h.result='lose';
+    const outcome=blackjackHandOutcome(h,dealerValue,isSingleHand);
+    h.result=outcome.result;
+    payout+=outcome.payout;
   });
   addPlayerCoins(payout);
   if(payout>0)trackTavernMission('gamblingWin',{game:'blackjack',amount:payout});
   blackjackState.phase='complete';
-  blackjackState.message=payout>0?`Paid ${payout}c.`:['Debt bites. Deal again?','The table wins this round.','One more hand could turn it.'][Math.floor(Math.random()*3)];
+  blackjackState.message=payout>0?`Paid ${payout}c.`:BLACKJACK_LOSS_MESSAGES[Math.floor(Math.random()*BLACKJACK_LOSS_MESSAGES.length)];
   saveGame(); tavernMoneyText(); setBarkeepState(payout>0?'gambling':'warning'); renderGamblingTables();
   requestAnimationFrame(()=>{
     const table=document.querySelector('.blackjack-table');
     const msg=document.querySelector('.blackjack-table .gambling-message');
-    if(payout>0&&typeof spawnCoinBurst==='function')spawnCoinBurst(table,{amount:24,spread:260,lift:180});
-    if(msg&&typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(msg,payout>0?'win':'loss');
+    if(typeof playGamblingResultEffect==='function')playGamblingResultEffect(table,msg,payout>0?'win':'loss');
+    else if(msg&&typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(msg,payout>0?'win':'loss');
   });
 }
 function blackjackCardHtml(card,hidden=false,delay=0,zone='player',index=0){
@@ -966,53 +1106,120 @@ function blackjackCardHtml(card,hidden=false,delay=0,zone='player',index=0){
   const style=` style="animation-delay:${delay}ms;--fly-x:${flyX}px;--fly-y:${flyY}px;--fly-r:${flyR}deg"`;
   if(hidden)return `<span class="blackjack-card back"${style}></span>`;
   const red=card.suit==='hearts'||card.suit==='diamonds';
-  const suit={hearts:'♥',diamonds:'♦',clubs:'♣',spades:'♠'}[card.suit];
+  const suit=BLACKJACK_SUIT_SYMBOLS[card.suit]||'';
   return `<span class="blackjack-card front ${red?'red':'black'}"${style}><b>${card.rank}</b><em>${suit}</em></span>`;
+}
+function renderBlackjackActions(){
+  if(blackjackState.phase==='betting'){
+    return `<button type="button" data-bj-action="deal" ${blackjackState.bet<=0||player.coins<blackjackState.bet?'disabled':''}>Deal</button>`;
+  }
+  if(blackjackState.phase==='playerTurn'){
+    return [
+      '<button type="button" data-bj-action="hit">Hit</button>',
+      '<button type="button" data-bj-action="stand">Stand</button>',
+      `<button type="button" data-bj-action="double" ${blackjackCanDouble()?'':'disabled'}>Double</button>`,
+      `<button type="button" data-bj-action="split" ${blackjackCanSplit()?'':'disabled'}>Split</button>`,
+    ].join('');
+  }
+  return blackjackState.phase==='complete'?`<button type="button" data-bj-action="new">New Bet</button>`:'';
+}
+function renderBlackjackDealerZone(){
+  const dealerValue=blackjackState.dealerHoleRevealed?blackjackHandValue(blackjackState.dealerHand):blackjackHandValue(blackjackState.dealerHand.slice(0,1));
+  const cards=blackjackState.dealerHand.map((card,index)=>blackjackCardHtml(card,index===1&&!blackjackState.dealerHoleRevealed,120+index*150,'dealer',index)).join('');
+  return `<div class="blackjack-dealer-zone"><span>Dealer ${blackjackState.dealerHoleRevealed?dealerValue:'?'}</span><div class="blackjack-hand">${cards}</div></div>`;
+}
+function renderBlackjackPlayerHand(hand,index){
+  const active=index===blackjackState.activeHandIndex&&blackjackState.phase==='playerTurn';
+  const cards=hand.cards.map((card,cardIndex)=>blackjackCardHtml(card,false,cardIndex*130,'player',cardIndex)).join('');
+  return `<div class="blackjack-player-hand ${active?'active':''} ${hand.result||''}"><span>Hand ${index+1}: ${blackjackHandValue(hand.cards)} ${hand.result?`- ${hand.result}`:''}</span><div class="blackjack-hand">${cards}</div></div>`;
+}
+function renderBlackjackBetRail(){
+  const locked=blackjackState.phase!=='betting';
+  return `<div class="gambling-bet-rail"><strong>Bet ${blackjackState.bet}c</strong><div>${chipButtons('bj',0,locked)}</div><div>${removeChipButtons('bj',blackjackState.bet,locked)}</div></div>`;
 }
 function renderBlackjackPopup(){
   if(!blackjackState)blackjackNewBet();
-  const dealerValue=blackjackState.dealerHoleRevealed?blackjackHandValue(blackjackState.dealerHand):blackjackHandValue(blackjackState.dealerHand.slice(0,1));
-  const actions=blackjackState.phase==='betting'
-    ? `<button type="button" data-bj-action="deal" ${blackjackState.bet<=0||player.coins<blackjackState.bet?'disabled':''}>Deal</button>`
-    : blackjackState.phase==='playerTurn'
-      ? `<button type="button" data-bj-action="hit">Hit</button><button type="button" data-bj-action="stand">Stand</button><button type="button" data-bj-action="double" ${blackjackCanDouble()?'':'disabled'}>Double</button><button type="button" data-bj-action="split" ${blackjackCanSplit()?'':'disabled'}>Split</button>`
-      : blackjackState.phase==='complete'?`<button type="button" data-bj-action="new">New Bet</button>`:'';
   return `<div class="gambling-game-title">Blackjack</div><div class="blackjack-table">
     <img class="gambling-table-art" src="images/tavern/gambling/blackjack/blackjack-table-popup.png" alt="">
     <div class="blackjack-deck"></div>
-    <div class="blackjack-dealer-zone"><span>Dealer ${blackjackState.dealerHoleRevealed?dealerValue:'?'}</span><div class="blackjack-hand">${blackjackState.dealerHand.map((c,i)=>blackjackCardHtml(c,i===1&&!blackjackState.dealerHoleRevealed,120+i*150,'dealer',i)).join('')}</div></div>
+    ${renderBlackjackDealerZone()}
     <div class="gambling-message">${blackjackState.message}</div>
-    <div class="blackjack-player-zone">${blackjackState.playerHands.map((h,i)=>`<div class="blackjack-player-hand ${i===blackjackState.activeHandIndex&&blackjackState.phase==='playerTurn'?'active':''} ${h.result||''}"><span>Hand ${i+1}: ${blackjackHandValue(h.cards)} ${h.result?`- ${h.result}`:''}</span><div class="blackjack-hand">${h.cards.map((c,ci)=>blackjackCardHtml(c,false,ci*130,'player',ci)).join('')}</div></div>`).join('')}</div>
-    <div class="gambling-bet-rail"><strong>Bet ${blackjackState.bet}c</strong><div>${chipButtons('bj',0,blackjackState.phase!=='betting')}</div><div>${removeChipButtons('bj',blackjackState.bet,blackjackState.phase!=='betting')}</div></div>
-    <div class="gambling-actions">${actions}</div>
+    <div class="blackjack-player-zone">${blackjackState.playerHands.map(renderBlackjackPlayerHand).join('')}</div>
+    ${renderBlackjackBetRail()}
+    <div class="gambling-actions">${renderBlackjackActions()}</div>
   </div>`;
 }
-function diceNewRound(){diceState={phase:'betting',bet:0,prediction:null,dice:[null,null],message:'Place a bet and choose low, seven, or high.'};}
-function diceAddChip(amount){if(!diceState||!['betting','complete'].includes(diceState.phase))return;if(diceState.phase==='complete')diceNewRound();if(diceState.bet+amount>player.coins){setBarkeepState('warning');return;}diceState.bet+=amount;diceState.message=`Bet set to ${diceState.bet}c.`;renderGamblingTables();}
-function diceRemoveChip(amount){if(!diceState||diceState.phase!=='betting')return;diceState.bet=Math.max(0,diceState.bet-amount);renderGamblingTables();}
-function diceChoosePrediction(choice){if(!diceState||!['betting','complete'].includes(diceState.phase))return;if(diceState.phase==='complete')diceNewRound();diceState.prediction=choice;diceState.message=`${choice==='seven'?'Seven':choice} called.`;renderGamblingTables();}
+function diceNewRound(){
+  diceState={
+    phase:'betting',
+    bet:0,
+    prediction:null,
+    dice:[null,null],
+    message:'Place a bet and choose low, seven, or high.',
+  };
+}
+function diceAddChip(amount){
+  if(!diceState||!['betting','complete'].includes(diceState.phase))return;
+  if(diceState.phase==='complete')diceNewRound();
+
+  if(diceState.bet+amount>player.coins){
+    setBarkeepState('warning');
+    return;
+  }
+
+  diceState.bet+=amount;
+  diceState.message=`Bet set to ${diceState.bet}c.`;
+  renderGamblingTables();
+}
+function diceRemoveChip(amount){
+  if(!diceState||diceState.phase!=='betting')return;
+  diceState.bet=Math.max(0,diceState.bet-amount);
+  renderGamblingTables();
+}
+function diceChoosePrediction(choice){
+  if(!diceState||!['betting','complete'].includes(diceState.phase))return;
+  if(diceState.phase==='complete')diceNewRound();
+  diceState.prediction=choice;
+  diceState.message=`${choice==='seven'?'Seven':choice} called.`;
+  renderGamblingTables();
+}
 function diceRoll(){
   if(!diceState||diceState.phase!=='betting')return;
-  if(diceState.bet<=0||!diceState.prediction){diceState.message='Set a bet and prediction first.';renderGamblingTables();return;}
+  if(diceState.bet<=0||!diceState.prediction){
+    diceState.message='Set a bet and prediction first.';
+    renderGamblingTables();
+    return;
+  }
   if(player.coins<diceState.bet){setBarkeepState('warning');return;}
-  player.coins-=diceState.bet; diceState.phase='rolling'; diceState.message='The cup rattles...'; diceState.dice=rollLuckyDicePair(diceState.prediction);
-  saveGame(); tavernMoneyText(); renderGamblingTables();
-  setTimeout(diceResolve,1050);
+  player.coins-=diceState.bet;
+  diceState.phase='rolling';
+  diceState.message='The cup rattles...';
+  diceState.dice=rollLuckyDicePair(diceState.prediction);
+  saveGame();
+  tavernMoneyText();
+  renderGamblingTables();
+  setTimeout(diceResolve,1480);
 }
 function diceResolve(){
   if(!diceState||activeGamblingGame!=='dice')return;
   const total=diceState.dice[0]+diceState.dice[1];
-  const win=(diceState.prediction==='low'&&total<=6)||(diceState.prediction==='high'&&total>=8)||(diceState.prediction==='seven'&&total===7);
+  const win=dicePredictionWins(diceState.prediction,total);
   const payout=win?diceState.bet*(diceState.prediction==='seven'?5:2):0;
-  addPlayerCoins(payout); diceState.phase='complete'; diceState.message=`Rolled ${total}. ${win?`Paid ${payout}c.`:'House takes it.'}`;
+  addPlayerCoins(payout);
+  diceState.phase='complete';
+  diceState.message=`Rolled ${total}. ${win?`Paid ${payout}c.`:'House takes it.'}`;
   if(payout>0)trackTavernMission('gamblingWin',{game:'dice',amount:payout});
-  saveGame(); tavernMoneyText(); setBarkeepState(win?'gambling':'warning'); renderGamblingTables();
+  saveGame();
+  tavernMoneyText();
+  setBarkeepState(win?'gambling':'warning');
+  renderGamblingTables();
   requestAnimationFrame(()=>{
     const tray=document.querySelector('.dice-tray');
     const msg=document.querySelector('.dice-table .gambling-message');
     if(tray&&typeof pulseElement==='function')pulseElement(tray,win?'dice-win':'dice-loss',760);
-    if(win&&typeof spawnCoinBurst==='function')spawnCoinBurst(tray,{amount:18,spread:220,lift:160});
-    if(msg&&typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(msg,win?'win':'loss');
+    const table=document.querySelector('.dice-table');
+    if(typeof playGamblingResultEffect==='function')playGamblingResultEffect(table||tray,msg,win?'win':'loss');
+    else if(msg&&typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(msg,win?'win':'loss');
   });
 }
 function dicePredictionWins(choice,total){
@@ -1030,69 +1237,178 @@ function rollLuckyDicePair(prediction){
   }
   return dice;
 }
+function diceCupImageState(){
+  if(diceState.phase==='rolling')return 'shake-1';
+  return diceState.phase==='complete'?'raised':'normal';
+}
+function diceDieHtml(index,revealDice){
+  const value=diceState.dice[index];
+  const rolling=diceState.phase==='rolling'?'is-rolling':'';
+  const image=revealDice&&value?`<img src="images/tavern/gambling/dice/dice-${value}.png" alt="${value}">`:'';
+  return `<span class="dice-die ${rolling}">${image}</span>`;
+}
+function renderDiceTray(revealDice){
+  const trayState=revealDice?'is-revealed':'is-hidden';
+  return `<div class="dice-tray ${trayState}">${[0,1].map(index=>diceDieHtml(index,revealDice)).join('')}</div>`;
+}
+function renderDicePredictionButtons(){
+  const choices=['low','seven','high'];
+  return `<div class="dice-prediction-buttons">${choices.map(choice=>{
+    const selected=diceState.prediction===choice?'selected':'';
+    const disabled=diceState.phase==='rolling'?'disabled':'';
+    const label=choice==='seven'?'Seven':choice;
+    return `<button type="button" data-dice-choice="${choice}" class="${selected}" ${disabled}>${label}</button>`;
+  }).join('')}</div>`;
+}
+function renderDiceBetRail(){
+  return `<div class="gambling-bet-rail">
+    <strong>Bet ${diceState.bet}c</strong>
+    <div>${chipButtons('dice',0,diceState.phase==='rolling')}</div>
+    <div>${removeChipButtons('dice',diceState.bet,diceState.phase!=='betting')}</div>
+  </div>`;
+}
+function renderDiceActions(){
+  const disabled=diceState.phase!=='betting'||diceState.bet<=0||!diceState.prediction?'disabled':'';
+  const replay=diceState.phase==='complete'?'<button type="button" data-dice-chip="0">Replay</button>':'';
+  return `<div class="gambling-actions"><button type="button" data-dice-cup ${disabled}>Shake Cup</button>${replay}</div>`;
+}
 function renderDicePopup(){
   if(!diceState)diceNewRound();
-  const cup=diceState.phase==='rolling'?'shake-1':diceState.phase==='complete'?'raised':'normal';
+  const cup=diceCupImageState();
   const revealDice=diceState.phase==='complete';
   return `<div class="gambling-game-title">Dice Table</div><div class="dice-table">
     <img class="gambling-table-art" src="images/tavern/gambling/dice/dice-table-popup.png" alt="">
     <div class="dice-cup ${diceState.phase==='rolling'?'is-shaking':''}" data-dice-cup><img src="images/tavern/gambling/dice/dice-cup-${cup}.png" alt=""></div>
-    <div class="dice-tray ${revealDice?'is-revealed':'is-hidden'}">${[0,1].map(i=>`<span class="dice-die ${diceState.phase==='rolling'?'is-rolling':''}">${revealDice&&diceState.dice[i]?`<img src="images/tavern/gambling/dice/dice-${diceState.dice[i]}.png" alt="${diceState.dice[i]}">`:''}</span>`).join('')}</div>
+    ${renderDiceTray(revealDice)}
     <div class="gambling-message">${diceState.message}</div>
-    <div class="dice-prediction-buttons">${['low','seven','high'].map(c=>`<button type="button" data-dice-choice="${c}" class="${diceState.prediction===c?'selected':''}" ${diceState.phase==='rolling'?'disabled':''}>${c==='seven'?'Seven':c}</button>`).join('')}</div>
-    <div class="gambling-bet-rail"><strong>Bet ${diceState.bet}c</strong><div>${chipButtons('dice',0,diceState.phase==='rolling')}</div><div>${removeChipButtons('dice',diceState.bet,diceState.phase!=='betting')}</div></div>
-    <div class="gambling-actions"><button type="button" data-dice-cup ${diceState.phase!=='betting'||diceState.bet<=0||!diceState.prediction?'disabled':''}>Shake Cup</button>${diceState.phase==='complete'?'<button type="button" data-dice-chip="0">Replay</button>':''}</div>
+    ${renderDicePredictionButtons()}
+    ${renderDiceBetRail()}
+    ${renderDiceActions()}
   </div>`;
 }
-function devilsDrawNewRound(){devilsDrawState={phase:'ready',cost:100,offeredCards:[],selectedIndex:null,result:null,message:'Pay 100c. The deck offers three chances.'};}
+function devilsDrawCost(){
+  return DEVILS_DRAW_BASE_COST+Math.min(900,Math.max(0,playerLevel())*35);
+}
+function devilsDrawNewRound(){
+  const cost=devilsDrawCost();
+  devilsDrawState={phase:'ready',cost,offeredCards:[],selectedIndex:null,result:null,message:`Pay ${cost}c. The deck offers three chances.`};
+}
 function weightedDevilsOutcome(){
   const luck=gamblingLuckMult();
   const weights=DEVILS_DRAW_OUTCOMES.map(outcome=>{
     const base=outcome.rarity==='legendary'?5:outcome.rarity==='epic'?8:outcome.rarity==='rare'?13:outcome.rarity==='uncommon'?18:24;
-    return outcome.type==='curse'?base/luck:base*luck;
+    return outcome.type==='curse'?(base*1.28)/Math.sqrt(luck):base*Math.sqrt(luck);
   });
   const total=weights.reduce((a,b)=>a+b,0);
   let r=Math.random()*total;
   for(let i=0;i<weights.length;i++){r-=weights[i];if(r<=0)return DEVILS_DRAW_OUTCOMES[i];}
   return DEVILS_DRAW_OUTCOMES[0];
 }
+function devilsDrawOfferCards(){
+  return [weightedDevilsOutcome(),weightedDevilsOutcome(),weightedDevilsOutcome()];
+}
+function resetDevilsDrawChoice(){
+  devilsDrawState.result=null;
+  devilsDrawState.selectedIndex=null;
+  devilsDrawState.offeredCards=[];
+}
+function makeRoomForDevilsCurse(){
+  ensureTavernState();
+  if(player.tavern.activeBuffs.length<MAX_TAVERN_BUFFS)return;
+  const displaced=player.tavern.activeBuffs.shift();
+  if(!displaced)return;
+  const barIndex=player.tavern.activeBarItems.findIndex(item=>item&&item.id===displaced.id&&item.expiresAt===displaced.expiresAt);
+  if(barIndex>=0)player.tavern.activeBarItems.splice(barIndex,1);
+  else player.tavern.activeBarItems.shift();
+}
 function devilsDrawStart(){
   if(!devilsDrawState||!['ready','complete'].includes(devilsDrawState.phase))return;
   if(player.coins<devilsDrawState.cost){setBarkeepState('warning');return;}
-  player.coins-=devilsDrawState.cost; devilsDrawState.phase='shuffling'; devilsDrawState.message='The deck whispers...'; devilsDrawState.result=null; devilsDrawState.selectedIndex=null; devilsDrawState.offeredCards=[];
-  saveGame(); tavernMoneyText(); renderGamblingTables();
-  setTimeout(()=>{if(!devilsDrawState||activeGamblingGame!=='devilsDraw')return;devilsDrawState.phase='choosing';devilsDrawState.offeredCards=[weightedDevilsOutcome(),weightedDevilsOutcome(),weightedDevilsOutcome()];devilsDrawState.message='Choose one. Only one.';renderGamblingTables();},1100);
+  player.coins-=devilsDrawState.cost;
+  devilsDrawState.phase='shuffling';
+  devilsDrawState.message='The deck whispers...';
+  resetDevilsDrawChoice();
+  saveGame();
+  tavernMoneyText();
+  renderGamblingTables();
+  setTimeout(()=>{
+    if(!devilsDrawState||activeGamblingGame!=='devilsDraw')return;
+    devilsDrawState.phase='choosing';
+    devilsDrawState.offeredCards=devilsDrawOfferCards();
+    devilsDrawState.message='Choose one. Only one.';
+    renderGamblingTables();
+  },1820);
 }
 function devilsDrawChooseCard(index){
   if(!devilsDrawState||devilsDrawState.phase!=='choosing')return;
-  devilsDrawState.selectedIndex=index; devilsDrawState.phase='revealing'; devilsDrawState.message='The card burns at the edge...'; renderGamblingTables();
-  setTimeout(()=>devilsDrawReveal(index),850);
+  devilsDrawState.selectedIndex=index;
+  devilsDrawState.phase='revealing';
+  devilsDrawState.message='The card burns at the edge...';
+  renderGamblingTables();
+  setTimeout(()=>devilsDrawReveal(index),1180);
 }
 function devilsDrawReveal(index){
   if(!devilsDrawState||activeGamblingGame!=='devilsDraw')return;
   const outcome=devilsDrawState.offeredCards[index];
   devilsDrawState.result=outcome;
   if(outcome.value)player.coins=Math.max(0,player.coins+outcome.value);
+  if(outcome.type==='curse'&&outcome.buff)makeRoomForDevilsCurse();
   if(outcome.buff)applyTavernBuff(outcome.buff);
   if(outcome.barItemId)applyTavernBuff(TAVERN_ITEMS.find(i=>i.id===outcome.barItemId));
   trackTavernMission('devilsDraw',{outcomeType:outcome.type,rarity:outcome.rarity,id:outcome.id});
   devilsDrawState.phase='complete';
   devilsDrawState.message=`${outcome.label}: ${outcome.effect}`;
-  saveGame(); tavernMoneyText(); renderTavernBuffs(); setBarkeepState(outcome.type==='curse'?'warning':'gambling'); renderGamblingTables();
+  saveGame();
+  tavernMoneyText();
+  renderTavernBuffs();
+  setBarkeepState(outcome.type==='curse'?'warning':'gambling');
+  renderGamblingTables();
+  requestAnimationFrame(()=>{
+    const table=document.querySelector('.devils-table');
+    const msg=document.querySelector('.devils-table .gambling-message');
+    if(typeof playGamblingResultEffect==='function')playGamblingResultEffect(table,msg,outcome.type==='curse'?'curse':'boost');
+    else if(msg&&typeof playResultPlaqueEffect==='function')playResultPlaqueEffect(msg,outcome.type==='curse'?'loss':'win');
+  });
+}
+function devilsDrawCardHtml(index){
+  const chosen=devilsDrawState.selectedIndex===index;
+  const revealed=devilsDrawState.phase==='complete'&&chosen;
+  const returning=devilsDrawState.phase==='revealing'&&devilsDrawState.selectedIndex!==null&&!chosen;
+  const gone=devilsDrawState.phase==='complete'&&devilsDrawState.selectedIndex!==null&&!chosen;
+  const outcome=revealed?devilsDrawState.result:null;
+  const returnX=index===0?'146px':index===2?'-146px':'0px';
+  const cardState=[
+    'devils-card',
+    'devils-plaque',
+    devilsDrawState.phase==='choosing'?'is-dealt':'',
+    chosen?'is-selected':'',
+    revealed?'is-revealed':'',
+    returning?'is-returning':'',
+    gone?'is-gone':'',
+    outcome?`devils-${outcome.type} rarity-${outcome.rarity}`:'',
+  ].filter(Boolean).join(' ');
+  const result=revealed
+    ? `<span class="devils-card-result"><strong>${outcome.label}</strong><em>${outcome.effect}</em></span>`
+    : '';
+  return `<button type="button" class="${cardState}" style="--card-index:${index};--return-x:${returnX}" data-devil-card="${index}" ${devilsDrawState.phase!=='choosing'?'disabled':''}>${result}</button>`;
+}
+function renderDevilsDrawCards(showCards){
+  return showCards?[0,1,2].map(devilsDrawCardHtml).join(''):'';
+}
+function renderDevilsDrawAction(){
+  const disabled=['shuffling','choosing','revealing'].includes(devilsDrawState.phase)?'disabled':'';
+  const label=devilsDrawState.phase==='complete'?`Shuffle ${devilsDrawState.cost}c`:`Pay ${devilsDrawState.cost}c`;
+  return `<div class="gambling-actions"><button type="button" data-devil-action ${disabled}>${label}</button></div>`;
 }
 function renderDevilsDrawPopup(){
   if(!devilsDrawState)devilsDrawNewRound();
-  const cards=[0,1,2].map(i=>{
-    const chosen=devilsDrawState.selectedIndex===i;
-    const revealed=devilsDrawState.phase==='complete'&&chosen;
-    const outcome=revealed?devilsDrawState.result:null;
-    return `<button type="button" class="devils-card devils-plaque ${chosen?'is-selected':''} ${revealed?'is-revealed':''} ${outcome?`devils-${outcome.type} rarity-${outcome.rarity}`:''}" data-devil-card="${i}" ${devilsDrawState.phase!=='choosing'?'disabled':''}>${revealed?`<span class="devils-card-result"><strong>${outcome.label}</strong><em>${outcome.effect}</em></span>`:''}</button>`;
-  }).join('');
+  const showCards=['choosing','revealing','complete'].includes(devilsDrawState.phase);
+  const cards=renderDevilsDrawCards(showCards);
   return `<div class="gambling-game-title">Devil's Draw</div><div class="devils-table">
     <img class="gambling-table-art" src="images/tavern/gambling/devils-draw/devils-draw-table-popup.png" alt="">
     <div class="devils-deck ${devilsDrawState.phase==='shuffling'?'is-shuffling':''}"><img src="images/tavern/gambling/devils-draw/cursed-deck.png" alt=""></div>
-    <div class="devils-card-row">${cards}</div>
+    <div class="devils-card-row ${showCards?'':'is-empty'}">${cards}</div>
     <div class="gambling-message">${devilsDrawState.message}</div>
-    <div class="gambling-actions"><button type="button" data-devil-action ${['shuffling','choosing','revealing'].includes(devilsDrawState.phase)?'disabled':''}>${devilsDrawState.phase==='complete'?'Draw Again':'Pay 100c'}</button></div>
+    ${renderDevilsDrawAction()}
   </div>`;
 }

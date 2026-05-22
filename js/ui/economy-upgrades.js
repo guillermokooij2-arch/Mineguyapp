@@ -1,4 +1,4 @@
-// â”€â”€ SELLING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Selling
 function playSellRewardEffect(target,total,kind='coins'){
   if(window.GameAudio)GameAudio.playPurchase();
   const el=target||marketplacePanel||document.body;
@@ -56,7 +56,7 @@ function sellCraftedItem(idx,target=null){
   saveGame(); renderMarket(); renderInventory(); renderShop();
 }
 
-// â”€â”€ UPGRADES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Upgrades
 function showUpgradeTooltip(id,x,y){
   if(!itemTooltip)return;
   const def=UPGRADE_DEFS[id];
@@ -80,6 +80,7 @@ function showUpgradeTooltip(id,x,y){
   itemTooltip.style.top=`${Math.max(pad,top)}px`;
 }
 function buyUpgrade(id, refreshFn, sourceRow=null){
+  if(typeof hideItemTooltip==='function')hideItemTooltip();
   const def=UPGRADE_DEFS[id],level=player.upgrades[id]||0,cost=upgradeCost(id);
   if(level>=def.max)return;
   if(def.location==='trader'){

@@ -18,8 +18,10 @@
   border-color:#3e2a16;
   color:#f1d59d;
   background:
-    radial-gradient(ellipse at 50% 8%,rgba(255,172,70,0.10),transparent 38%),
-    linear-gradient(145deg,rgba(30,18,9,0.97),rgba(10,8,7,0.98) 58%,rgba(20,12,6,0.98));
+    radial-gradient(ellipse at 50% 8%,rgba(255,172,70,0.12),transparent 38%),
+    linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.46) 68%,rgba(0,0,0,0.72)),
+    url('../images/trader/trader-cart-bg.webp') center/cover no-repeat,
+    url('../images/trader/trader-cart-bg.png') center/cover no-repeat;
   box-shadow:inset 0 0 0 2px rgba(236,166,72,0.14),0 30px 80px rgba(0,0,0,0.72);
   transform:translate(-50%,-46%) scale(.92);
 }
@@ -32,12 +34,13 @@
   color:#b39368;
 }
 .trader-scene {
-  position:relative;
-  height:clamp(160px,24vh,190px);
-  flex:0 0 auto;
-  margin:0 0 12px;
+  position:absolute;
+  inset:0;
+  z-index:1;
+  width:auto;
+  height:auto;
+  margin:0;
   overflow:visible;
-  border-radius:10px;
   isolation:isolate;
 }
 #trader-close {
@@ -49,35 +52,39 @@
   height:60px;
 }
 .trader-scene-bg {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:10px;
-  opacity:.82;
-  filter:brightness(.78) contrast(1.1) saturate(.95);
-  box-shadow:inset 0 0 0 1px rgba(234,166,72,0.2),inset 0 -60px 80px rgba(0,0,0,0.48),0 14px 26px rgba(0,0,0,0.46);
+  display:none;
 }
 .trader-scene::before {
   content:"";
   position:absolute;
   inset:0;
   z-index:1;
-  border-radius:10px;
   pointer-events:none;
   background:
-    radial-gradient(circle at 58% 34%,rgba(255,177,73,0.18),transparent 26%),
-    radial-gradient(ellipse at 50% 82%,rgba(0,0,0,0.72),transparent 54%),
-    linear-gradient(90deg,rgba(0,0,0,0.48),transparent 32%,transparent 68%,rgba(0,0,0,0.52));
+    radial-gradient(circle at 52% 38%,rgba(255,177,73,0.18),transparent 24%),
+    radial-gradient(ellipse at 50% 80%,rgba(0,0,0,0.25),transparent 36%),
+    linear-gradient(90deg,rgba(0,0,0,0.34),transparent 32%,transparent 68%,rgba(0,0,0,0.38));
+}
+.trader-scene::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  background:
+    url('../images/trader/trader-cart-bg.webp') center/cover no-repeat,
+    url('../images/trader/trader-cart-bg.png') center/cover no-repeat;
+  clip-path:polygon(0 64%,100% 64%,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0 61%,#000 68%);
+  mask-image:linear-gradient(to bottom,transparent 0 61%,#000 68%);
 }
 .trader-character {
   position:absolute;
   left:50%;
-  bottom:-10px;
+  bottom:25%;
   z-index:3;
-  width:248px;
-  height:220px;
+  width:clamp(270px,31vw,370px);
+  height:clamp(286px,45vh,410px);
   padding:0;
   border:0;
   background:transparent;
@@ -88,9 +95,9 @@
   content:"";
   position:absolute;
   left:50%;
-  bottom:10px;
-  width:190px;
-  height:34px;
+  bottom:22px;
+  width:230px;
+  height:42px;
   border-radius:50%;
   background:radial-gradient(ellipse,rgba(0,0,0,0.72),rgba(0,0,0,0));
   transform:translateX(-50%);
@@ -116,10 +123,10 @@
 }
 .trader-speech {
   position:absolute;
-  right:62px;
-  bottom:34px;
-  z-index:4;
-  width:min(306px,30%);
+  right:clamp(20px,5vw,62px);
+  top:clamp(78px,13vh,112px);
+  z-index:5;
+  width:min(306px,31%);
   aspect-ratio:437 / 180;
   display:flex;
   align-items:center;
@@ -140,43 +147,52 @@
 }
 #trader-list {
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
-  margin-top:0;
-  flex:1 1 auto;
+  grid-template-columns:repeat(4,minmax(112px,1fr));
+  align-items:end;
+  gap:clamp(8px,1.3vw,20px);
+  position:absolute;
+  left:50%;
+  bottom:clamp(88px,11vh,118px);
+  z-index:6;
+  width:min(760px,72%);
+  height:clamp(154px,24vh,205px);
   min-height:0;
-  overflow:hidden;
-  padding:0 2px 8px;
+  margin:0;
+  padding:0;
+  overflow:visible;
+  transform:translateX(-50%);
 }
 #trader-panel .trader-upgrade-row {
   min-height:0;
+  height:100%;
+  width:auto;
+  max-width:100%;
   aspect-ratio:360 / 468;
-  display:grid;
-  grid-template-columns:1fr;
-  grid-template-rows:1fr;
+  display:flex;
+  justify-self:center;
   justify-items:center;
   align-items:center;
+  justify-content:center;
   gap:0;
-  padding:24px 22px;
+  padding:24px 18px 28px;
   position:relative;
-  overflow:hidden;
+  overflow:visible;
   border:0;
   border-radius:0;
   background:url('../images/market/market-box-forged.png') center/100% 100% no-repeat;
   box-shadow:none;
-  filter:drop-shadow(0 12px 16px rgba(0,0,0,0.46));
+  filter:drop-shadow(0 14px 16px rgba(0,0,0,0.48));
 }
 #trader-panel .trader-upgrade-row::before,
 #trader-panel .trader-upgrade-row::after { display:none; }
 #trader-panel .upgrade-copy { display:none; }
 #trader-panel .trader-upgrade-row:hover {
-  transform:translateY(-2px);
-  filter:brightness(1.07) drop-shadow(0 16px 18px rgba(0,0,0,0.5));
+  transform:translateY(-3px);
+  filter:brightness(1.06) drop-shadow(0 18px 18px rgba(0,0,0,0.52));
 }
 .trader-upgrade-art-button {
-  grid-row:1;
   position:relative;
-  width:min(140px,82%);
+  width:min(118px,88%);
   aspect-ratio:1;
   border:0;
   border-radius:0;
@@ -186,20 +202,20 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  filter:drop-shadow(0 12px 12px rgba(0,0,0,0.55));
+  filter:drop-shadow(0 14px 10px rgba(0,0,0,0.68));
   transition:transform .16s ease,filter .16s ease;
 }
 .trader-upgrade-art-button:hover:not(:disabled),
 .trader-upgrade-art-button:focus-visible:not(:disabled) {
-  transform:translateY(-2px) scale(1.06);
-  filter:drop-shadow(0 14px 13px rgba(0,0,0,0.58)) drop-shadow(0 0 14px rgba(255,176,58,0.28));
+  transform:translateY(-7px) scale(1.09);
+  filter:drop-shadow(0 18px 13px rgba(0,0,0,0.64)) drop-shadow(0 0 14px rgba(255,176,58,0.28));
 }
 .trader-upgrade-art-button:disabled { opacity:.52; cursor:not-allowed; }
 .trader-upgrade-art {
   position:relative;
   z-index:1;
-  width:90%;
-  height:90%;
+  width:82%;
+  height:82%;
   display:flex;
   align-items:center;
   justify-content:center;

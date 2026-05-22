@@ -5,10 +5,10 @@
   #backpack-map-panel { width:96vw; min-width:0; }
   #backpack-map-panel.map-mode { width:100vw; height:100vh; }
   #backpack-map-panel.map-mode .bmp-header { left:10px; top:10px; }
-  #backpack-map-panel.map-mode #backpack-back { width:50px; height:50px; min-width:50px; min-height:50px; }
+  #backpack-map-panel.map-mode #backpack-back { display:none !important; }
   .travel-map { --node-size:62px; --node-hit:92px; width:min(100vw,150vh); height:auto; min-height:0; }
   .map-node-asset { border-radius:6px; font-size:10px; }
-  .map-node-label { top:calc(50% + 43px); max-width:96px; padding:4px 6px 5px; }
+  .map-node-label { top:auto; bottom:calc(50% + 43px); max-width:96px; padding:4px 6px 5px; }
   .map-node-name { font-size:10px; }
   .map-node-sub { font-size:7px; }
   .map-node[data-label-pos="top"] .map-node-label { bottom:calc(50% + 43px); }
@@ -34,6 +34,7 @@
   }
   .char-xp-section {
     position:static;
+    width:auto;
     margin:12px 0;
   }
   #marketplace-panel {
@@ -99,40 +100,40 @@
     padding:14px 12px 18px;
   }
   .trader-scene {
-    height:176px;
-    margin:4px 0 10px;
+    inset:0;
   }
   .trader-character {
-    width:168px;
-    height:158px;
-    bottom:-6px;
-    left:42%;
+    width:min(236px,55vw);
+    height:min(286px,41vh);
+    bottom:30%;
+    left:50%;
   }
   .trader-speech {
     right:8px;
-    bottom:16px;
-    width:min(218px,46%);
+    top:70px;
+    bottom:auto;
+    width:min(218px,45%);
     aspect-ratio:437 / 180;
     padding:10px 17px;
     font-size:10px;
   }
   #trader-list {
-    grid-template-columns:1fr;
-    gap:10px;
-    overflow-y:auto;
-    padding:0 2px 16px 0;
+    grid-template-columns:repeat(2,minmax(104px,1fr));
+    gap:6px 12px;
+    bottom:clamp(48px,7.4vh,68px);
+    width:min(360px,82vw);
+    height:min(278px,39vh);
+    overflow:visible;
+    padding:0;
   }
   #trader-panel .trader-upgrade-row {
-    grid-template-columns:1fr;
-    grid-template-rows:auto minmax(0,1fr) auto;
     min-height:0;
+    height:132px;
     aspect-ratio:360 / 468;
-    padding:22px 18px 24px;
-    row-gap:5px;
-    border-radius:7px;
+    padding:18px 12px 20px;
   }
-  .trader-upgrade-art-button { width:min(86px,72%); }
-  .trader-upgrade-art { height:68px; }
+  .trader-upgrade-art-button { width:min(88px,84%); }
+  .trader-upgrade-art { height:72%; }
   #trader-panel .upgrade-title { font-size:15px; }
   #trader-panel .upgrade-desc,
   #trader-panel .upgrade-effect { font-size:10px; }
@@ -274,7 +275,7 @@
   #tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone .tavern-mission-note {
     min-height:138px;
     width:auto;
-    padding:16px 15px 12px;
+    padding:22px 21px 16px;
   }
   .tavern-mission-layout,
   .tavern-mission-list {
@@ -737,4 +738,224 @@
   }
   .pc-terminal-btn { bottom:128px; }
   #hint { display:none; }
+}
+
+/* Keep the mineshaft command bar as the original miner button plus compact resources. */
+#character-command-bar .terminal-hud-info {
+  position:relative !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  align-self:flex-end;
+  width:auto !important;
+  min-width:86px;
+  min-height:0;
+  margin:0 2px 8px 0 !important;
+  padding:6px 8px 4px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  filter:none !important;
+  color:#b98b5b;
+  font-family:inherit;
+  text-align:center;
+}
+#character-command-bar .terminal-hud-info::after,
+#character-command-bar .terminal-hud-status,
+#character-command-bar .terminal-hud-toggle,
+#character-command-bar .terminal-hud-expanded {
+  display:none !important;
+}
+#character-command-bar .terminal-hud-info .terminal-hud-compact {
+  display:flex !important;
+  flex-direction:column;
+  gap:3px !important;
+}
+#character-command-bar .terminal-hud-info .terminal-hud-resource {
+  display:flex !important;
+  align-items:baseline;
+  justify-content:center;
+  gap:5px;
+}
+#character-command-bar .terminal-hud-info .terminal-hud-resource span {
+  color:#b98b5b;
+  font-size:8px !important;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+#character-command-bar .terminal-hud-info .terminal-hud-resource strong {
+  color:#ffd76a;
+  font-size:13px !important;
+  text-shadow:0 0 10px rgba(255,190,60,0.42),0 2px 3px #000;
+}
+
+@media (max-width:760px) {
+  #character-command-bar .terminal-hud-info {
+    min-width:68px;
+    margin-bottom:3px !important;
+    padding:2px 3px !important;
+  }
+  #character-command-bar .terminal-hud-info .terminal-hud-resource span {
+    font-size:7px !important;
+  }
+  #character-command-bar .terminal-hud-info .terminal-hud-resource strong {
+    font-size:10px !important;
+  }
+  #character-panel {
+    box-sizing:border-box;
+    width:100vw !important;
+    max-width:100vw;
+    overflow-x:hidden;
+  }
+  #character-panel * {
+    box-sizing:border-box;
+  }
+  #character-panel .char-username-row {
+    grid-template-columns:1fr;
+  }
+  #character-panel .char-username-row button {
+    width:100%;
+  }
+  #character-panel .char-profile-card p {
+    overflow-wrap:anywhere;
+  }
+  #character-panel .char-records-list {
+    grid-template-columns:1fr 1fr;
+  }
+  #character-panel .char-leaderboard-row {
+    grid-template-columns:24px minmax(0,1fr);
+  }
+  #character-panel .char-leaderboard-head {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+}
+
+@media (max-width:760px) {
+  #character-command-bar #miner-hud.terminal-command-hud {
+    width:calc(100vw - 112px);
+    min-height:96px;
+    margin:0 0 6px 4px;
+    display:block;
+    grid-template-columns:none;
+    padding:0;
+  }
+  .terminal-hud-shell {
+    min-height:96px;
+    padding:19px 18px 16px;
+  }
+  .terminal-hud-compact {
+    grid-template-columns:auto minmax(62px,.7fr) minmax(92px,1fr) 36px;
+    gap:7px;
+  }
+  .terminal-hud-resource {
+    display:none;
+  }
+  .terminal-command-hud .mhud-level-badge {
+    font-size:15px;
+  }
+  .terminal-command-hud .mhud-level-label,
+  .terminal-command-hud .mhud-xp-next {
+    font-size:8px;
+  }
+  .terminal-hud-toggle {
+    width:36px;
+    height:36px;
+    font-size:16px;
+  }
+  .terminal-hud-expanded {
+    left:8px;
+    right:8px;
+    bottom:calc(100% - 12px);
+    grid-template-columns:1fr;
+    gap:8px;
+    padding:10px;
+  }
+  .terminal-hud-stat-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .terminal-hud-actions {
+    grid-template-columns:1fr 1fr;
+  }
+  #character-command-bar .terminal-command-hud .command-buffs {
+    display:none;
+  }
+  #character-command-bar .backpack-btn {
+    width:94px;
+    height:94px;
+  }
+  #character-command-bar .terminal-hud-info {
+    position:absolute;
+    left:12px;
+    right:112px;
+    bottom:104px;
+    width:auto;
+    min-height:62px;
+    margin:0;
+    padding:10px 11px;
+  }
+  .terminal-hud-info .terminal-hud-compact {
+    grid-template-columns:auto minmax(58px,1fr) minmax(58px,1fr) 34px;
+    gap:6px;
+  }
+  .terminal-hud-info .terminal-hud-status {
+    min-width:38px;
+    font-size:10px;
+    letter-spacing:1px;
+  }
+  .terminal-hud-info .terminal-hud-resource {
+    display:grid;
+  }
+  .terminal-hud-info .terminal-hud-resource span {
+    font-size:7px;
+  }
+  .terminal-hud-info .terminal-hud-resource strong {
+    font-size:12px;
+  }
+  .terminal-hud-info .terminal-hud-toggle {
+    width:34px;
+    height:34px;
+    font-size:14px;
+  }
+  .sys-terminal-stage {
+    width:177.777vh;
+    height:100vh;
+    max-width:none;
+  }
+  .sys-screen-overlay {
+    left:39%;
+    top:15.4%;
+    width:22%;
+    height:63.8%;
+  }
+  .sys-os-topbar {
+    padding:7px 8px 6px;
+  }
+  .sys-os-kicker,
+  .sys-os-panel-head strong {
+    display:none;
+  }
+  .sys-os-topbar strong {
+    font-size:11px;
+  }
+  .sys-os-tabs {
+    gap:4px;
+    padding:6px;
+  }
+  .sys-os-tab {
+    min-height:28px;
+    padding:5px 3px;
+    font-size:8px;
+  }
+  .sys-os-app {
+    padding:7px;
+  }
+  .terminal-stats-list {
+    grid-template-columns:1fr;
+  }
+  .terminal-log-lines p {
+    font-size:9px;
+  }
 }

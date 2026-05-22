@@ -6,9 +6,10 @@ const UPGRADE_DEFS = {
     desc:'More damage per swing', effect:'+1 dmg / lv',
     baseCost:25, costMult:1.65, max:20,
   },
-  speed: {
-    name:'Speed', location:'terminal', icon:'SPD',
-    desc:'Faster pickaxe swing', effect:'-1 frame / lv',
+  accuracy: {
+    name:'Accuracy', location:'terminal', icon:'ACC',
+    desc:'Bigger weak-point circle and longer crit window',
+    effect:'+circle size, +7 frames / lv',
     baseCost:40, costMult:1.75, max:10,
   },
   luck: {

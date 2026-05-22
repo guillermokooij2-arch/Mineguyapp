@@ -11,24 +11,29 @@ function breakRock(rock){
   const baseN=2+Math.floor(Math.random()*3)+(Math.random()<Math.min(0.95,rock.bonusOreChance+yieldChanceBonus())?1:0);
   const n=Math.max(1,Math.round(baseN*(1+yieldBonus())*tavernBuffMult('oreYieldMultiplier')));
   spawnOre(rock.x,rock.y,rock.type,n);
-  spawnDust(rock.x,rock.y,24,1.25);
-  spawnChunks(rock.x,rock.y,rock.col,18);
-  gs.shakeAmt=9;
+  if(typeof spawnRockBreakEffect==='function')spawnRockBreakEffect(rock);
+  else {
+    spawnDust(rock.x,rock.y,24,1.25);
+    spawnChunks(rock.x,rock.y,rock.col,18);
+  }
+  if(!(typeof reducedMiningMotion==='function'&&reducedMiningMotion()))gs.shakeAmt=9;
   floatTxt(rock.x,rock.y-rock.radius-8,`+${rock.val*n} ${ORE[rock.type].lbl}`,rock.glow||'#c8c0d8',true);
   setTimeout(()=>{ const idx=rocks.indexOf(rock); if(idx!==-1){const nr=createRock(rock.afx*W,rock.afy*H,rock.afx,rock.afy,rock.depth,rock.embed,rock.radius);nr.scale=0.01;rocks[idx]=nr;} },1600+Math.random()*800);
 }
 
 // ── NORMAL HIT ───────────────────────────────────────────────────────────────
-function normalHit(rock,dmg,isCrit){
+function normalHit(rock,dmg,isCrit,critCombo=0,hitX=rock.x,hitY=rock.y){
   if(window.GameAudio){
-    if(isCrit)GameAudio.playCritHit();
+    if(isCrit)GameAudio.playCritHit({combo:critCombo});
     else GameAudio.playMineHit();
   }
   const prevStage=rockBreakStage(rock);
   rock.hp-=isCrit?dmg:Math.max(0.1,dmg*0.1);
+  if(typeof spawnRockHitEffect==='function')spawnRockHitEffect(rock,hitX,hitY,isCrit,critCombo);
   addCrack(rock); if(isCrit) addCrack(rock);
   if(isCrit)applyProxyDamage(rock,Math.max(1,dmg*proxyDamageBonus()),rock.x,rock.y);
   const nextStage=rockBreakStage(rock);
+  if(nextStage>prevStage&&rock.hp>0&&typeof spawnStageFractureEffect==='function')spawnStageFractureEffect(rock,hitX,hitY,nextStage);
   if(nextStage>prevStage&&rock.hp>0&&nextStage>=4) floatTxt(rock.x,rock.y-rock.radius-22,nextStage>=5?'BREAKING!':'FRACTURE!',rock.glow||'#ff9b48',true);
   if(rock.hp<=0) breakRock(rock);
 }
@@ -45,6 +50,7 @@ function applyProxyDamage(source,dmg,x,y){
     target.hp-=echo;
     target.bonusOreChance=Math.min(0.85,target.bonusOreChance+0.03);
     addCrack(target);
+    if(typeof spawnProxyEchoEffect==='function')spawnProxyEchoEffect(source,target,x,y);
     floatTxt(target.x,target.y-target.radius-18,'ECHO HIT','#9fe8ff',false);
     if(target.hp<=0)breakRock(target);
     hits++;
@@ -59,7 +65,6 @@ function maybeTriggerPickaxeChainReaction(rock,wpX,wpY){
   const maxHits=Math.min(AUTO_CRIT_LIMITS.maxAutoCritsPerSwing,PERF_LIMITS.maxAutoCritsPerSwing,ability.maxHits||1);
   const minHits=Math.max(1,Math.min(ability.minHits||1,maxHits));
   const hits=minHits+Math.floor(Math.random()*(maxHits-minHits+1));
-  const playerCritDmg=(1+powerBonus())*damageMultiplier()*2.5;
   floatTxt(wpX,wpY-18,'CHAIN REACTION!','#9fe8ff',true);
   let currentRock=rock,lastX=wpX,lastY=wpY;
   function nextAutoCritRock(){
@@ -80,19 +85,22 @@ function maybeTriggerPickaxeChainReaction(rock,wpX,wpY){
       const jitterA=Math.random()*Math.PI*2;
       const x=target.x+Math.cos(jitterA)*target.radius*0.26;
       const y=target.y+Math.sin(jitterA)*target.radius*0.2;
-      const dmg=Math.max(1,Math.round(playerCritDmg*0.8));
+      const streakMult=1+chain.combo*0.15;
+      const nextChainDamage=(1+powerBonus())*damageMultiplier()*2.5*streakMult;
+      const dmg=Math.max(1,Math.round(nextChainDamage*0.8));
       const fromX=lastX,fromY=lastY;
       lastX=x; lastY=y;
       chain.combo++;
       player.stats={...DEFAULT_STATS,...(player.stats||{})};
+      player.stats.totalCritStrikes=(Number(player.stats.totalCritStrikes)||0)+1;
       player.stats.highestCritChain=Math.max(Number(player.stats.highestCritChain)||0,chain.combo);
       chain.rock=target;
-      if(window.GameAudio)GameAudio.playCritHit({auto:true});
+      if(window.GameAudio)GameAudio.playCritHit({auto:true,combo:chain.combo});
       if(typeof spawnAutoCritImpact==='function')spawnAutoCritImpact(x,y,target,ability,chain.combo,fromX,fromY);
       target.hp-=dmg;
       target.bonusOreChance=Math.min(0.85,target.bonusOreChance+0.05);
       addCrack(target);
-      floatTxt(x,y-12,`AUTO ${chain.combo}x`,'#9fe8ff',false);
+      floatTxt(x,y-12,`AUTO CRIT ${chain.combo}x`,'#bff7ff',i===hits-1||chain.combo%3===0);
       if(target.hp<=0)breakRock(target);
       else setWeakPoint(target,true,x,y);
     },AUTO_CRIT_LIMITS.delayBetweenAutoCritsMs*(i+1));
@@ -107,11 +115,14 @@ function chainHit(rock, wpX, wpY){
   const chainDamage=Math.round(baseChainDmg*2.5*streakMult);
   chain.combo++;
   player.stats={...DEFAULT_STATS,...(player.stats||{})};
+  player.stats.totalCritStrikes=(Number(player.stats.totalCritStrikes)||0)+1;
   player.stats.highestCritChain=Math.max(Number(player.stats.highestCritChain)||0,chain.combo);
   rock.bonusOreChance=Math.min(0.85,rock.bonusOreChance+0.12);
-  normalHit(rock,chainDamage,true);
+  normalHit(rock,chainDamage,true,chain.combo,wpX,wpY);
+  if(typeof spawnChainMilestoneEffect==='function')spawnChainMilestoneEffect(rock,wpX,wpY,chain.combo);
   const label=chain.combo===1?'WEAK POINT!':`${chain.combo}x STREAK! ×${(2.5*streakMult).toFixed(1)}`;
-  floatTxt(rock.x,rock.y-rock.radius-22,label,'#ffee00',true);
+  const labelCol=chain.combo>=20?(rock.glow||'#f6f0ff'):chain.combo>=10?(rock.glow||'#fff4a0'):chain.combo>=5?'#fff287':'#ffee00';
+  floatTxt(rock.x,rock.y-rock.radius-22,label,labelCol,true);
 
   if(rock.dead) return;
   maybeTriggerPickaxeChainReaction(rock,wpX,wpY);
@@ -128,7 +139,17 @@ function isElementClickable(el){
   return !target.classList.contains('locked');
 }
 function isUiSurface(el){
-  return !!(el&&el.closest('#start-screen,#ui-backdrop,#character-command-bar,#miner-hud,#backpack-toggle,#backpack-map-panel,#character-panel,#marketplace-panel,#workbench-panel,#trader-panel,#tavern-panel'));
+  if(!el)return false;
+  if(el.closest('#start-screen'))return true;
+  if(el.closest('#ui-backdrop'))return document.body.classList.contains('panel-open');
+
+  const backpackPanel=el.closest('#backpack-map-panel');
+  if(backpackPanel)return backpackPanel.classList.contains('open');
+
+  const openPanel=el.closest('#character-panel.open,#marketplace-panel.open,#workbench-panel.open,#trader-panel.open,#tavern-panel.open,#deep-lift-panel.open');
+  if(openPanel)return true;
+
+  return false;
 }
 function updateCursorContext(e){
   const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -155,14 +176,13 @@ window.addEventListener('pointerdown',e=>{
 });
 window.addEventListener('pointerup',()=>{ uiCursor.pressed=false; });
 window.addEventListener('pointercancel',()=>{ uiCursor.pressed=false; });
-canvas.addEventListener('click',e=>{
-  if(uiCursor.mode==='ui')return;
-  if(!isScreenInWorld(e.clientX,e.clientY))return;
+function startWorldSwing(clientX,clientY){
+  if(!isScreenInWorld(clientX,clientY))return;
   if(sw.active)return;
-  const world=screenToWorld(e.clientX,e.clientY);
+  const world=screenToWorld(clientX,clientY);
   sw.active=true; sw.t=0; sw.hitDone=false;
   sw.clickX=world.x; sw.clickY=world.y;
-  sw.clickScreenX=e.clientX; sw.clickScreenY=e.clientY;
+  sw.clickScreenX=clientX; sw.clickScreenY=clientY;
   // Compute fixed handle-butt pivot from cursor (tip) position at REST angle.
   // tip-to-butt vector in image space: (-iW*0.47, +iH*0.88).
   const pickImg=activePickaxeImage();
@@ -171,8 +191,13 @@ canvas.addEventListener('click',e=>{
   const hitT=sw.HIT_AT;
   const a=hitT<0.50?sw.REST+(sw.WIND-sw.REST)*(1-easeOut(hitT/0.50)):sw.WIND+(sw.STRIKE-sw.WIND)*easeOut((hitT-0.50)/0.50);
   const tipX=iW*(0.87-0.40), tipY=iH*(0.07-0.93);
-  sw.pivotX=e.clientX-(tipX*Math.cos(a)-tipY*Math.sin(a));
-  sw.pivotY=e.clientY-(tipX*Math.sin(a)+tipY*Math.cos(a));
+  sw.pivotX=clientX-(tipX*Math.cos(a)-tipY*Math.sin(a));
+  sw.pivotY=clientY-(tipX*Math.sin(a)+tipY*Math.cos(a));
+}
+window.addEventListener('click',e=>{
+  updateCursorContext(e);
+  if(uiCursor.mode==='ui')return;
+  startWorldSwing(e.clientX,e.clientY);
 });
 
 // ── SWING UPDATE ──────────────────────────────────────────────────────────────
@@ -203,7 +228,7 @@ function updateSwing(){
         floatTxt(sw.clickX,sw.clickY,'CHAIN LOST','#ff5533',false);
       }
       const startsChain=!canceledChain;
-      normalHit(r,(1+powerBonus())*damageMultiplier(),false);
+      normalHit(r,(1+powerBonus())*damageMultiplier(),false,0,sw.clickX,sw.clickY);
       if(startsChain&&!r.dead&&chain.timer===0) setWeakPoint(r,false,sw.clickX,sw.clickY);
       hit=true; break;
     }
@@ -224,15 +249,19 @@ function updateChain(){
     chain.timer=Math.max(0,chain.timer-dt);
     chain.pulse+=0.08*dtScale;
     if(chain.rock&&!chain.rock.dead){
-      let da=chain.targetAngle-chain.angle;
-      while(da>Math.PI) da-=Math.PI*2;
-      while(da<-Math.PI) da+=Math.PI*2;
-      const moveStep=1-Math.pow(1-chain.moveSpeed,dtScale);
-      chain.angle+=da*moveStep;
-      chain.dist+=(chain.targetDist-chain.dist)*moveStep;
-      if(Math.abs(da)<0.08&&Math.abs(chain.targetDist-chain.dist)<1.5){
-        chain.targetAngle=chain.angle+(Math.random()-0.5)*2.2;
-        chain.targetDist=chain.rock.radius*(0.38+Math.random()*0.34);
+      const streakPressure=Math.max(0,chain.combo-CRIT_STATIONARY_STREAK);
+      const moveSpeed=chain.combo<CRIT_STATIONARY_STREAK?0:Math.min(0.07,0.026+streakPressure*0.0025);
+      if(moveSpeed>0){
+        let da=chain.targetAngle-chain.angle;
+        while(da>Math.PI) da-=Math.PI*2;
+        while(da<-Math.PI) da+=Math.PI*2;
+        const moveStep=1-Math.pow(1-moveSpeed,dtScale);
+        chain.angle+=da*moveStep;
+        chain.dist+=(chain.targetDist-chain.dist)*moveStep;
+        if(Math.abs(da)<0.08&&Math.abs(chain.targetDist-chain.dist)<1.5){
+          chain.targetAngle=chain.angle+(Math.random()-0.5)*2.2;
+          chain.targetDist=chain.rock.radius*(0.38+Math.random()*0.34);
+        }
       }
     }
     if(chain.timer<=0){
@@ -242,7 +271,24 @@ function updateChain(){
 }
 
 // ── ROCK UPDATE ───────────────────────────────────────────────────────────────
-function updateRocks(){ rocks.forEach(r=>{ if(r.dead)return; r.scale=Math.min(1,r.scale+0.05*dtScale); r.flash=Math.max(0,r.flash-0.09*dtScale); if(r.shakeF>0){r.shakeF=Math.max(0,r.shakeF-dtScale);r.shakeX=(Math.random()-0.5)*5;r.shakeY=(Math.random()-0.5)*5;}else{r.shakeX=0;r.shakeY=0;} }); }
+function updateRocks(){
+  rocks.forEach(r=>{
+    if(r.dead)return;
+
+    r.scale=Math.min(1,r.scale+0.05*dtScale);
+    r.flash=Math.max(0,r.flash-0.09*dtScale);
+
+    if(r.shakeF>0){
+      r.shakeF=Math.max(0,r.shakeF-dtScale);
+      r.shakeX=(Math.random()-0.5)*5;
+      r.shakeY=(Math.random()-0.5)*5;
+      return;
+    }
+
+    r.shakeX=0;
+    r.shakeY=0;
+  });
+}
 
 function resize(){
   screenW=window.innerWidth;screenH=window.innerHeight;
@@ -274,6 +320,7 @@ function frame(ts){
     updateShake();updateSwing();updateChain();updateRocks();
     updateParticles();updateOrePickups();updateFloatTexts();
     if(typeof updateTavernSystems==='function')updateTavernSystems();
+    if(typeof updateDeepLift==='function')updateDeepLift(dt);
     updateUI();
     // Main canvas: shakes with screen shake.
     ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -311,6 +358,7 @@ function frame(ts){
   const gameMenuButton=document.getElementById('game-menu-button');
   const SETTINGS_KEY='mineTycoonSettings';
   const AUTO_START_KEY='mineTycoonAutoStart';
+  const MODAL_FADE_MS=220;
   let started=false;
   let menuReady=false;
   let startFadeTimer=null;
@@ -333,26 +381,45 @@ function frame(ts){
   function readSaveData(){
     try{
       const raw=localStorage.getItem(SAVE_KEY);
-      return raw?JSON.parse(raw):null;
+      if(!raw)return null;
+      const data=JSON.parse(raw);
+      return hasSaveProgress(data)?data:null;
     }catch(e){ return null; }
+  }
+  function hasSaveProgress(save){
+    if(!save||typeof save!=='object')return false;
+    if((Number(save.coins)||0)>0||(Number(save.xp)||0)>0||(Number(save.rareParts)||0)>0||(Number(save.anvilTaps)||0)>0)return true;
+    if(save.currentMineZoneId&&save.currentMineZoneId!=='starter')return true;
+    if(save.upgrades&&Object.values(save.upgrades).some(v=>(Number(v)||0)>0))return true;
+    if(Array.isArray(save.inventory)&&save.inventory.some(Boolean))return true;
+    if(Array.isArray(save.craftedItems)&&save.craftedItems.some(Boolean))return true;
+    if(save.stats&&Object.entries(save.stats).some(([key,value])=>key!=='bestForgedRarity'&&(Number(value)||0)>0))return true;
+    if(save.deepLift&&((Number(save.deepLift.bestFloor)||0)>0||(Number(save.deepLift.totalRuns)||0)>0))return true;
+    if(save.deepLift&&save.deepLift.materials&&Object.values(save.deepLift.materials).some(v=>(Number(v)||0)>0))return true;
+    const tavern=save.tavern||{};
+    return ['activeBuffs','activeBarItems','availableMissions','activeMissions'].some(key=>Array.isArray(tavern[key])&&tavern[key].length>0);
   }
   function levelFromXp(xp){
     let l=0;
     while(((l+1)*(l+1)*20)<=xp)l++;
     return l;
   }
+  function coinText(coins){
+    return `${Math.max(0,Math.floor(Number(coins)||0)).toLocaleString()} coins`;
+  }
   function renderSaveState(){
     const save=readSaveData();
+    const coins=save?Number(save.coins)||0:0;
+    const xp=save?Number(save.xp)||0:0;
     if(!continueBtn)return;
     continueBtn.classList.toggle('hidden',!save);
     if(!save){
       continueBtn.disabled=true;
+      if(saveSummary)saveSummary.textContent='';
       return;
     }
     continueBtn.disabled=false;
-    const coins=Number(save.coins)||0;
-    const xp=Number(save.xp)||0;
-    if(saveSummary)saveSummary.textContent=`Lv ${levelFromXp(xp)} - ${coins} coins`;
+    if(saveSummary)saveSummary.textContent=`Lv ${levelFromXp(xp)} - ${coinText(coins)}`;
   }
   function setMenuReady(){
     if(menuReady)return;
@@ -377,43 +444,104 @@ function frame(ts){
     });
     return Promise.all(waits);
   }
-  function closeModals(){
-    [confirmPanel,settingsPanel,creditsPanel].forEach(panel=>{ if(panel)panel.hidden=true; });
+  function closeModals(options={}){
+    const {sound=false,immediate=false}=options;
+    let closedAny=false;
+    [confirmPanel,settingsPanel,creditsPanel].forEach(panel=>{
+      if(!panel||panel.hidden)return;
+      closedAny=true;
+      panel.classList.remove('is-open');
+      if(immediate)panel.hidden=true;
+      else setTimeout(()=>{ if(!panel.classList.contains('is-open'))panel.hidden=true; },MODAL_FADE_MS);
+    });
+    if(sound&&closedAny&&window.GameAudio&&GameAudio.playUiBack)GameAudio.playUiBack();
   }
   function openModal(panel){
     if(!panel)return;
-    closeModals();
+    closeModals({immediate:true});
     panel.hidden=false;
+    requestAnimationFrame(()=>panel.classList.add('is-open'));
     const focusTarget=panel.querySelector('button,input');
     if(focusTarget)focusTarget.focus({preventScroll:true});
   }
-  function startGame(){
+  function resetCursorInputState(){
+    if(typeof uiCursor==='object'&&uiCursor){
+      uiCursor.mode='world';
+      uiCursor.overInteractive=false;
+      uiCursor.pressed=false;
+      uiCursor.pressT=0;
+    }
+    if(typeof sw==='object'&&sw)sw.active=false;
+  }
+  function hideStartScreenNow(){
+    screen.classList.add('starting','fading','menu-hidden');
+    screen.hidden=true;
+    screen.style.display='none';
+    screen.style.pointerEvents='none';
+  }
+  function showStartScreen(){
+    screen.hidden=false;
+    screen.style.display='';
+    screen.style.pointerEvents='';
+    screen.classList.remove('starting','fading','menu-hidden');
+  }
+  function openResumeMap(){
+    resetCursorInputState();
+    if(typeof openWorldMap==='function'){
+      openWorldMap({instant:true});
+      return;
+    }
+    if(typeof toggleBackpackMap==='function'){
+      toggleBackpackMap(true,'map');
+      return;
+    }
+    if(typeof openPanel==='function'&&typeof backpackMapPanel!=='undefined'&&backpackMapPanel){
+      openPanel(backpackMapPanel);
+      if(typeof switchBmpScreen==='function')switchBmpScreen('map');
+    }
+  }
+  function startGameplayAudio(){
+    if(!window.GameAudio)return;
+    GameAudio.setMenuLoop(false);
+    GameAudio.setLoadingLoop(false);
+    if(typeof currentMineZone==='function'&&currentMineZone().ambience==='dangerousMine')GameAudio.setDangerousMineAmbience(true);
+    else GameAudio.setMineAmbience(true);
+  }
+  function startGame(options={}){
+    const {resumeToMap=false}=options;
     if(started)return;
     started=true;
-    closeModals();
-    document.body.classList.add('game-active');
-    if(window.GameAudio){
-      GameAudio.setMenuLoop(false);
-      GameAudio.setLoadingLoop(false);
-      if(typeof currentMineZone==='function'&&currentMineZone().ambience==='dangerousMine')GameAudio.setDangerousMineAmbience(true);
-      else GameAudio.setMineAmbience(true);
+    closeModals({immediate:true});
+    if(typeof closeAllPanels==='function')closeAllPanels();
+    resetCursorInputState();
+    clearTimeout(startFadeTimer);
+    clearTimeout(startHideTimer);
+    if(resumeToMap){
+      hideStartScreenNow();
+      openResumeMap();
+      document.body.classList.add('game-active');
+      startGameplayAudio();
+      return;
     }
     screen.classList.add('starting');
     screen.querySelectorAll('button,input').forEach(el=>{ el.disabled=true; });
-    clearTimeout(startFadeTimer);
+    document.body.classList.add('game-active');
+    startGameplayAudio();
     startFadeTimer=setTimeout(()=>screen.classList.add('fading'),520);
-    clearTimeout(startHideTimer);
-    startHideTimer=setTimeout(()=>screen.classList.add('menu-hidden'),1280);
+    startHideTimer=setTimeout(()=>{
+      screen.classList.add('menu-hidden');
+      openResumeMap();
+    },1280);
   }
   function returnToMainMenu(){
-    closeModals();
+    closeModals({immediate:true});
     if(typeof closeAllPanels==='function')closeAllPanels();
     started=false;
     clearTimeout(startFadeTimer);
     clearTimeout(startHideTimer);
     if(window.GameAudio)GameAudio.playMapOpenClose();
     document.body.classList.remove('game-active');
-    screen.classList.remove('starting','fading','menu-hidden');
+    showStartScreen();
     screen.querySelectorAll('button,input').forEach(el=>{ el.disabled=false; });
     renderSaveState();
     if(window.GameAudio){
@@ -428,6 +556,27 @@ function frame(ts){
     }catch(e){}
     window.location.reload();
   }
+  function wireMenuSounds(){
+    const menuTargets=screen.querySelectorAll('button,[role="button"]');
+    menuTargets.forEach(el=>{
+      el.addEventListener('pointerenter',()=>{
+        if(el.disabled||el.getAttribute('aria-disabled')==='true')return;
+        if(window.GameAudio&&GameAudio.playUiHover)GameAudio.playUiHover();
+      });
+      el.addEventListener('pointerdown',()=>{
+        if(!window.GameAudio)return;
+        if(el.disabled||el.getAttribute('aria-disabled')==='true'){
+          if(GameAudio.playUiError)GameAudio.playUiError();
+          return;
+        }
+        if(el.matches('[data-menu-close]')) {
+          if(GameAudio.playUiBack)GameAudio.playUiBack();
+          return;
+        }
+        if(GameAudio.playUiClick)GameAudio.playUiClick();
+      });
+    });
+  }
 
   window.MINE_TYCOON_SETTINGS=readSettings();
   applyMenuSettings();
@@ -438,7 +587,7 @@ function frame(ts){
   ]).then(setMenuReady),{once:true});
   setTimeout(setMenuReady,6200);
 
-  if(continueBtn)continueBtn.addEventListener('click',startGame);
+  if(continueBtn)continueBtn.addEventListener('click',()=>startGame({resumeToMap:true}));
   if(newGameBtn)newGameBtn.addEventListener('click',()=>{
     if(readSaveData())openModal(confirmPanel);
     else startGame();
@@ -457,9 +606,10 @@ function frame(ts){
     persistSettings();
     applyMenuSettings();
   });
-  screen.querySelectorAll('[data-menu-close]').forEach(btn=>btn.addEventListener('click',closeModals));
+  screen.querySelectorAll('[data-menu-close]').forEach(btn=>btn.addEventListener('click',()=>closeModals()));
+  wireMenuSounds();
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'&&document.body.contains(screen))closeModals();
+    if(e.key==='Escape'&&document.body.contains(screen))closeModals({sound:true});
   });
 
   try{

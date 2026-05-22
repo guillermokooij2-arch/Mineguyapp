@@ -73,10 +73,14 @@ const uiCursor = { mode:'world', overInteractive:false, pressed:false, pressT:0 
 const SAVE_KEY        = 'mineTycoonPhase2Save';
 const BASE_SWING_DUR  = 18;
 const BASE_CHAIN_TIMEOUT = 72;
+const CRIT_STATIONARY_STREAK = 5;
+const CRIT_RADIUS_DECAY_PER_STREAK = 0.008;
+const CRIT_MIN_RADIUS_SCALE = 0.70;
 const DEFAULT_STATS = {
   rocksBroken: 0,
   totalRocksBroken: 0,
   highestCritChain: 0,
+  totalCritStrikes: 0,
   totalXpEarned: 0,
   totalCoinsEarned: 0,
   totalForgedItems: 0,
@@ -107,9 +111,23 @@ const DEFAULT_TAVERN_STATE = {
   activeMissions: [],
   missionRefreshAt: 0,
 };
+const DEFAULT_DEEP_LIFT_STATE = {
+  bestFloor: 0,
+  bestDungeon: 0,
+  unlockedDungeon: 1,
+  selectedDungeon: 1,
+  totalRuns: 0,
+  completedDungeons: [],
+  materials: {
+    echoShards: 0,
+    boneScrap: 0,
+    glitchOre: 0,
+  },
+  storyFlags: {},
+};
 const AUTO_CRIT_LIMITS = {
   maxAutoCritsPerSwing: 9,
-  delayBetweenAutoCritsMs: 45,
+  delayBetweenAutoCritsMs: 85,
   allowAutoCritsToTriggerAutoCrits: false,
 };
 
@@ -121,7 +139,7 @@ const player = {
   anvilTaps: 0,
   upgrades: {
     // Terminal — early game core
-    power: 0, speed: 0, luck: 0,
+    power: 0, accuracy: 0, luck: 0,
     // Trader — pickaxe / yield / quality of life
     pickaxeTier: 0, rareFinder: 0, stackSize: 0, forgeSkill: 0,
   },
@@ -129,6 +147,11 @@ const player = {
   inventory:    new Array(INVENTORY_SIZE).fill(null),
   craftedItems: new Array(MAX_CRAFTED_ITEMS).fill(null),
   tavern: {...DEFAULT_TAVERN_STATE},
+  deepLift: {
+    ...DEFAULT_DEEP_LIFT_STATE,
+    materials: {...DEFAULT_DEEP_LIFT_STATE.materials},
+    storyFlags: {},
+  },
 };
 
 
@@ -178,14 +201,18 @@ function pickaxeTierAutoCritChance(){ return pickaxeTierLevel()*0.05; }
 function pickaxeTierAutoCritAmount(){ return PICKAXE_TIER_AUTO_CRITS[pickaxeTierLevel()]||0; }
 function activePickaxeImage(){ return PICKAXE_CURSOR_IMAGES[pickaxeTierLevel()]||imgPick; }
 function weakPointUpgradePower(){
-  return Math.max(0,(player.upgrades.speed||0)+(itemBonus('swingSpeed')*0.65));
+  return Math.max(0,(player.upgrades.accuracy||0)+(itemBonus('swingSpeed')*0.65));
 }
 function weakPointBaseRadius(){
   return Math.min(48,18+weakPointUpgradePower()*2.35);
 }
+function weakPointStreakScale(combo=chain.combo){
+  const pressure=Math.max(0,combo-(CRIT_STATIONARY_STREAK-1));
+  return Math.max(CRIT_MIN_RADIUS_SCALE,1-pressure*CRIT_RADIUS_DECAY_PER_STREAK);
+}
 function weakPointHitRadius(rock){
   const scale=rock?rockVisualScale(rock):1;
-  return weakPointBaseRadius()*scale*tavernBuffMult('weakPointWindowMultiplier');
+  return weakPointBaseRadius()*weakPointStreakScale()*scale*tavernBuffMult('weakPointWindowMultiplier');
 }
 function weakPointLocalRadius(rock){
   return weakPointHitRadius(rock)/Math.max(0.001,rockVisualScale(rock));
@@ -195,7 +222,6 @@ function forgedSellMultBonus(){ return itemBonus('forgedSellMult'); }
 function upgradeDiscountBonus(){ return Math.min(0.35,itemBonus('upgradeDiscount')); }
 function pickupRangeBonus(){ return itemBonus('pickupRange'); }
 function activeInventorySize(){ return INVENTORY_SIZE+Math.floor(itemBonus('inventoryCapacity')); }
-function forgedInventorySize(){ return Math.min(MAX_CRAFTED_ITEMS,MAX_CRAFTED_ITEMS+Math.floor(itemBonus('forgedCapacity'))); }
 function effectiveMaxStack(type){ return ORE[type].maxStack+(player.upgrades.stackSize||0)*10; }
 function oreValueMult(type){
   let mult=coinMultBonus()+itemBonus('oreValue')+itemBonus(type+'Value');
@@ -204,9 +230,10 @@ function oreValueMult(type){
 }
 
 function applyUpgradeStats(){
-  const swingFrames=Math.max(9,Math.round((BASE_SWING_DUR-((player.upgrades.speed||0)*0.45)-itemBonus('swingSpeed'))/tavernBuffMult('swingSpeedMultiplier')));
-  const speedWindow=Math.max(0,(player.upgrades.speed||0))*7+Math.max(0,itemBonus('swingSpeed'))*4;
-  const chainFrames=(BASE_CHAIN_TIMEOUT+speedWindow+itemBonus('chainTime'))*tavernBuffMult('weakPointWindowMultiplier');
+  const accuracyLevel=Math.max(0,player.upgrades.accuracy||0);
+  const swingFrames=Math.max(9,Math.round((BASE_SWING_DUR-itemBonus('swingSpeed'))/tavernBuffMult('swingSpeedMultiplier')));
+  const accuracyWindow=accuracyLevel*7+Math.max(0,itemBonus('swingSpeed'))*4;
+  const chainFrames=(BASE_CHAIN_TIMEOUT+accuracyWindow+itemBonus('chainTime'))*tavernBuffMult('weakPointWindowMultiplier');
   sw.durFrames=swingFrames;
   sw.dur=secondsFromFrames(swingFrames);
   chain.timeoutFrames=Math.round(chainFrames);
@@ -220,11 +247,6 @@ function addCraftedItem(id){
   player.inventory[i]={kind:'item',itemId:id,count:1};
   applyUpgradeStats();
   return true;
-}
-function removeCraftedItem(idx){
-  player.craftedItems[idx]=null;
-  applyUpgradeStats();
-  saveGame();
 }
 function forgeSkillPartCost(level=player.upgrades.forgeSkill||0){
   return Math.round(40*Math.pow(1.85,level));
@@ -397,6 +419,71 @@ function xpProgress(){
 function inventoryValue(){
   return player.inventory.reduce((s,slot)=>slot&&slot.kind!=='item'?s+Math.round(slot.count*ORE[slot.type].val*(1+oreValueMult(slot.type))):s,0);
 }
+function hasInventorySpace(){
+  return player.inventory.some((slot,idx)=>idx<activeInventorySize()&&slot===null);
+}
+function countInventoryOre(type){
+  return player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'&&slot.type===type?slot.count:0),0);
+}
+function countInventoryCraftedByRarity(rarity){
+  return player.inventory.reduce((sum,slot)=>{
+    const def=slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId];
+    return sum+(def&&def.rarity===rarity?1:0);
+  },0);
+}
+function countInventoryCraftedAny(){
+  return player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId]?1:0),0);
+}
+function consumeInventoryOre(type,amount){
+  let remaining=amount;
+  for(const slot of player.inventory){
+    if(remaining<=0)break;
+    if(slot&&slot.kind!=='item'&&slot.type===type){
+      const take=Math.min(remaining,slot.count);
+      slot.count-=take;
+      remaining-=take;
+    }
+  }
+  player.inventory=player.inventory.map(slot=>slot&&slot.count<=0?null:slot);
+}
+function consumeInventoryOreValue(valueNeeded){
+  let paid=0;
+  const oreSlots=player.inventory
+    .map((slot,idx)=>slot&&slot.kind!=='item'&&ORE[slot.type]?{idx,type:slot.type,value:ORE[slot.type].val}:null)
+    .filter(Boolean)
+    .sort((a,b)=>a.value-b.value);
+  for(const part of oreSlots){
+    const slot=player.inventory[part.idx];
+    while(slot&&slot.count>0&&paid<valueNeeded){
+      paid+=part.value;
+      slot.count--;
+    }
+    if(slot&&slot.count<=0)player.inventory[part.idx]=null;
+    if(paid>=valueNeeded)break;
+  }
+}
+function consumeInventoryCraftedByRarity(rarity,amount){
+  let remaining=amount;
+  for(let i=0;i<player.inventory.length&&remaining>0;i++){
+    const slot=player.inventory[i];
+    const def=slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId];
+    if(def&&def.rarity===rarity){
+      player.inventory[i]=null;
+      remaining--;
+    }
+  }
+}
+function consumeInventoryCraftedAny(amount){
+  let remaining=amount;
+  for(let i=0;i<player.inventory.length&&remaining>0;i++){
+    const slot=player.inventory[i];
+    const def=slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId];
+    if(def){
+      player.inventory[i]=null;
+      remaining--;
+    }
+  }
+}
 function addToInventory(type, count){
   const maxStack=effectiveMaxStack(type);
   const limit=activeInventorySize();
@@ -448,6 +535,10 @@ function loadSave(){
       imgBg.src=currentMineZone().background;
     }
     player.upgrades={...player.upgrades,...(data.upgrades||{})};
+    if(Number.isFinite(Number(data.upgrades&&data.upgrades.speed))){
+      player.upgrades.accuracy=Math.max(Number(player.upgrades.accuracy)||0,Number(data.upgrades.speed)||0);
+    }
+    delete player.upgrades.speed;
     player.stats={...DEFAULT_STATS,...(data.stats||{})};
     if(Array.isArray(data.inventory)){
       for(let i=0;i<data.inventory.length;i++) player.inventory[i]=data.inventory[i]||null;
@@ -468,6 +559,18 @@ function loadSave(){
       availableMissions:Array.isArray(data.tavern&&data.tavern.availableMissions)?data.tavern.availableMissions:[],
       activeMissions:Array.isArray(data.tavern&&data.tavern.activeMissions)?data.tavern.activeMissions:[],
       missionRefreshAt:Number(data.tavern&&data.tavern.missionRefreshAt)||0,
+    };
+    player.deepLift={
+      ...DEFAULT_DEEP_LIFT_STATE,
+      ...(data.deepLift||{}),
+      materials:{
+        ...DEFAULT_DEEP_LIFT_STATE.materials,
+        ...((data.deepLift&&data.deepLift.materials)||{}),
+      },
+      storyFlags:{
+        ...((data.deepLift&&data.deepLift.storyFlags)||{}),
+      },
+      completedDungeons:Array.isArray(data.deepLift&&data.deepLift.completedDungeons)?data.deepLift.completedDungeons:[],
     };
   }catch(e){}
   applyUpgradeStats();
@@ -501,6 +604,7 @@ function saveGame(){
       inventory:player.inventory,
       craftedItems:[],
       tavern:player.tavern,
+      deepLift:player.deepLift,
     }));
   }catch(e){}
 }

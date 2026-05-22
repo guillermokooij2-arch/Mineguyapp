@@ -1,4 +1,6 @@
-// â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Init
+let terminalHudExpanded=false;
+
 function initPanels(){
   ensureInventorySlots();
   buildCharacterCommandBar();
@@ -11,7 +13,10 @@ function initPanels(){
   };
   const hoverSound=window.UI_HOVER_SOUND_SRC&&typeof Audio!=='undefined'?new Audio(window.UI_HOVER_SOUND_SRC):null;
   document.querySelectorAll('[data-bmp-go]').forEach(btn=>{
-    btn.addEventListener('click',()=>runUiAction(()=>switchBmpScreen(btn.dataset.bmpGo)));
+    btn.addEventListener('click',()=>runUiAction(()=>{
+      if(btn.dataset.bmpGo==='terminal'&&typeof openTerminalScreen==='function')openTerminalScreen({returnTo:backpackScreen==='map'?'map':'inventory'});
+      else switchBmpScreen(btn.dataset.bmpGo);
+    }));
   });
   document.querySelectorAll('.ui-img-btn').forEach(btn=>{
     btn.addEventListener('mouseenter',()=>{
@@ -36,11 +41,13 @@ function initPanels(){
   characterClose.addEventListener('click',()=>runUiAction(()=>toggleCharacter(false)));
   if(charUsernameSave)charUsernameSave.addEventListener('click',()=>{ setPlayerUsername(charUsernameInput&&charUsernameInput.value); renderCharacter(); });
   if(charUsernameInput)charUsernameInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setPlayerUsername(charUsernameInput.value); renderCharacter(); } });
+  wireCharacterTerminalNavigation();
   minerHud.addEventListener('click',()=>runUiAction(()=>toggleCharacter()));
-  minerHud.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')runUiAction(()=>toggleCharacter());});
+  minerHud.addEventListener('keydown',e=>{if(e.target===minerHud&&(e.key==='Enter'||e.key===' '))runUiAction(()=>toggleCharacter());});
   sellAllOresBtn.addEventListener('click',sellAllOres);
   if(sellAllForgedBtn) sellAllForgedBtn.addEventListener('click',sellAllForgedItems);
   if(typeof initTavern==='function')initTavern();
+  if(typeof initDeepLift==='function')initDeepLift();
   if(inventoryGrid){
     inventoryGrid.addEventListener('mousemove',e=>{
       const slot=e.target.closest('.inventory-slot');
@@ -51,15 +58,6 @@ function initPanels(){
   }
   setTraderState(0);
   renderTravelMap();
-  document.getElementById('travel-map-nodes').addEventListener('click',e=>{
-    const node=e.target.closest('.map-node');
-    if(!node)return;
-    if(node.classList.contains('locked')){
-      floatTxt(W*0.5,H*0.24,'Location not unlocked yet','#c09060',false);
-      return;
-    }
-    runUiAction(()=>travelToLocation(node.dataset.action,node));
-  });
   backdrop.addEventListener('click',()=>runUiAction(()=>mapDetailOpen?returnToBackpackMap():closeAllPanels()));
   // Craft result OK button
   document.getElementById('craft-result-ok').addEventListener('click',()=>{
@@ -75,7 +73,6 @@ function buildCharacterCommandBar(){
   bar.setAttribute('aria-label','Miner command bar');
   backpackToggle.classList.add('command-slot','command-backpack');
 
-  // Raised identity panel combines miner portrait, level, and stats entry.
   minerHud.classList.add('command-level-panel');
   minerHud.innerHTML=`
     <div class="command-id-portrait">
@@ -104,25 +101,91 @@ function buildCharacterCommandBar(){
   commandBuffsEl.innerHTML='<span class="command-buff-empty">No active buffs</span>';
   minerHud.appendChild(commandBuffsEl);
 
-  // Wrapper: resources stacked above backpack icon.
+  const terminalInfo=document.createElement('div');
+  terminalInfo.id='terminal-hud-info';
+  terminalInfo.className='terminal-hud-info';
+  terminalInfo.innerHTML=`
+    <div class="terminal-hud-compact">
+      <div class="terminal-hud-status"><span></span><strong>SYS</strong></div>
+      <div class="terminal-hud-resource"><span>COINS</span><strong id="v-coins">0</strong></div>
+      <div class="terminal-hud-resource"><span>ORE</span><strong id="v-ore">0</strong></div>
+      <button id="hud-expand-toggle" class="terminal-hud-toggle" type="button" aria-label="Expand terminal HUD information" aria-expanded="false">▣</button>
+    </div>
+    <div class="terminal-hud-expanded" id="terminal-hud-expanded" aria-label="Expanded terminal telemetry">
+      <div class="terminal-hud-stat-grid" id="terminal-hud-stat-grid"></div>
+      <div class="terminal-hud-actions">
+        <button id="hud-terminal-shortcut" type="button">SYS</button>
+      </div>
+    </div>`;
+  bar.appendChild(terminalInfo);
+
+  const expandToggle=document.getElementById('hud-expand-toggle');
+  if(expandToggle)expandToggle.addEventListener('click',e=>{
+    e.stopPropagation();
+    terminalHudExpanded=!terminalHudExpanded;
+    terminalInfo.classList.toggle('is-expanded',terminalHudExpanded);
+    expandToggle.setAttribute('aria-expanded',terminalHudExpanded?'true':'false');
+    expandToggle.setAttribute('aria-label',terminalHudExpanded?'Collapse terminal HUD information':'Expand terminal HUD information');
+    renderTerminalHudDetails();
+  });
+  const terminalShortcut=document.getElementById('hud-terminal-shortcut');
+  if(terminalShortcut)terminalShortcut.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(typeof openTerminalScreen==='function')openTerminalScreen({returnTo:'inventory'});
+  });
+
   const sideStack=document.createElement('div');
   sideStack.className='command-side-stack';
 
-  const resources=document.createElement('div');
-  resources.id='command-resources';
-  resources.className='command-resources';
-  resources.innerHTML=`
-    <div class="command-resource-row"><span>Coins</span><strong id="v-coins">0</strong></div>
-    <div class="command-resource-row"><span>Ore Bag</span><strong id="v-ore">0</strong></div>`;
-  sideStack.appendChild(resources);
+  terminalInfo.classList.add('command-resources-lite');
+  sideStack.appendChild(terminalInfo);
   sideStack.appendChild(backpackToggle);
   bar.appendChild(sideStack);
   elCoins=document.getElementById('v-coins');
   elOre=document.getElementById('v-ore');
   elBrk=null;
+  renderTerminalHudDetails();
 }
 
-// â”€â”€ UPDATE UI (called every frame) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let characterTerminalNavigationWired=false;
+function visibleCharacterFocusables(){
+  if(!characterPanel||!characterPanel.classList.contains('open'))return [];
+  return Array.from(characterPanel.querySelectorAll('button,input,.char-record-row,.char-stat-row,.char-leaderboard-row')).filter(el=>{
+    if(el.disabled||el.hidden||el.getAttribute('aria-hidden')==='true')return false;
+    return !!(el.offsetWidth||el.offsetHeight||el.getClientRects().length);
+  });
+}
+function focusCharacterTerminal(delta=1){
+  const focusables=visibleCharacterFocusables();
+  if(!focusables.length)return;
+  let index=focusables.indexOf(document.activeElement);
+  if(index<0)index=0;
+  else index=(index+delta+focusables.length)%focusables.length;
+  focusables[index].focus({preventScroll:true});
+}
+function wireCharacterTerminalNavigation(){
+  if(characterTerminalNavigationWired)return;
+  characterTerminalNavigationWired=true;
+  document.addEventListener('keydown',e=>{
+    if(!characterPanel||!characterPanel.classList.contains('open'))return;
+    const key=e.key.toLowerCase();
+    if(['w','a','arrowup','arrowleft'].includes(key)){
+      e.preventDefault();
+      focusCharacterTerminal(-1);
+    }else if(['s','d','arrowdown','arrowright'].includes(key)){
+      e.preventDefault();
+      focusCharacterTerminal(1);
+    }else if(key==='enter'&&document.activeElement&&characterPanel.contains(document.activeElement)){
+      const active=document.activeElement;
+      if(active.matches('button')){
+        e.preventDefault();
+        active.click();
+      }
+    }
+  });
+}
+
+// Update UI (called every frame)
 const HUD_UPDATE_INTERVAL_MS=100;
 const COMMAND_BUFF_RENDER_INTERVAL_MS=1000;
 let _lastHudUpdateAt=-Infinity;
@@ -164,6 +227,7 @@ function updateUI(){
       mhudXpNext.textContent=`Next: ${xpNext} XP`;
       _lastHudXpNext=xpNext;
     }
+    renderTerminalHudDetails();
   }
   if(now-_lastCommandBuffRenderAt>=COMMAND_BUFF_RENDER_INTERVAL_MS){
     _lastCommandBuffRenderAt=now;
@@ -178,7 +242,6 @@ function updateUI(){
       +(c>=20?' chain-flame':'')
       +(c>=40?' chain-blue-flame':'')
       +(c>=45?' chain-void':'');
-    if(c!==_prevCombo&&c%5===0&&window.GameAudio)GameAudio.playCritMilestone();
     if(c>=50&&!_comboBreakerPlayed){
       _comboBreakerPlayed=true;
       if(window.GameAudio)GameAudio.playComboBreaker();
@@ -197,6 +260,21 @@ function updateUI(){
     _prevCombo=0;
     _comboBreakerPlayed=false;
   }
+}
+
+function renderTerminalHudDetails(){
+  const grid=document.getElementById('terminal-hud-stat-grid');
+  if(!grid)return;
+  const stats=player.stats||{};
+  const rows=[
+    ['Power', powerBonus()],
+    ['Luck', `${Math.round(luckBonus()*100)}%`],
+    ['Chain', chain.combo||0],
+    ['Rocks', stats.totalRocksBroken||stats.rocksBroken||0],
+    ['Forge', stats.totalForgedItems||0],
+    ['Lift', player.deepLift&&player.deepLift.bestFloor||0],
+  ];
+  grid.innerHTML=rows.map(([label,value])=>`<div class="terminal-hud-stat"><span>${label}</span><strong>${value}</strong></div>`).join('');
 }
 
 let _lastCommandBuffHtml='';

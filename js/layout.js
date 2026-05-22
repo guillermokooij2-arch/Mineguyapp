@@ -29,7 +29,16 @@ function weightedOre(){
   for(let i=0;i<keys.length;i++){r-=weights[i];if(r<=0)return keys[i];}
   return zone.id==='crystal'?'hardstone':'stone';
 }
-function genPoly(radius,sides){ const pts=[],a0=Math.random()*Math.PI*2; for(let i=0;i<sides;i++){ const a=a0+(i/sides)*Math.PI*2+(Math.random()-0.5)*(Math.PI/sides)*0.6; pts.push({x:Math.cos(a)*radius*(0.72+Math.random()*0.28),y:Math.sin(a)*radius*(0.72+Math.random()*0.28)}); } return pts; }
+function genPoly(radius,sides){
+  const pts=[];
+  const a0=Math.random()*Math.PI*2;
+  for(let i=0;i<sides;i++){
+    const a=a0+(i/sides)*Math.PI*2+(Math.random()-0.5)*(Math.PI/sides)*0.6;
+    const r=radius*(0.72+Math.random()*0.28);
+    pts.push({x:Math.cos(a)*r,y:Math.sin(a)*r});
+  }
+  return pts;
+}
 function genOreDetails(radius,type){
   const veinCount=type==='stone'?3:type==='gold'?7:5;
   const chipCount=8+Math.floor(Math.random()*6);
@@ -116,9 +125,38 @@ function createRock(x,y,afx,afy,depth=null,embed=null,plannedRadius=null){
   const type=weightedOre(),o=ORE[type];
   const radius=plannedRadius||52+Math.random()*26, sides=7+Math.floor(Math.random()*3);
   depth=depth||chooseDepth();
-  return { x,y,afx,afy,type,radius,depth,embed:embed??rand(0.10,0.30), col:o.col,hi:o.hi,rim:o.rim,glow:o.glow,val:o.val, maxHp:o.hp,hp:o.hp,bonusOreChance:0,pts:genPoly(radius,sides),details:genOreDetails(radius,type),cracks:[],shakeX:0,shakeY:0,shakeF:0, flash:0,scale:0,hovered:false,dead:false };
+  return {
+    x,y,afx,afy,type,radius,depth,
+    embed:embed??rand(0.10,0.30),
+    col:o.col,
+    hi:o.hi,
+    rim:o.rim,
+    glow:o.glow,
+    val:o.val,
+    maxHp:o.hp,
+    hp:o.hp,
+    bonusOreChance:0,
+    pts:genPoly(radius,sides),
+    details:genOreDetails(radius,type),
+    cracks:[],
+    shakeX:0,
+    shakeY:0,
+    shakeF:0,
+    flash:0,
+    scale:0,
+    hovered:false,
+    dead:false,
+  };
 }
-function spawnRocks(){ rocks=makeOreLayout().map(a=>{ const r=createRock(a.x,a.y,a.afx,a.afy,a.depth,a.embed,a.radius); r.scale=0.01; return r; }).sort((a,b)=>a.depth.scale-b.depth.scale); }
+function spawnRocks(){
+  rocks=makeOreLayout()
+    .map(a=>{
+      const r=createRock(a.x,a.y,a.afx,a.afy,a.depth,a.embed,a.radius);
+      r.scale=0.01;
+      return r;
+    })
+    .sort((a,b)=>a.depth.scale-b.depth.scale);
+}
 
 function resetChain(){
   chain.rock=null;
@@ -140,7 +178,10 @@ function setWeakPoint(rock, keepCombo=false, fromX=null, fromY=null){
   chain.timer=chain.TIMEOUT;
   if(!keepCombo) chain.combo=0;
   const wp=chainWorldPoint(rock);
-  if(fromX!==null&&fromY!==null) spawnDirLine(fromX,fromY,wp.x,wp.y,rock.glow||'#ffcc00');
+  if(fromX!==null&&fromY!==null){
+    if(typeof spawnWeakPointPath==='function')spawnWeakPointPath(fromX,fromY,wp.x,wp.y,rock.glow||'#ffcc00');
+    else spawnDirLine(fromX,fromY,wp.x,wp.y,rock.glow||'#ffcc00');
+  }
   spawnRing(wp.x,wp.y,'#ffaa00',50);
 }
 

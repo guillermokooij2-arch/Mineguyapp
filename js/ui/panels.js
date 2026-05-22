@@ -1,18 +1,39 @@
+function setCursorLayerMode(mode){
+  if(typeof uiCursor!=='object'||!uiCursor)return;
+  uiCursor.mode=mode;
+  uiCursor.overInteractive=false;
+  uiCursor.pressed=false;
+  uiCursor.pressT=0;
+  if(mode==='world'&&typeof sw==='object'&&sw)sw.active=false;
+}
+let currentDestination='map';
+let terminalView='room';
+let terminalApp='upgrades';
+let terminalUiWired=false;
+function setDestination(destination){
+  currentDestination=destination;
+  document.body.dataset.destination=destination;
+}
 function closeAllPanels(){
-  if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
+  if(typeof hideItemTooltip==='function')hideItemTooltip();
   if(tavernPanel&&tavernPanel.classList.contains('open')&&window.GameAudio)GameAudio.setTavernAmbience(false);
-  ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open'));
-  document.body.classList.remove('panel-open');
+  ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open','instant-open'));
+  document.body.classList.remove('panel-open','map-detail-open','deep-lift-active');
+  if(backpackMapPanel)backpackMapPanel.style.pointerEvents='';
   backpackToggle.classList.remove('open');
   mapDetailOpen=false;
   if(traderAutoTimer)clearInterval(traderAutoTimer);
   traderAutoTimer=null;
+  if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
+  if(typeof resetDeepLiftUi==='function')resetDeepLiftUi(true);
+  setCursorLayerMode('world');
 }
 function openPanel(panel){
   closeAllPanels();
   panel.classList.add('open');
   document.body.classList.add('panel-open');
   if(panel===backpackMapPanel) backpackToggle.classList.add('open');
+  setCursorLayerMode('ui');
 }
 function toggleBackpackMap(open=!backpackMapPanel.classList.contains('open'), screen='inventory'){
   if(window.GameAudio){
@@ -22,11 +43,50 @@ function toggleBackpackMap(open=!backpackMapPanel.classList.contains('open'), sc
   if(open){ openPanel(backpackMapPanel); switchBmpScreen(screen); }
   else closeAllPanels();
 }
+function openWorldMap(options={}){
+  const {instant=false}=options;
+  setDestination('map');
+  if(typeof hideItemTooltip==='function')hideItemTooltip();
+  if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
+  if(typeof resetDeepLiftUi==='function')resetDeepLiftUi(true);
+  ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open'));
+  if(traderAutoTimer)clearInterval(traderAutoTimer);
+  traderAutoTimer=null;
+  mapDetailOpen=false;
+  document.body.classList.remove('map-detail-open');
+  if(instant)backpackMapPanel.classList.add('instant-open');
+  backpackMapPanel.classList.add('open');
+  backpackToggle.classList.add('open');
+  document.body.classList.add('panel-open');
+  switchBmpScreen('map');
+  setCursorLayerMode('ui');
+  if(instant)requestAnimationFrame(()=>backpackMapPanel.classList.remove('instant-open'));
+}
+function openTerminalScreen(options={}){
+  const {returnTo='map',instant=false}=options;
+  setDestination('terminal');
+  if(typeof hideItemTooltip==='function')hideItemTooltip();
+  if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
+  if(typeof resetDeepLiftUi==='function')resetDeepLiftUi(true);
+  ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open'));
+  if(traderAutoTimer)clearInterval(traderAutoTimer);
+  traderAutoTimer=null;
+  mapDetailOpen=false;
+  document.body.classList.remove('map-detail-open');
+  if(instant)backpackMapPanel.classList.add('instant-open');
+  backpackMapPanel.classList.add('open');
+  backpackToggle.classList.add('open');
+  document.body.classList.add('panel-open');
+  switchBmpScreen('terminal',{returnTo});
+  setTerminalView('room',{focus:false});
+  setCursorLayerMode('ui');
+  if(instant)requestAnimationFrame(()=>backpackMapPanel.classList.remove('instant-open'));
+}
 function toggleMarketplace(open=!marketplacePanel.classList.contains('open')){
-  if(open){ openMapDetail(marketplacePanel); renderMarket(); } else returnToBackpackMap();
+  if(open){ setDestination('marketplace'); openMapDetail(marketplacePanel); renderMarket(); } else returnToBackpackMap();
 }
 function toggleWorkbench(open=!workbenchPanel.classList.contains('open')){
-  if(open){ openMapDetail(workbenchPanel); renderWorkbench(); } else returnToBackpackMap();
+  if(open){ setDestination('workbench'); openMapDetail(workbenchPanel); renderWorkbench(); } else returnToBackpackMap();
 }
 function setTraderState(index=0){
   traderStateIndex=((index%TRADER_STATES.length)+TRADER_STATES.length)%TRADER_STATES.length;
@@ -40,6 +100,7 @@ function advanceTraderState(){
 }
 function toggleTrader(open=!traderPanel.classList.contains('open')){
   if(open){
+    setDestination('trader');
     openMapDetail(traderPanel);
     setTraderState(0);
     renderUpgradePanel('trader',traderList);
@@ -57,7 +118,7 @@ function toggleCharacter(open=!characterPanel.classList.contains('open')){
   if(open){ openPanel(characterPanel); renderCharacter(); } else closeAllPanels();
 }
 
-// â”€â”€ BACKPACK NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Backpack navigation
 function switchBmpScreen(screen, opts={}){
   if(screen==='terminal') terminalReturnScreen=opts.returnTo||'inventory';
   backpackScreen=screen;
@@ -65,7 +126,8 @@ function switchBmpScreen(screen, opts={}){
   document.getElementById('bmp-map').classList.toggle('hidden', screen!=='map');
   document.getElementById('bmp-terminal').classList.toggle('hidden', screen!=='terminal');
   backpackMapPanel.classList.toggle('map-mode', screen==='map');
-  backpackBack.classList.toggle('hidden', screen==='inventory');
+  backpackMapPanel.classList.toggle('terminal-mode', screen==='terminal');
+  backpackBack.classList.toggle('hidden', screen!=='terminal');
   backpackMapClose.classList.toggle('hidden', screen==='map'||screen==='terminal');
   const titles={
     inventory:['Backpack','Inventory'],
@@ -75,37 +137,282 @@ function switchBmpScreen(screen, opts={}){
   const [kicker,title]=titles[screen]||titles.inventory;
   backpackKicker.textContent=kicker;
   backpackTitle.textContent=title;
-  if(screen==='terminal') renderShop();
+  if(screen==='terminal'){
+    wireTerminalUi();
+    setTerminalView(terminalView||'room',{focus:false});
+    renderShop();
+    renderTerminalMiniOs();
+  }
   if(screen==='inventory') renderInventory();
   if(screen==='map') renderTravelMap();
 }
 function backpackGoBack(){
   if(window.GameAudio)GameAudio.playMapOpenClose();
   if(backpackScreen==='terminal') switchBmpScreen(terminalReturnScreen==='map'?'map':'inventory');
-  else if(backpackScreen==='map') switchBmpScreen('inventory');
+}
+
+function terminalStage(){
+  return document.querySelector('.sys-terminal-stage');
+}
+function visibleTerminalFocusables(){
+  const stage=terminalStage();
+  if(!stage||terminalView!=='screen')return [];
+  return Array.from(stage.querySelectorAll('.terminal-focusable')).filter(el=>{
+    if(el.disabled||el.hidden||el.getAttribute('aria-hidden')==='true')return false;
+    const panel=el.closest('[hidden],.sys-os-app:not(.active)');
+    if(panel)return false;
+    return true;
+  });
+}
+function focusTerminalControl(delta=1){
+  const focusables=visibleTerminalFocusables();
+  if(!focusables.length)return;
+  const current=document.activeElement;
+  let index=focusables.indexOf(current);
+  if(index<0)index=0;
+  else index=(index+delta+focusables.length)%focusables.length;
+  focusables[index].focus({preventScroll:true});
+}
+function setTerminalView(view='room',options={}){
+  const stage=terminalStage();
+  if(!stage)return;
+  terminalView=view==='screen'?'screen':'room';
+  stage.dataset.terminalView=terminalView;
+  const room=stage.querySelector('.sys-room-view');
+  const screen=stage.querySelector('.sys-screen-view');
+  if(room)room.hidden=terminalView!=='room';
+  if(screen)screen.hidden=terminalView!=='screen';
+  renderTerminalMiniOs();
+  if(options.focus!==false){
+    const target=terminalView==='room'
+      ? document.getElementById('terminal-room-enter')
+      : stage.querySelector('.sys-os-tab.active')||stage.querySelector('.terminal-focusable');
+    if(target)target.focus({preventScroll:true});
+  }
+}
+function switchTerminalApp(app='upgrades'){
+  terminalApp=['upgrades','stats','leaderboards','settings','logs'].includes(app)?app:'upgrades';
+  renderTerminalMiniOs();
+}
+function terminalStatRows(){
+  const stats=player.stats||{};
+  const progress=typeof xpProgress==='function'?xpProgress():{cur:0,needed:20,pct:0};
+  const oreValue=typeof inventoryValue==='function'?inventoryValue():0;
+  const bagUsed=Array.isArray(player.inventory)?player.inventory.filter(Boolean).length:0;
+  const bagMax=typeof activeInventorySize==='function'?activeInventorySize():20;
+  return [
+    ['Level', typeof playerLevel==='function'?playerLevel():1],
+    ['XP', `${progress.cur}/${progress.needed}`],
+    ['Coins', player.coins||0],
+    ['Ore Value', oreValue],
+    ['Bag Slots', `${bagUsed}/${bagMax}`],
+    ['Rocks Broken', stats.totalRocksBroken||stats.rocksBroken||0],
+    ['Best Chain', stats.highestCritChain||0],
+    ['Forged Items', stats.totalForgedItems||0],
+    ['Deep Runs', player.deepLift&&player.deepLift.totalRuns||0],
+    ['Best Floor', player.deepLift&&player.deepLift.bestFloor||0],
+  ];
+}
+function terminalDetailedStatRows(){
+  const stats={...(typeof DEFAULT_STATS==='object'?DEFAULT_STATS:{}),...(player.stats||{})};
+  const progress=typeof xpProgress==='function'?xpProgress():{cur:0,needed:20,pct:0};
+  const level=typeof playerLevel==='function'?playerLevel():1;
+  const oreCount=Array.isArray(player.inventory)?player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'?slot.count:0),0):0;
+  const activeBuffs=player.tavern&&Array.isArray(player.tavern.activeBuffs)?player.tavern.activeBuffs:[];
+  const bestRarity=stats.bestForgedRarity||'common';
+  const cm=typeof coinMultBonus==='function'?Math.round(coinMultBonus()*100):0;
+  const xm=typeof xpMultBonus==='function'?Math.round(xpMultBonus()*100):0;
+  const emptyDash='-';
+  return [
+    {key:'coins',sprite:'C',label:'Coins',val:player.coins||0,metric:player.coins||0},
+    {key:'oreBag',sprite:'O',label:'Ore in Bag',val:`${oreCount} ore / ${typeof inventoryValue==='function'?inventoryValue():0}c`,metric:oreCount},
+    {key:'rocksBroken',sprite:'R',label:'Rocks Broken',val:stats.rocksBroken||0,metric:stats.rocksBroken||0},
+    {key:'totalRocks',sprite:'T',label:'Total Rocks',val:stats.totalRocksBroken||0,metric:stats.totalRocksBroken||0},
+    {key:'totalXp',sprite:'X',label:'Total XP',val:stats.totalXpEarned||player.xp||0,metric:stats.totalXpEarned||player.xp||0},
+    {key:'currentLevel',sprite:'L',label:'Current Level',val:level,metric:level},
+    {key:'xpProgress',sprite:'X',label:'XP Progress',val:`${progress.cur}/${progress.needed}`,metric:progress.cur},
+    {key:'highestCritChain',sprite:'C',label:'Max Crit Chain Record',val:stats.highestCritChain||0,metric:stats.highestCritChain||0},
+    {key:'power',sprite:'P',label:'Total Damage',val:`+${typeof powerBonus==='function'?powerBonus():0} dmg`,metric:typeof powerBonus==='function'?powerBonus():0},
+    {key:'luck',sprite:'U',label:'Universal Luck',val:`+${typeof luckBonus==='function'?Math.round(luckBonus()*100):0}%`,metric:typeof luckBonus==='function'?Math.round(luckBonus()*100):0},
+    {key:'yield',sprite:'Y',label:'Yield Bonus',val:`+${typeof yieldBonus==='function'?Math.round(yieldBonus()*100):0}%`,metric:typeof yieldBonus==='function'?Math.round(yieldBonus()*100):0},
+    {key:'sellBonus',sprite:'S',label:'Sell Bonus',val:cm>0?`+${cm}%`:emptyDash,metric:cm},
+    {key:'xpBonus',sprite:'B',label:'XP Bonus',val:xm>0?`+${xm}%`:emptyDash,metric:xm},
+    {key:'totalForgedItems',sprite:'F',label:'Forged Items',val:stats.totalForgedItems||0,metric:stats.totalForgedItems||0},
+    {key:'bestForged',sprite:'Q',label:'Best Forged',val:typeof RARITY_LABELS==='object'?(RARITY_LABELS[bestRarity]||bestRarity):bestRarity,metric:typeof rarityRank==='function'?rarityRank(bestRarity)*40:0},
+    {key:'swingSpeed',sprite:'S',label:'Swing Speed',val:`${typeof BASE_SWING_DUR==='number'&&typeof sw==='object'&&sw?Math.round(BASE_SWING_DUR/(sw.durFrames||BASE_SWING_DUR)*100):100}%`,metric:typeof BASE_SWING_DUR==='number'&&typeof sw==='object'&&sw?Math.round(BASE_SWING_DUR/(sw.durFrames||BASE_SWING_DUR)*100)-100:0},
+    {key:'accuracy',sprite:'A',label:'Accuracy',val:`${typeof weakPointBaseRadius==='function'?Math.round(weakPointBaseRadius()):0}px / ${typeof chain==='object'&&chain?Math.round(chain.timeoutFrames):0}f`,metric:typeof weakPointBaseRadius==='function'?Math.round(weakPointBaseRadius()+(typeof chain==='object'&&chain?chain.timeoutFrames/8:0)):0},
+    {key:'rareBonus',sprite:'R',label:'Rare Ore Bonus',val:`+${typeof rareFinderBonus==='function'?Math.round(rareFinderBonus()*100):0}%`,metric:typeof rareFinderBonus==='function'?Math.round(rareFinderBonus()*100):0},
+    {key:'forgeBonus',sprite:'F',label:'Forge Bonus',val:`+${typeof forgeLuckBonus==='function'?Math.round(forgeLuckBonus()*100):0}% luck`,metric:typeof forgeLuckBonus==='function'?Math.round(forgeLuckBonus()*100):0},
+    {key:'gamblingLuck',sprite:'G',label:'Gambling Luck',val:`${typeof gamblingLuckMult==='function'?Math.round(gamblingLuckMult()*100):100}%`,metric:typeof gamblingLuckMult==='function'?Math.round(gamblingLuckMult()*100)-100:0},
+    {key:'activeBuffs',sprite:'B',label:'Tavern Buffs Active',val:activeBuffs.length?`${activeBuffs.length}/7`:'None',metric:activeBuffs.length},
+  ];
+}
+function renderTerminalStats(){
+  const list=document.getElementById('terminal-stats-list');
+  if(!list)return;
+  list.innerHTML=terminalDetailedStatRows().map(s=>{
+    const metric=Number(s.metric)||0;
+    const tier=typeof statAchievementTier==='function'?statAchievementTier(s.key,metric):{rank:'SYS',className:'tier-stone'};
+    const next=typeof nextStatAchievementRequirement==='function'?nextStatAchievementRequirement(s.key,metric):'SYS record tracked locally';
+    return `<div class="terminal-stat-row ${tier.className}" tabindex="0" data-next="${next}"><span class="terminal-stat-icon">${s.sprite}</span><span class="terminal-stat-label">${s.label}</span><span class="terminal-stat-rank">${tier.rank}</span><strong>${s.val}</strong></div>`;
+  }).join('');
+}
+function renderTerminalLeaderboards(){
+  const list=document.getElementById('terminal-leaderboard-list');
+  if(!list)return;
+  const rows=typeof localLeaderboardRows==='function'?localLeaderboardRows():[];
+  list.innerHTML=rows.map(row=>`<button class="terminal-leaderboard-row terminal-focusable is-player" type="button"><span>${row.mark}</span><strong>${row.label}</strong><em>${row.score}</em></button>`).join('');
+}
+function renderTerminalLogs(){
+  const el=document.getElementById('terminal-log-lines');
+  if(!el)return;
+  const level=typeof playerLevel==='function'?playerLevel():1;
+  const runs=player.deepLift&&Number(player.deepLift.totalRuns)||0;
+  const best=player.deepLift&&Number(player.deepLift.bestFloor)||0;
+  const lines=[
+    'boot: lynx-mine kernel mounted claim_root as read-only',
+    'sensor: pick rhythm accepted; manual labor loop stable',
+    level>=5?'lift: deep route handshake returned a second heartbeat':'lift: deep route locked behind miner-level gate',
+    runs>0?`deep-lift: ${runs} run sample(s), best floor ${best}`:'deep-lift: no descent samples recorded',
+    'notice: fantasy shell integrity nominal',
+    'warning: room temperature differs from painted lantern model',
+  ];
+  el.innerHTML=lines.map(line=>`<p><span>&gt;</span>${line}</p>`).join('');
+}
+function syncTerminalSettings(){
+  const muted=document.getElementById('terminal-muted');
+  const reduced=document.getElementById('terminal-reduced-motion');
+  const settings=window.MINE_TYCOON_SETTINGS||{};
+  if(muted)muted.checked=window.GameAudio&&GameAudio.isMuted?GameAudio.isMuted():!!settings.muted;
+  if(reduced)reduced.checked=!!settings.reducedMotion;
+}
+function persistTerminalSettings(){
+  try{ localStorage.setItem('mineTycoonSettings',JSON.stringify(window.MINE_TYCOON_SETTINGS||{})); }catch(e){}
+}
+function renderTerminalMiniOs(){
+  const stage=terminalStage();
+  if(!stage)return;
+  stage.querySelectorAll('.sys-os-tab').forEach(tab=>{
+    const active=tab.dataset.terminalApp===terminalApp;
+    tab.classList.toggle('active',active);
+    tab.setAttribute('aria-selected',active?'true':'false');
+  });
+  stage.querySelectorAll('[data-terminal-panel]').forEach(panel=>{
+    const active=panel.dataset.terminalPanel===terminalApp;
+    panel.classList.toggle('active',active);
+    panel.hidden=!active;
+  });
+  renderTerminalStats();
+  renderTerminalLeaderboards();
+  renderTerminalLogs();
+  syncTerminalSettings();
+}
+function wireTerminalUi(){
+  if(terminalUiWired)return;
+  terminalUiWired=true;
+  document.addEventListener('click',e=>{
+    const enter=e.target.closest('#terminal-room-enter');
+    if(enter){ setTerminalView('screen'); return; }
+    const room=e.target.closest('#terminal-screen-back');
+    if(room){ setTerminalView('room'); return; }
+    const tab=e.target.closest('[data-terminal-app]');
+    if(tab){ switchTerminalApp(tab.dataset.terminalApp); tab.focus({preventScroll:true}); return; }
+    if(e.target.closest('#terminal-return-map')){ openWorldMap({instant:true}); return; }
+    if(e.target.closest('#terminal-refresh-os')){ renderShop(); renderTerminalMiniOs(); return; }
+  });
+  document.addEventListener('change',e=>{
+    if(e.target&&e.target.id==='terminal-muted'){
+      window.MINE_TYCOON_SETTINGS={...(window.MINE_TYCOON_SETTINGS||{}),muted:e.target.checked};
+      if(window.GameAudio&&GameAudio.setMuted)GameAudio.setMuted(e.target.checked);
+      persistTerminalSettings();
+    }
+    if(e.target&&e.target.id==='terminal-reduced-motion'){
+      window.MINE_TYCOON_SETTINGS={...(window.MINE_TYCOON_SETTINGS||{}),reducedMotion:e.target.checked};
+      document.body.classList.toggle('reduced-motion',!!e.target.checked);
+      persistTerminalSettings();
+    }
+  });
+  document.addEventListener('keydown',e=>{
+    if(backpackScreen!=='terminal'||terminalView!=='screen')return;
+    const key=e.key.toLowerCase();
+    if(['w','a','arrowup','arrowleft'].includes(key)){
+      e.preventDefault();
+      focusTerminalControl(-1);
+    }else if(['s','d','arrowdown','arrowright'].includes(key)){
+      e.preventDefault();
+      focusTerminalControl(1);
+    }else if(key==='enter'&&document.activeElement&&document.activeElement.classList.contains('terminal-focusable')){
+      e.preventDefault();
+      document.activeElement.click();
+    }
+  });
 }
 function openMapDetail(panel){
   closeAllPanels();
   mapDetailOpen=true;
+  backpackMapPanel.classList.remove('open','instant-open');
+  backpackMapPanel.style.pointerEvents='';
   panel.classList.add('open');
-  document.body.classList.add('panel-open');
+  document.body.classList.add('panel-open','map-detail-open');
+  setCursorLayerMode('ui');
 }
 function returnToBackpackMap(){
-  if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
-  ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open'));
-  if(traderAutoTimer)clearInterval(traderAutoTimer);
-  traderAutoTimer=null;
-  document.body.classList.add('panel-open');
-  backpackMapPanel.classList.add('open');
-  backpackToggle.classList.add('open');
-  mapDetailOpen=false;
-  switchBmpScreen('map');
+  openWorldMap();
 }
 
+function enterMineDestination(zoneId='starter'){
+  setDestination(zoneId==='crystal'?'crystal-vein':'mineshaft');
+  closeAllPanels();
+  if(typeof setMineZone==='function'){
+    setMineZone(zoneId);
+    saveGame();
+  }
+  if(Array.isArray(rocks)&&rocks.length===0&&typeof spawnRocks==='function')spawnRocks();
+  setCursorLayerMode('world');
+}
+
+const MAP_DESTINATION_HANDLERS={
+  current:()=>enterMineDestination(typeof currentMineZone==='function'?currentMineZone().id:'starter'),
+  'starter-mine':()=>enterMineDestination('starter'),
+  marketplace:()=>toggleMarketplace(true),
+  workbench:()=>toggleWorkbench(true),
+  trader:()=>toggleTrader(true),
+  terminal:()=>openTerminalScreen({returnTo:'map'}),
+  tavern:()=>{ setDestination('tavern'); toggleTavern(true); },
+  'deep-lift':()=>{ setDestination('deep-lift'); if(typeof toggleDeepLift==='function')toggleDeepLift(true); },
+  'crystal-vein':()=>enterMineDestination('crystal'),
+};
+
 let _travelMapBuilt=false;
+let _travelMapWired=false;
+function handleTravelMapNodeClick(node){
+  if(!node)return;
+  if(node.classList.contains('locked')||node.disabled||node.getAttribute('aria-disabled')==='true'){
+    floatTxt(W*0.5,H*0.24,'Location not unlocked yet','#c09060',false);
+    return;
+  }
+  try{
+    travelToLocation(node.dataset.action,node);
+  }catch(err){
+    console.error('Map travel failed:',err);
+    if(node)node.classList.remove('traveling');
+    returnToBackpackMap();
+  }
+}
+function wireTravelMap(){
+  const layer=document.getElementById('travel-map-nodes');
+  if(!layer||_travelMapWired)return;
+  _travelMapWired=true;
+  layer.addEventListener('click',e=>{
+    const node=e.target.closest('.map-node');
+    if(!node)return;
+    handleTravelMapNodeClick(node);
+  });
+}
 function renderTravelMap(){
   const layer=document.getElementById('travel-map-nodes');
   if(!layer)return;
+  wireTravelMap();
   if(!_travelMapBuilt){
     _travelMapBuilt=true;
     MAP_LOCATIONS.forEach(loc=>{
@@ -113,6 +420,7 @@ function renderTravelMap(){
       const state=resolveMapLocationState(loc);
       btn.className=`map-node ${state}`;
       btn.type='button';
+      btn.disabled=false;
       btn.dataset.loc=loc.id;
       btn.dataset.action=loc.action||'';
       btn.dataset.labelPos=loc.labelPos||'bottom';
@@ -129,6 +437,10 @@ function renderTravelMap(){
           <span class="map-node-name">${loc.name}</span>
           <span class="map-node-sub">${resolveMapLocationSub(loc)}</span>
         </span>`;
+      btn.addEventListener('click',e=>{
+        e.stopPropagation();
+        handleTravelMapNodeClick(btn);
+      });
       layer.appendChild(btn);
     });
   } else {
@@ -138,6 +450,7 @@ function renderTravelMap(){
       if(!loc)return;
       const state=resolveMapLocationState(loc);
       btn.className=`map-node ${state}`;
+      btn.disabled=false;
       btn.setAttribute('aria-disabled',state==='locked'?'true':'false');
       const sub=btn.querySelector('.map-node-sub');
       if(sub)sub.textContent=resolveMapLocationSub(loc);
@@ -145,41 +458,32 @@ function renderTravelMap(){
   }
 }
 function resolveMapLocationState(loc){
-  const zone=typeof currentMineZone==='function'?currentMineZone():null;
-  if(loc.id==='mineshaft'&&(!zone||zone.id==='starter'))return 'active';
-  if(loc.id==='crystal-vein'&&zone&&zone.id==='crystal')return 'active';
   if(loc.id==='crystal-vein')return playerLevel()>=30?'available':'locked';
-  return loc.state==='levelLocked'?'locked':(loc.state||'available');
+  if(loc.id==='deep-lift')return playerLevel()>=5?'available':'locked';
+  return loc.state==='levelLocked'?'locked':(loc.state==='active'?'available':(loc.state||'available'));
 }
 function resolveMapLocationSub(loc){
   if(loc.id==='crystal-vein')return playerLevel()>=30?'Dangerous mine':'Unlocks at Lv 30';
+  if(loc.id==='deep-lift')return playerLevel()>=5?'Dungeon test':'Unlocks at Lv 5';
   return loc.sub;
 }
 
 function travelToLocation(action, nodeEl){
   if(!action)return;
-  if(action==='current'||action==='starter-mine'){
-    if(action==='starter-mine'){
-      setMineZone('starter');
-      saveGame();
-    }
-    closeAllPanels();
+  const handler=MAP_DESTINATION_HANDLERS[action];
+  if(!handler){
+    console.warn('Unknown map destination:',action);
+    return;
+  }
+  if(action==='current'||action==='starter-mine'||action==='crystal-vein'){
+    handler();
     return;
   }
   nodeEl.classList.add('traveling');
   setTimeout(()=>{
     try{
       nodeEl.classList.remove('traveling');
-      if(action==='marketplace') toggleMarketplace(true);
-      if(action==='workbench') toggleWorkbench(true);
-      if(action==='trader') toggleTrader(true);
-      if(action==='terminal') switchBmpScreen('terminal',{returnTo:'map'});
-      if(action==='tavern') toggleTavern(true);
-      if(action==='crystal-vein'){
-        setMineZone('crystal');
-        closeAllPanels();
-        saveGame();
-      }
+      handler();
     }catch(err){
       console.error('Map travel failed:',err);
       if(nodeEl)nodeEl.classList.remove('traveling');
@@ -187,4 +491,25 @@ function travelToLocation(action, nodeEl){
     }
   },180);
 }
+
+let _panelFallbackControlsWired=false;
+function wirePanelFallbackControls(){
+  if(_panelFallbackControlsWired)return;
+  _panelFallbackControlsWired=true;
+  const bind=(el,fn)=>{
+    if(!el)return;
+    el.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      fn();
+    },true);
+  };
+  bind(backpackBack,backpackGoBack);
+  bind(backpackMapClose,()=>toggleBackpackMap(false));
+  bind(marketClose,()=>toggleMarketplace(false));
+  bind(workbenchClose,()=>toggleWorkbench(false));
+  bind(traderClose,()=>toggleTrader(false));
+  bind(characterClose,()=>toggleCharacter(false));
+}
+wirePanelFallbackControls();
 

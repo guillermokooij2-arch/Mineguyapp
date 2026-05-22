@@ -39,26 +39,35 @@
 
     <div class="menu-desk" aria-hidden="true"></div>
 
-    <nav class="menu-props" aria-label="Main menu">
-      <button id="menu-continue" class="menu-prop prop-continue hidden" type="button" aria-label="Continue saved game" data-tooltip="Continue">
-        <img src="images/main-menu/miner-journal-closed.png" alt="">
-        <span class="prop-live-label">Continue</span>
-        <span id="menu-save-summary" class="save-summary" aria-live="polite"></span>
-      </button>
-      <button id="menu-new-game" class="menu-prop prop-new-game" type="button" aria-label="Start a new game" data-tooltip="New Game">
-        <img src="images/main-menu/mining-contract-parchment.png" alt="">
-        <span class="contract-mark">NEW CLAIM</span>
-      </button>
-      <button id="menu-settings" class="menu-prop prop-settings" type="button" aria-label="Open settings" data-tooltip="Settings">
-        <img src="images/main-menu/brass-gear-box-closed.png" alt="">
-      </button>
-      <button id="menu-credits" class="menu-prop prop-credits" type="button" aria-label="Open credits" data-tooltip="Credits">
-        <img src="images/main-menu/credits-plaque-notice.png" alt="">
-        <span class="plaque-mark">NOTICE</span>
-      </button>
-    </nav>
-
-    <div class="menu-hint" aria-hidden="true">Choose a claim from the desk</div>
+    <div class="main-menu-shell">
+      <nav class="menu-props" aria-label="Main menu">
+        <button id="menu-continue" class="menu-prop prop-continue hidden" type="button" aria-label="Continue saved game">
+          <img class="menu-prop-icon" src="images/main-menu/miner-journal-closed.png" alt="">
+          <span class="menu-label-group">
+            <span class="menu-label">Continue</span>
+            <span id="menu-save-summary" class="save-summary" aria-live="polite"></span>
+          </span>
+        </button>
+        <button id="menu-new-game" class="menu-prop prop-new-game" type="button" aria-label="Start a new claim">
+          <img class="menu-prop-icon" src="images/main-menu/mining-contract-parchment.png" alt="">
+          <span class="menu-label-group">
+            <span class="menu-label">New Claim</span>
+          </span>
+        </button>
+        <button id="menu-settings" class="menu-prop prop-settings" type="button" aria-label="Open options">
+          <img class="menu-prop-icon" src="images/main-menu/brass-gear-box-closed.png" alt="">
+          <span class="menu-label-group">
+            <span class="menu-label">Options</span>
+          </span>
+        </button>
+        <button id="menu-credits" class="menu-prop prop-credits" type="button" aria-label="Open notices and credits">
+          <img class="menu-prop-icon" src="images/main-menu/credits-plaque-notice.png" alt="">
+          <span class="menu-label-group">
+            <span class="menu-label">Notices</span>
+          </span>
+        </button>
+      </nav>
+    </div>
 
     <section id="menu-confirm-new" class="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-confirm-title" hidden>
       <div class="modal-surface parchment-surface">
@@ -88,7 +97,7 @@
 
     <section id="menu-credits-panel" class="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-credits-title" hidden>
       <div class="modal-surface plaque-surface">
-        <h2 id="menu-credits-title">Mine Notice</h2>
+        <h2 id="menu-credits-title">Notices & Credits</h2>
         <p>Drunk Dwarf is a painterly browser mining adventure by 12pg, built with vanilla HTML, CSS, and JavaScript.</p>
         <p>Art direction: rugged mine camp, warm lanterns, contract desk, and tactile prop-based UI.</p>
         <button class="menu-modal-close" type="button" data-menu-close>Close</button>
@@ -184,22 +193,77 @@
       </div>
     </div>
 
-    <!-- TERMINAL TAB — power/speed/luck upgrades, moved from standalone button -->
+    <!-- TERMINAL TAB — room entry plus mini OS terminal -->
     <div class="bmp-section hidden" id="bmp-terminal">
-      <div class="bmp-term-wrap">
-        <div class="bmp-term-head">
-          <div class="pc-scanline"></div>
-          <div class="bmp-term-title">
-            <span class="pc-label">SYS</span>
-            <span class="pc-sub">MINE TERMINAL</span>
-            <div class="pc-dot"></div>
+      <div class="sys-terminal-stage" data-terminal-view="room">
+        <section class="sys-room-view" aria-label="SYS terminal room">
+          <img class="sys-room-bg" src="images/sys-terminal/sys-room.png" alt="">
+          <button id="terminal-room-enter" class="sys-room-enter ui-img-btn terminal-focusable" type="button" aria-label="Use SYS terminal">
+            <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/terminal-normal.png" alt="">
+            <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/terminal-hover.png" alt="">
+            <span class="sys-room-enter-glow"></span>
+          </button>
+        </section>
+
+        <section class="sys-screen-view" aria-label="SYS terminal screen" hidden>
+          <img class="sys-screen-bg" src="images/sys-terminal/sys-screen-pov.png" alt="">
+          <div class="sys-screen-overlay">
+            <div class="sys-os-window">
+              <div class="sys-os-topbar">
+                <div>
+                  <span class="sys-os-kicker">LYNX-MINE KERNEL</span>
+                  <strong>SYS://CLAIM-ROOT</strong>
+                </div>
+                <button id="terminal-screen-back" class="terminal-focusable" type="button">ROOM</button>
+              </div>
+              <div class="sys-os-tabs" role="tablist" aria-label="SYS terminal apps">
+                <button class="sys-os-tab terminal-focusable active" type="button" role="tab" aria-selected="true" data-terminal-app="upgrades">UPGRADES</button>
+                <button class="sys-os-tab terminal-focusable" type="button" role="tab" aria-selected="false" data-terminal-app="stats">STATS</button>
+                <button class="sys-os-tab terminal-focusable" type="button" role="tab" aria-selected="false" data-terminal-app="leaderboards">LEADERS</button>
+                <button class="sys-os-tab terminal-focusable" type="button" role="tab" aria-selected="false" data-terminal-app="settings">SETTINGS</button>
+                <button class="sys-os-tab terminal-focusable" type="button" role="tab" aria-selected="false" data-terminal-app="logs">LOGS</button>
+              </div>
+              <div class="sys-os-body">
+                <section class="sys-os-app active" data-terminal-panel="upgrades" role="tabpanel">
+                  <div class="bmp-term-head">
+                    <div class="pc-scanline"></div>
+                    <div class="bmp-term-title">
+                      <span class="pc-label">SYS</span>
+                      <span class="pc-sub">UPGRADE DAEMON</span>
+                      <div class="pc-dot"></div>
+                    </div>
+                    <div class="bmp-term-coins-row">
+                      <span class="bmp-term-coins-lbl">Coins</span>
+                      <strong id="terminal-coins">0</strong>
+                    </div>
+                  </div>
+                  <div id="terminal-upgrade-list" class="upgrade-list"></div>
+                </section>
+                <section class="sys-os-app" data-terminal-panel="stats" role="tabpanel" hidden>
+                  <div class="sys-os-panel-head"><span>MINER STATS</span><strong>Live claim telemetry</strong></div>
+                  <div id="terminal-stats-list" class="terminal-stats-list"></div>
+                </section>
+                <section class="sys-os-app" data-terminal-panel="leaderboards" role="tabpanel" hidden>
+                  <div class="sys-os-panel-head"><span>LEADERBOARDS</span><strong>Tracked categories</strong></div>
+                  <div id="terminal-leaderboard-list" class="terminal-leaderboard-list"></div>
+                </section>
+                <section class="sys-os-app" data-terminal-panel="settings" role="tabpanel" hidden>
+                  <div class="sys-os-panel-head"><span>SETTINGS</span><strong>Local machine controls</strong></div>
+                  <label class="sys-setting-row"><span>Mute audio</span><input id="terminal-muted" class="terminal-focusable" type="checkbox"></label>
+                  <label class="sys-setting-row"><span>Reduced motion</span><input id="terminal-reduced-motion" class="terminal-focusable" type="checkbox"></label>
+                  <div class="sys-setting-actions">
+                    <button id="terminal-return-map" class="terminal-focusable" type="button">RETURN MAP</button>
+                    <button id="terminal-refresh-os" class="terminal-focusable" type="button">REFRESH</button>
+                  </div>
+                </section>
+                <section class="sys-os-app" data-terminal-panel="logs" role="tabpanel" hidden>
+                  <div class="sys-os-panel-head"><span>LOGS</span><strong>Recovered fragments</strong></div>
+                  <div class="terminal-log-lines" id="terminal-log-lines" aria-live="polite"></div>
+                </section>
+              </div>
+            </div>
           </div>
-          <div class="bmp-term-coins-row">
-            <span class="bmp-term-coins-lbl">Coins</span>
-            <strong id="terminal-coins">0</strong>
-          </div>
-        </div>
-        <div id="terminal-upgrade-list" class="upgrade-list"></div>
+        </section>
       </div>
     </div>
 
@@ -219,7 +283,7 @@
         <div class="panel-kicker">Miner</div>
         <h2>Character</h2>
       </div>
-      <button class="close-btn ui-img-btn" id="character-close" type="button" aria-label="Close character panel">
+      <button class="back-btn panel-back-btn ui-img-btn" id="character-close" type="button" aria-label="Close character panel">
         <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
         <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
       </button>
@@ -384,6 +448,69 @@
     <div id="tavern-content" class="tavern-content"></div>
   </div>
 
+  <div id="deep-lift-panel" aria-label="Deep Lift dungeon test" aria-hidden="true">
+    <canvas id="deep-lift-canvas" width="960" height="540"></canvas>
+    <div class="deep-lift-noise" aria-hidden="true"></div>
+    <div class="deep-lift-hud">
+      <div><span>Floor</span><strong id="deep-lift-floor">1</strong></div>
+      <div><span>Wave</span><strong id="deep-lift-wave">1/3</strong></div>
+      <div><span>Loot</span><strong id="deep-lift-loot">0</strong></div>
+      <div><span>Best</span><strong id="deep-lift-best">0</strong></div>
+    </div>
+    <div class="deep-lift-hp-panel" id="deep-lift-hp-panel" aria-label="Dungeon health">
+      <span>HP</span>
+      <strong id="deep-lift-hp">100</strong>
+      <div class="deep-lift-hp-bar" aria-hidden="true"><i></i></div>
+    </div>
+    <div id="deep-lift-crit" class="deep-lift-crit" aria-live="polite" hidden>
+      <strong id="deep-lift-crit-num">1</strong>
+      <span>CRIT CHAIN</span>
+    </div>
+    <div class="deep-lift-story" id="deep-lift-story" aria-live="polite" hidden>
+      <span>Lift static</span>
+      <strong>The lift hums like something breathing behind glass.</strong>
+    </div>
+    <div id="deep-lift-map" class="deep-lift-map" aria-label="Deep Lift dungeon map">
+      <div class="deep-lift-map-bg" aria-hidden="true"></div>
+      <button class="deep-lift-map-back ui-img-btn" id="deep-lift-close" type="button" aria-label="Back to map">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+      <div class="deep-lift-map-title">
+        <span>Deep Lift</span>
+        <h2>Dungeon Routes</h2>
+        <p>Clear a dungeon in one run to unlock the next route.</p>
+      </div>
+      <div id="deep-lift-floor-list" class="deep-lift-floor-list"></div>
+      <aside id="deep-lift-route-intel" class="deep-lift-route-intel">
+        <span>Route Intel</span>
+        <h3 id="deep-lift-route-name">Old Stone Descent</h3>
+        <p id="deep-lift-route-desc">Hover a dungeon route to inspect enemies and progress.</p>
+        <div id="deep-lift-route-enemies" class="deep-lift-route-enemies"></div>
+        <button id="deep-lift-route-enter" class="deep-lift-plaque-btn" type="button">Enter Dungeon</button>
+      </aside>
+    </div>
+    <div class="deep-lift-actions">
+      <button id="deep-lift-start" class="deep-lift-plaque-btn" type="button">Enter Floor</button>
+      <button id="deep-lift-descend" class="deep-lift-plaque-btn" type="button" hidden>Descend</button>
+      <button id="deep-lift-extract" class="deep-lift-plaque-btn" type="button">Extract</button>
+    </div>
+    <div class="deep-lift-help">
+      <span>WASD move</span>
+      <span>Click enemies</span>
+      <span>Hit glowing weak points</span>
+    </div>
+    <div id="deep-lift-cursor" class="deep-lift-cursor" aria-hidden="true"></div>
+    <div id="deep-lift-reward" class="deep-lift-reward" hidden>
+      <div class="deep-lift-reward-card">
+        <span>Extracted</span>
+        <h2>Run Haul</h2>
+        <div id="deep-lift-reward-list" class="deep-lift-reward-list"></div>
+        <button id="deep-lift-reward-close" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
   <div id="zone-lbl" hidden></div>
   <div id="hint">Mine ore · Hit the weak point to chain crits · Click miner for stats</div>
 
@@ -399,6 +526,7 @@
   <script src="js/data/ui-data.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/ui/panels.js"></script>
+  <script src="js/deep-lift.js"></script>
   <script src="js/ui/economy-upgrades.js"></script>
   <script src="js/ui/workbench.js"></script>
   <script src="js/ui/inventory-market.js"></script>

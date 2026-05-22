@@ -14,6 +14,7 @@ const marketplacePanel=document.getElementById('marketplace-panel'),marketClose=
 const workbenchPanel=document.getElementById('workbench-panel'),workbenchClose=document.getElementById('workbench-close');
 const traderPanel=document.getElementById('trader-panel'),traderClose=document.getElementById('trader-close'),traderList=document.getElementById('trader-list');
 const traderCharacterBtn=document.getElementById('trader-character'),traderCharacterImg=document.getElementById('trader-character-img'),traderSpeech=document.getElementById('trader-speech');
+const deepLiftPanel=document.getElementById('deep-lift-panel');
 const characterPanel=document.getElementById('character-panel'),characterClose=document.getElementById('character-close'),charStatsList=document.getElementById('char-stats-list'),charRecordsList=document.getElementById('char-records-list'),charUsernameInput=document.getElementById('char-username'),charUsernameSave=document.getElementById('char-username-save');
 const minerHud=document.getElementById('miner-hud');
 let commandBuffsEl=null,mhudXpNext=null;
@@ -26,8 +27,8 @@ let traderStateIndex=0;
 let traderResetTimer=null;
 let traderAutoTimer=null;
 
-// â”€â”€ PANEL MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const ALL_PANEL_ELS=[backpackMapPanel,marketplacePanel,workbenchPanel,traderPanel,characterPanel,tavernPanel];
+// Panel management
+const ALL_PANEL_ELS=[backpackMapPanel,marketplacePanel,workbenchPanel,traderPanel,characterPanel,tavernPanel,deepLiftPanel];
 let backpackScreen='inventory';
 let terminalReturnScreen='inventory';
 let mapDetailOpen=false;

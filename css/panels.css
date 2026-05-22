@@ -8,4 +8,45 @@
   transition:transform .28s cubic-bezier(.2,.9,.18,1),opacity .2s ease;
 }
 #marketplace-panel.open,#workbench-panel.open,#trader-panel.open { transform:translateX(0); opacity:1; pointer-events:auto; }
+#backpack-map-panel:not(.open),
+#character-panel:not(.open),
+#marketplace-panel:not(.open),
+#workbench-panel:not(.open),
+#trader-panel:not(.open),
+#tavern-panel:not(.open),
+#deep-lift-panel:not(.open) {
+  visibility:hidden;
+  pointer-events:none !important;
+}
+#backpack-map-panel.open,
+#character-panel.open,
+#marketplace-panel.open,
+#workbench-panel.open,
+#trader-panel.open,
+#tavern-panel.open,
+#deep-lift-panel.open {
+  visibility:visible;
+}
+body.map-detail-open #marketplace-panel.open,
+body.map-detail-open #workbench-panel.open,
+body.map-detail-open #trader-panel.open,
+body.map-detail-open #character-panel.open,
+body.map-detail-open #tavern-panel.open,
+body.map-detail-open #deep-lift-panel.open {
+  z-index:280;
+}
+
+body.map-detail-open #marketplace-panel.open,
+body.map-detail-open #workbench-panel.open,
+body.map-detail-open #trader-panel.open {
+  left:0;
+  top:0;
+  right:0;
+  bottom:0;
+  width:100vw;
+  height:100vh;
+  max-height:none;
+  border-radius:0;
+  transform:none;
+}
 

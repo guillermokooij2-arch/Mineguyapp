@@ -673,7 +673,7 @@
   display:grid;
   align-content:start;
   gap:5px;
-  padding:16px 15px 12px;
+  padding:23px 22px 18px;
   color:#4a2b13;
   background:url('../images/tavern/missions/mission-note.png') center/100% 100% no-repeat;
   filter:drop-shadow(0 8px 9px rgba(0,0,0,0.42));
@@ -726,12 +726,12 @@
   width:190px;
   min-height:132px;
   justify-self:start;
-  padding:16px 13px 11px 25px;
+  padding:22px 21px 16px 30px;
 }
 .tavern-mission-note:nth-child(2) { transform:rotate(1.5deg); }
 .tavern-mission-note:nth-child(3) { transform:rotate(-1deg); }
 .tavern-mission-note.failed { filter:saturate(.5) brightness(.75); }
-.tavern-mission-note h4 { margin:4px 0 0; color:#3a1f0c; font-size:12px; line-height:1.02; }
+.tavern-mission-note h4 { margin:2px 0 0; color:#3a1f0c; font-size:12px; line-height:1.02; }
 .tavern-mission-note p,
 .tavern-mission-note span { margin:0; font-size:9px; line-height:1.1; font-weight:bold; }
 .tavern-active-contract-zone .tavern-mission-note h4 { font-size:11px; }
@@ -1507,6 +1507,9 @@
   gap:28px;
   transform:translateX(-50%);
 }
+.devils-card-row.is-empty {
+  pointer-events:none;
+}
 .tavern-content .devils-card {
   position:relative;
   width:118px;
@@ -1517,6 +1520,21 @@
   color:inherit;
   text-indent:0;
   filter:drop-shadow(0 12px 13px rgba(0,0,0,0.58));
+  transition:transform .18s ease,filter .18s ease;
+}
+.tavern-content .devils-card::after {
+  content:"";
+  position:absolute;
+  inset:12px 14px;
+  border-radius:52% 48% 48% 52%;
+  background:radial-gradient(circle at 50% 58%,rgba(255,105,64,.18),transparent 58%);
+  opacity:0;
+  pointer-events:none;
+}
+.tavern-content .devils-card.is-dealt {
+  opacity:0;
+  animation:devilDealCard .48s cubic-bezier(.18,.88,.28,1.12) forwards;
+  animation-delay:calc(var(--card-index) * 145ms);
 }
 .tavern-content .devils-card:disabled {
   opacity:1;
@@ -1528,11 +1546,23 @@
 }
 .devils-card:hover:not(:disabled),
 .devils-card:focus-visible {
-  animation:devilCardHoverBob .72s ease-in-out infinite;
+  animation:devilTemptCard 2.65s cubic-bezier(.34,.02,.32,1) infinite;
   filter:drop-shadow(0 0 16px rgba(190,33,24,0.42)) drop-shadow(0 12px 13px rgba(0,0,0,0.58));
+}
+.devils-card:hover:not(:disabled)::after,
+.devils-card:focus-visible::after {
+  animation:devilTemptGlow 2.65s ease-in-out infinite;
 }
 .tavern-content .devils-card.is-selected {
   animation:devilChosen 1.05s ease infinite alternate;
+}
+.tavern-content .devils-card.is-returning {
+  pointer-events:none;
+  animation:devilCardReturn .62s ease-in forwards;
+}
+.tavern-content .devils-card.is-gone {
+  opacity:0;
+  pointer-events:none;
 }
 .tavern-content .devils-card.is-revealed {
   background-image:url('../images/tavern/gambling/devils-draw/cursed-card-reveal-frame.png');
@@ -1583,6 +1613,31 @@
   from { transform:translateX(-52%) rotate(-3deg); }
   to { transform:translateX(-48%) rotate(3deg); }
 }
+@keyframes devilDealCard {
+  from {
+    opacity:0;
+    transform:translate(var(--return-x),-165px) rotate(-8deg) scale(.58);
+    filter:drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+  }
+  68% {
+    opacity:1;
+    transform:translate(0,8px) rotate(2deg) scale(1.04);
+  }
+  to {
+    opacity:1;
+    transform:translate(0,0) rotate(0) scale(1);
+  }
+}
+@keyframes devilCardReturn {
+  from {
+    opacity:1;
+    transform:translate(0,0) rotate(0) scale(1);
+  }
+  to {
+    opacity:0;
+    transform:translate(var(--return-x),-165px) rotate(9deg) scale(.54);
+  }
+}
 @keyframes devilChosen {
   from { filter:drop-shadow(0 0 8px rgba(160,28,22,0.36)); }
   to { filter:drop-shadow(0 0 24px rgba(236,54,36,0.68)); }
@@ -1591,6 +1646,17 @@
   0%,100% { transform:translateY(0) rotate(0deg); }
   45% { transform:translateY(-10px) rotate(-1.5deg); }
   70% { transform:translateY(-5px) rotate(1deg); }
+}
+@keyframes devilTemptCard {
+  0% { transform:translateY(0) rotate(0deg) scale(1); }
+  34% { transform:translateY(-7px) rotate(-.7deg) scale(1.018); }
+  68% { transform:translateY(-17px) rotate(-1.8deg) scale(1.065); }
+  86% { transform:translateY(-13px) rotate(.7deg) scale(1.05); }
+  100% { transform:translateY(-9px) rotate(-.4deg) scale(1.035); }
+}
+@keyframes devilTemptGlow {
+  0%,100% { opacity:.12; transform:scale(.9); }
+  62% { opacity:1; transform:scale(1.08); }
 }
 @keyframes devilCurseReveal {
   0% { transform:translateY(-10px) rotate(-2deg) scale(.96); }
@@ -1642,4 +1708,14 @@
   0% { transform:translateY(0) rotate(0); }
   55% { transform:translateY(8px) rotate(-2deg); }
   100% { transform:translateY(0) rotate(0); }
+}
+body.reduced-motion .devils-card:hover:not(:disabled),
+body.reduced-motion .devils-card:focus-visible {
+  animation:none;
+  transform:translateY(-8px) scale(1.03);
+}
+body.reduced-motion .devils-card:hover:not(:disabled)::after,
+body.reduced-motion .devils-card:focus-visible::after {
+  animation:none;
+  opacity:.44;
 }

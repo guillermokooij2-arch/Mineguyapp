@@ -58,29 +58,29 @@ const OLD_CRAFT_ITEM_DEFS = {
   bloodstone: {
     name:'Bloodstone', rarity:'rare', type:'gem',
     col:'#880020', glow:'#ff4040',
-    effect:{ power:2, xpMult:0.20 }, desc:'+2 dmg, +20% XP',
+    effect:{ power:6, xpMult:0.20 }, desc:'+6 dmg, +20% XP',
   },
   swift_ring: {
     name:'Swift Ring', rarity:'rare', type:'ring',
     col:'#207888', glow:'#40d8ff',
-    effect:{ swingSpeed:2, chainTime:20 }, desc:'-2 swing spd, +20 chain timer',
+    effect:{ swingSpeed:4, chainTime:20 }, desc:'-4 swing spd, +20 chain timer',
   },
   // ── LEGENDARY ───────────────────────────────────────────────────────────────
   void_pick: {
     name:'Void Pickaxe', rarity:'legendary', type:'pickaxe',
     col:'#5520aa', glow:'#aa44ff',
-    effect:{ power:6, yield:0.40 }, desc:'+6 dmg, +40% yield',
+    effect:{ power:16, yield:0.40 }, desc:'+16 dmg, +40% yield',
   },
   star_pendant: {
     name:'Star Pendant', rarity:'legendary', type:'amulet',
     col:'#208898', glow:'#88eeff',
-    effect:{ xpMult:0.30, coinMult:0.15 }, desc:'+30% XP, +15% coins',
+    effect:{ xpMult:0.30, coinMult:0.25 }, desc:'+30% XP, +25% coins',
   },
   cosmic_shard: {
     name:'Cosmic Shard', rarity:'legendary', type:'gem',
     col:'#aa44aa', glow:'#ffaaff',
-    effect:{ power:3, luck:0.08, yield:0.20, coinMult:0.15 },
-    desc:'+3 dmg, +8% luck, +20% yield, +15% coins',
+    effect:{ power:10, luck:0.08, yield:0.20, coinMult:0.15 },
+    desc:'+10 dmg, +8% luck, +20% yield, +15% coins',
   },
 };
 

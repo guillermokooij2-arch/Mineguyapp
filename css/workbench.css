@@ -176,7 +176,10 @@
   opacity:.78;
 }
 #workbench-panel.workbench-forging {
-  animation:forgeScreenShake .18s ease-in-out infinite;
+  animation:none;
+}
+#workbench-panel.workbench-forging .craft-forge-stage {
+  animation:forgeStageShake .18s ease-in-out infinite;
 }
 #workbench-panel.workbench-forging::after {
   content:"";
@@ -494,7 +497,7 @@
 #workbench-panel .forge-result-hint { position:relative; z-index:1; }
 .item-tooltip {
   position:fixed;
-  z-index:260;
+  z-index:295;
   max-width:286px;
   padding:13px 14px;
   border:1px solid rgba(219,153,72,0.5);
@@ -510,6 +513,7 @@
 .item-tooltip-row span { color:#9f805a; text-transform:uppercase; letter-spacing:.8px; font-size:9px; }
 .item-tooltip-row strong { color:#ffe0a0; font-weight:normal; line-height:1.35; }
 @keyframes forgeScreenShake { 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(calc(-50% + 2px),calc(-50% - 1px)) scale(1.002);} }
+@keyframes forgeStageShake { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(2px,-1px) scale(1.002);} }
 @keyframes forgeDarkPulse { from{opacity:.75;} to{opacity:1;} }
 @keyframes forgeRevealFlash { from{opacity:1;transform:scale(.94);} to{opacity:0;transform:scale(1.25);} }
 @keyframes forgeVideoHammerStrike { 0%,100%{transform:translate(-50%,-50%) rotate(-38deg) scale(.96);} 48%{transform:translate(-50%,-50%) rotate(17deg) scale(1.02);} 58%{transform:translate(-50%,-50%) rotate(21deg) scale(.99);} 76%{transform:translate(-50%,-50%) rotate(-10deg) scale(.97);} }

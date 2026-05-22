@@ -2,24 +2,30 @@
 (function(){
   const SETTINGS_KEY='mineTycoonSettings';
   const SOURCES={
-    mineHit:{src:'sounds/mine-hit.mp3',volume:0.85,pool:8,cooldown:38},
+    mineHit:{src:'sounds/mine-hit.ogg',volume:0.85,pool:8,cooldown:38},
     oreCollect:{src:'sounds/ore-collect.wav',volume:0.34,pool:6,cooldown:34},
     buttonPress:{src:'sounds/button-press-2.mp3',volume:0.62,pool:5,cooldown:28},
-    critMilestone:{src:'sounds/crit-hit.mp3',volume:0.9,pool:4,cooldown:120},
+    critHit:{src:'sounds/crit-hit.mp3',volume:0.9,pool:8,cooldown:0},
+    critHit5:{src:'sounds/crit-hit5.mp3',volume:0.96,pool:4,cooldown:0},
+    critHit10:{src:'sounds/crit-hit-10.mp3',volume:1,pool:3,cooldown:0},
     purchase:{src:'sounds/purchase.mp3',volume:0.82,pool:5,cooldown:45},
     mapOpenClose:{src:'sounds/mapopenclose.mp3',volume:0.64,pool:4,cooldown:80},
     comboBreaker:{src:'sounds/combobreaker.mp3',volume:0.9,pool:2,cooldown:500},
     backpackOpen:{src:'sounds/backpackopen.mp3',volume:0.82,pool:3,cooldown:120},
     rockBreak1:{src:'sounds/rockbreak-1.mp3',volume:0.82,pool:3,cooldown:90},
     rockBreak2:{src:'sounds/rockbreak-2.mp3',volume:0.82,pool:3,cooldown:90},
+    uiHover:{src:'sounds/button-press.wav',volume:0.2,pool:4,cooldown:20},
+    uiClick:{src:'sounds/button-press-2.mp3',volume:0.52,pool:4,cooldown:34},
+    uiBack:{src:'sounds/mapopenclose.mp3',volume:0.48,pool:3,cooldown:80},
+    uiError:{src:'sounds/combobreaker.mp3',volume:0.38,pool:2,cooldown:180},
   };
   const LOOPS={
     oldMine:{src:'sounds/old-mine-ambience.mp3',volume:1},
     dangerousMine:{src:'sounds/dangerous-mine-shaftmp3-52820.mp3',volume:0.72},
-    menu:{src:'sounds/startmenuloop-lift-shaft-73002.mp3',volume:0.28},
+    menu:{src:'sounds/startmenuloop-lift-shaft-73002.mp3',volume:0.88},
     loading:{src:'sounds/gameloading.mp3',volume:0.42,loop:false},
     forge:{src:'sounds/forgesoundeffect.mp3',volume:0.78,loop:false},
-    tavern:{src:'sounds/bar-ambience.mp3',volume:0.42},
+    tavern:{src:'sounds/bar-ambience.mp3',volume:0.62},
   };
   const state={
     muted:readMuted(),
@@ -99,10 +105,16 @@
     getPool('purchase');
     getPool('mapOpenClose');
     getPool('comboBreaker');
-    getPool('critMilestone');
+    getPool('critHit');
+    getPool('critHit5');
+    getPool('critHit10');
     getPool('backpackOpen');
     getPool('rockBreak1');
     getPool('rockBreak2');
+    getPool('uiHover');
+    getPool('uiClick');
+    getPool('uiBack');
+    getPool('uiError');
     const startScreen=document.getElementById('start-screen');
     if(document.body.classList.contains('game-active')){
       if(typeof currentMineZone==='function'&&currentMineZone().ambience==='dangerousMine')setDangerousMineAmbience(true);
@@ -126,8 +138,24 @@
     play('mineHit',{volume:0.92+Math.random()*0.16,rate:randomRate(1.02,0.07)});
   }
 
-  function playCritHit(){
-    playMineHit();
+  function critSoundId(combo){
+    const c=Math.max(0,Math.floor(Number(combo)||0));
+    if(c>0&&c%10===0)return 'critHit10';
+    if(c>0&&c%5===0)return 'critHit5';
+    return 'critHit';
+  }
+
+  function critRate(combo,auto=false){
+    const c=Math.max(1,Math.floor(Number(combo)||1));
+    const climb=Math.min(0.54,(c-1)*0.018);
+    return randomRate((auto?1.04:0.98)+climb,0.025);
+  }
+
+  function playCritHit(options={}){
+    const combo=Math.max(1,Math.floor(Number(options.combo)||1));
+    const id=critSoundId(combo);
+    const milestoneBoost=id==='critHit10'?1.08:id==='critHit5'?1.03:1;
+    play(id,{volume:(0.94+Math.random()*0.1)*milestoneBoost,rate:critRate(combo,!!options.auto),ignoreCooldown:true});
   }
 
   function playOreCollect(options={}){
@@ -141,7 +169,7 @@
     play('purchase',{volume:0.92+Math.random()*0.1,rate:randomRate(1.02,0.035)});
   }
   function playCritMilestone(){
-    play('critMilestone',{volume:1,rate:randomRate(1.02,0.025),ignoreCooldown:true});
+    play('critHit5',{volume:1,rate:randomRate(1.04,0.025),ignoreCooldown:true});
   }
   function playMapOpenClose(){
     play('mapOpenClose',{volume:0.9+Math.random()*0.08,rate:randomRate(1,0.025)});
@@ -154,6 +182,18 @@
   }
   function playComboBreaker(){
     play('comboBreaker',{volume:1,rate:1,ignoreCooldown:true});
+  }
+  function playUiHover(){
+    play('uiHover',{volume:0.9+Math.random()*0.12,rate:randomRate(1.18,0.025)});
+  }
+  function playUiClick(){
+    play('uiClick',{volume:0.9+Math.random()*0.1,rate:randomRate(1.02,0.025)});
+  }
+  function playUiBack(){
+    play('uiBack',{volume:0.9+Math.random()*0.08,rate:randomRate(0.96,0.02)});
+  }
+  function playUiError(){
+    play('uiError',{volume:1,rate:randomRate(0.86,0.025)});
   }
 
   function finishLoadingSequence(){
@@ -292,6 +332,7 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tryStartLoadingOnOpen,{once:true});
   else setTimeout(tryStartLoadingOnOpen,0);
   document.addEventListener('pointerdown',e=>{
+    if(e.target&&e.target.closest&&e.target.closest('#start-screen'))return;
     if(isPressableUiTarget(e.target))playButtonPress();
   },{capture:true});
   document.addEventListener('keydown',unlock,{once:true,capture:true});
@@ -309,6 +350,10 @@
     playPurchase,
     playMapOpenClose,
     playComboBreaker,
+    playUiHover,
+    playUiClick,
+    playUiBack,
+    playUiError,
     setMineAmbience,
     setDangerousMineAmbience,
     setTavernAmbience,

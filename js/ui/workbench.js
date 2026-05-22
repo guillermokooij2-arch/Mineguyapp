@@ -1,7 +1,5 @@
-// â”€â”€ WORKBENCH CRAFTING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Workbench crafting
 const RARITY_COLS={ junk:'#7b7469', common:'#88bb55', uncommon:'#5599dd', rare:'#cc77ff', epic:'#ff66aa', legendary:'#ff9900', mythic:'#f7f0b8', god:'#66f7ff' };
-const TYPE_ICONS={ junk:'JNK', pickaxe:'PCK', ring:'RNG', amulet:'AMU', gem:'GEM', charm:'CHM', relic:'RLC' };
-function typeIcon(t){ return TYPE_ICONS[t]||'ITM'; }
 function craftItemIconSrc(itemId){ return `images/workbench/items/${itemId}.png`; }
 function craftItemIconHtml(itemId,def,className='crafted-item-art'){
   const glow=(def&&def.glow)||(def&&def.col)||'#ffd27a';
@@ -57,6 +55,9 @@ function forgeChancePercentages(weights){
     .filter(r=>weights[r]>0)
     .map(r=>({rarity:r,pct:weights[r]/total*100}));
 }
+function hasCraftInventorySpace(){
+  return typeof hasInventorySpace==='function'?hasInventorySpace():player.inventory.some((slot,idx)=>idx<activeInventorySize()&&slot===null);
+}
 function currentSmeltRecipe(){
   const level=player.upgrades.forgeSkill||0;
   return CRAFT_RECIPES
@@ -89,104 +90,134 @@ function _showWorkbenchPhase(phase){
   if(resultEl) resultEl.classList.toggle('hidden',  phase!=='result');
 }
 
+function getCraftRecipeViewModel(recipe,counts,hasItemSpace,forgeLevel,nextRecipe){
+  const offer=getCraftOffer(recipe,counts);
+  const value=offeringValue(recipe,offer);
+  const minValue=recipe.minValue||0;
+  const meetsMinimum=value>=minValue;
+  const canAfford=Object.entries(offer).some(([,n])=>n>0)&&Object.entries(offer).every(([type,n])=>(counts[type]||0)>=n)&&meetsMinimum;
+  const canForge=canAfford&&hasItemSpace;
+  const offerTypes=Object.entries(offer).filter(([,n])=>n>0).map(([type,n])=>`${n} ${ORE[type].lbl}`).join(' + ')||'No ore selected';
+  const offerAmount=Object.values(offer).reduce((sum,n)=>sum+n,0);
+  const weights=forgeRarityWeights(recipe,offer);
+  return {
+    offer,
+    value,
+    minValue,
+    canForge,
+    forgeLevel,
+    ownedTypes:ORE_KEYS.filter(type=>(counts[type]||0)>0),
+    quality:Math.round(offeringOreQuality(offer)*100),
+    offerTypes,
+    offerAmount,
+    nextText:nextRecipe?`${nextRecipe.name} at Forge Lv ${nextRecipe.minForgeLevel}`:'Max forge tier',
+    raritiesHtml:recipe.rarities.map(rarity=>`<span class="rarity-chip" style="color:${RARITY_COLS[rarity]};border-color:${RARITY_COLS[rarity]}40">${RARITY_LABELS[rarity]||rarity}</span>`).join(''),
+    chancesHtml:forgeChancePercentages(weights).map(({rarity,pct})=>`<span style="color:${RARITY_COLS[rarity]||'#d6a85f'}">${RARITY_LABELS[rarity]||rarity}: ${pct<1?pct.toFixed(1):Math.round(pct)}%</span>`).join(''),
+    forgeStatus:!hasItemSpace?'Backpack Full':canForge?'Strike Anvil':value>0?`Need ${Math.max(0,minValue-value)} more value`:'Select Ore',
+  };
+}
+function craftOfferControlsHtml(recipe,counts,view){
+  if(!view.ownedTypes.length)return `<div class="craft-empty-offer">No mined ore in your backpack.</div>`;
+  return view.ownedTypes.map(type=>{
+    const has=counts[type]||0;
+    const amount=view.offer[type]||0;
+    const icon=MARKET_ORE_ICONS&&MARKET_ORE_ICONS[type]?MARKET_ORE_ICONS[type]:'';
+    return `<div class="craft-offer-control${amount>0?' craft-offer-used':''}" style="--ore-col:${ORE[type].col};--ore-glow:${ORE[type].glow||ORE[type].hi}">
+      <span class="craft-offer-ore">
+        ${icon?`<img src="${icon}" alt="">`:''}
+        <strong>${ORE[type].lbl}</strong>
+        <em>${ORE[type].val}v each &middot; Bag ${has}</em>
+      </span>
+      <div class="craft-stepper">
+        <button type="button" data-type="${type}" data-delta="-1">-</button>
+        <input type="number" min="0" max="${has}" value="${amount}" data-type="${type}">
+        <button type="button" data-type="${type}" data-delta="1">+</button>
+      </div>
+      <button class="craft-fill-btn" type="button" data-type="${type}" data-fill-min="1">+ Min Value</button>
+    </div>`;
+  }).join('');
+}
+function craftRecipeInfoHtml(recipe,counts,view){
+  return `
+    <div class="craft-card-top">
+      <span class="craft-card-icon">${craftTierIconHtml(recipe)}</span>
+      <div class="craft-card-info">
+        <div class="craft-card-name">${recipe.name}</div>
+        <div class="craft-card-desc">${recipe.desc}</div>
+      </div>
+    </div>
+    <div class="craft-cost-row">${craftOfferControlsHtml(recipe,counts,view)}</div>
+    <div class="craft-offer-row">
+      <span>Selected Ore <strong>${view.offerTypes}</strong></span>
+      <span>Amount <strong>${view.offerAmount}</strong></span>
+      <span>Minimum Value <strong>${view.minValue}v</strong></span>
+      <span>Offering Value <strong>${view.value}v</strong></span>
+      <span>Ore Quality <strong>${view.quality}%</strong></span>
+    </div>
+    <div class="craft-tier-row">
+      <span>Current Forge Level <strong>${view.forgeLevel}</strong></span>
+      <span>Next Unlock <strong>${view.nextText}</strong></span>
+    </div>
+    <div class="craft-rar-row">${view.raritiesHtml}</div>
+    <div class="craft-chance-row">${view.chancesHtml}</div>`;
+}
+function craftAnvilHtml(recipe,view){
+  return `
+    <button class="craft-anvil-button" type="button" aria-label="Forge ${recipe.name}" ${view.canForge?'':'disabled'}>
+      <img class="craft-anvil-hero craft-anvil-hero-normal" src="images/workbench/anvil-normal.png" alt="">
+      <img class="craft-anvil-hero craft-anvil-hero-hover" src="images/workbench/anvil-hover.png" alt="">
+    </button>
+    <div class="craft-anvil-status">${view.forgeStatus}</div>`;
+}
+function bindCraftRecipeCard(card,recipe,offer){
+  const anvilButton=card.querySelector('.craft-anvil-button');
+  if(anvilButton)anvilButton.addEventListener('click',event=>{
+    event.stopPropagation();
+    attemptCraft(recipe);
+  });
+  card.querySelectorAll('.craft-stepper button').forEach(stepBtn=>{
+    stepBtn.addEventListener('click',()=>{
+      const type=stepBtn.dataset.type;
+      setCraftOffer(recipe,type,(offer[type]||0)+Number(stepBtn.dataset.delta||0));
+    });
+  });
+  card.querySelectorAll('.craft-fill-btn').forEach(fillBtn=>{
+    fillBtn.addEventListener('click',()=>addMinimumCraftOffer(recipe,fillBtn.dataset.type));
+  });
+  card.querySelectorAll('.craft-stepper input').forEach(input=>{
+    input.addEventListener('change',()=>setCraftOffer(recipe,input.dataset.type,Number(input.value)));
+  });
+}
+function createCraftRecipeCard(recipe,counts,view){
+  const card=document.createElement('div');
+  card.className='craft-card'+(view.canForge?'':' craft-card-locked');
+  card.innerHTML=craftRecipeInfoHtml(recipe,counts,view);
+  const anvilWrap=document.createElement('div');
+  anvilWrap.className='craft-anvil-wrap';
+  anvilWrap.innerHTML=craftAnvilHtml(recipe,view);
+  card.appendChild(anvilWrap);
+  bindCraftRecipeCard(card,recipe,view.offer);
+  return card;
+}
+
 function renderCraftRecipes(){
   const list=document.getElementById('craft-recipe-list');
   if(!list)return;
   const counts=oreCounts();
-  const hasItemSpace=player.inventory.some((s,idx)=>idx<activeInventorySize()&&s===null);
+  const hasItemSpace=hasCraftInventorySpace();
   const forgeLevel=player.upgrades.forgeSkill||0;
   list.innerHTML='';
   const recipe=currentSmeltRecipe();
   const nextRecipe=nextSmeltRecipe();
-    const offer=getCraftOffer(recipe,counts);
-    const value=offeringValue(recipe,offer);
-    const minValue=recipe.minValue||0;
-    const meetsMinimum=value>=minValue;
-    const canAfford=Object.entries(offer).some(([,n])=>n>0)&&Object.entries(offer).every(([t,n])=>(counts[t]||0)>=n)&&meetsMinimum;
-    const canForge=canAfford&&hasItemSpace;
-    const card=document.createElement('div');
-    card.className='craft-card'+(canForge?'':' craft-card-locked');
-    const ownedTypes=ORE_KEYS.filter(t=>(counts[t]||0)>0);
-    const costHtml=ownedTypes.length?ownedTypes.map(t=>{
-      const has=counts[t]||0,amount=offer[t]||0;
-      const icon=MARKET_ORE_ICONS&&MARKET_ORE_ICONS[t]?MARKET_ORE_ICONS[t]:'';
-      return `<div class="craft-offer-control${amount>0?' craft-offer-used':''}" style="--ore-col:${ORE[t].col};--ore-glow:${ORE[t].glow||ORE[t].hi}">
-        <span class="craft-offer-ore">
-          ${icon?`<img src="${icon}" alt="">`:''}
-          <strong>${ORE[t].lbl}</strong>
-          <em>${ORE[t].val}v each · Bag ${has}</em>
-        </span>
-        <div class="craft-stepper">
-          <button type="button" data-type="${t}" data-delta="-1">-</button>
-          <input type="number" min="0" max="${has}" value="${amount}" data-type="${t}">
-          <button type="button" data-type="${t}" data-delta="1">+</button>
-        </div>
-        <button class="craft-fill-btn" type="button" data-type="${t}" data-fill-min="1">+ Min Value</button>
-      </div>`;
-    }).join(''):`<div class="craft-empty-offer">No mined ore in your backpack.</div>`;
-    const rarHtml=recipe.rarities.map(r=>`<span class="rarity-chip" style="color:${RARITY_COLS[r]};border-color:${RARITY_COLS[r]}40">${RARITY_LABELS[r]||r}</span>`).join('');
-    const weights=forgeRarityWeights(recipe,offer);
-    const chanceHtml=forgeChancePercentages(weights).map(({rarity,pct})=>`<span style="color:${RARITY_COLS[rarity]||'#d6a85f'}">${RARITY_LABELS[rarity]||rarity}: ${pct<1?pct.toFixed(1):Math.round(pct)}%</span>`).join('');
-    const quality=Math.round(offeringOreQuality(offer)*100);
-    const offerTypes=Object.entries(offer).filter(([,n])=>n>0).map(([t,n])=>`${n} ${ORE[t].lbl}`).join(' + ')||'No ore selected';
-    const offerAmount=Object.values(offer).reduce((sum,n)=>sum+n,0);
-    const nextText=nextRecipe?`${nextRecipe.name} at Forge Lv ${nextRecipe.minForgeLevel}`:'Max forge tier';
-    card.innerHTML=`
-      <div class="craft-card-top">
-        <span class="craft-card-icon">${craftTierIconHtml(recipe)}</span>
-        <div class="craft-card-info">
-          <div class="craft-card-name">${recipe.name}</div>
-          <div class="craft-card-desc">${recipe.desc}</div>
-        </div>
-      </div>
-      <div class="craft-cost-row">${costHtml}</div>
-      <div class="craft-offer-row">
-        <span>Selected Ore <strong>${offerTypes}</strong></span>
-        <span>Amount <strong>${offerAmount}</strong></span>
-        <span>Minimum Value <strong>${minValue}v</strong></span>
-        <span>Offering Value <strong>${value}v</strong></span>
-        <span>Ore Quality <strong>${quality}%</strong></span>
-      </div>
-      <div class="craft-tier-row">
-        <span>Current Forge Level <strong>${forgeLevel}</strong></span>
-        <span>Next Unlock <strong>${nextText}</strong></span>
-      </div>
-      <div class="craft-rar-row">${rarHtml}</div>
-      <div class="craft-chance-row">${chanceHtml}</div>`;
-    const anvilWrap=document.createElement('div');
-    anvilWrap.className='craft-anvil-wrap';
-    const forgeStatus=!hasItemSpace?'Backpack Full':canForge?'Strike Anvil':value>0?`Need ${Math.max(0,minValue-value)} more value`:'Select Ore';
-    anvilWrap.innerHTML=`
-      <button class="craft-anvil-button" type="button" aria-label="Forge ${recipe.name}" ${canForge?'':'disabled'}>
-        <img class="craft-anvil-hero craft-anvil-hero-normal" src="images/workbench/anvil-normal.png" alt="">
-        <img class="craft-anvil-hero craft-anvil-hero-hover" src="images/workbench/anvil-hover.png" alt="">
-      </button>
-      <div class="craft-anvil-status">${forgeStatus}</div>`;
-    anvilWrap.querySelector('.craft-anvil-button').addEventListener('click',e=>{
-      e.stopPropagation();
-      attemptCraft(recipe);
-    });
-    card.appendChild(anvilWrap);
-    card.querySelectorAll('.craft-stepper button').forEach(stepBtn=>{
-      stepBtn.addEventListener('click',()=>{
-        const type=stepBtn.dataset.type;
-        setCraftOffer(recipe,type,(offer[type]||0)+Number(stepBtn.dataset.delta||0));
-      });
-    });
-    card.querySelectorAll('.craft-fill-btn').forEach(fillBtn=>{
-      fillBtn.addEventListener('click',()=>addMinimumCraftOffer(recipe,fillBtn.dataset.type));
-    });
-    card.querySelectorAll('.craft-stepper input').forEach(input=>{
-      input.addEventListener('change',()=>setCraftOffer(recipe,input.dataset.type,Number(input.value)));
-    });
-    list.appendChild(card);
+  const view=getCraftRecipeViewModel(recipe,counts,hasItemSpace,forgeLevel,nextRecipe);
+  list.appendChild(createCraftRecipeCard(recipe,counts,view));
 }
 
 function attemptCraft(recipe){
   if(_craftBusy)return;
   const counts=oreCounts();
   const offer=getCraftOffer(recipe,counts);
-  const hasItemSpace=player.inventory.some((s,idx)=>idx<activeInventorySize()&&s===null);
+  const hasItemSpace=hasCraftInventorySpace();
   if(!hasItemSpace)return;
   if(offeringValue(recipe,offer)<(recipe.minValue||0))return;
   if(!Object.entries(offer).every(([type,count])=>(counts[type]||0)>=count))return;
@@ -275,7 +306,7 @@ function _showForgeResult(itemId, recipeName){
   } else {
     const def=CRAFT_ITEM_DEFS[itemId];
     const rc=RARITY_COLS[def.rarity];
-    const full=!player.inventory.some((s,idx)=>idx<activeInventorySize()&&s===null);
+    const full=!hasCraftInventorySpace();
     if(full){
       inner.innerHTML=`
         <div class="forge-result-wrap forge-result-full">

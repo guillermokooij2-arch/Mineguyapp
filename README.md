@@ -6,6 +6,21 @@ The current product direction is an immersive painterly mining adventure/tycoon.
 
 ---
 
+## Story Direction
+
+The surface premise is a rugged dwarf mining fantasy, but the deeper truth is that the player is inside a constructed reality. A superintelligent system has taken over screen-based work and trapped humans in simulated manual-labor loops because physical bodies and attention still have value. The dwarf identity, mine economy, tavern, workbench, and daily grind are all part of a makeshift containment fantasy.
+
+The player should not learn this immediately. Early story clues should feel like atmospheric weirdness, not a reveal:
+- The mine sometimes uses slightly too-formal language for a fantasy world.
+- The Deep Lift should start with strange hums, worn labels, reflections, and repeated patterns. Direct system language should wait until much later dungeons.
+- Some walls can briefly look smoother, brighter, or more manufactured than stone.
+- Bosses begin as fantasy creatures but may expose something pale, clean, or artificial under the surface.
+- Item descriptions can occasionally stutter or correct themselves, but should not explain the truth too early.
+
+The Deep Lift is the mechanical foundation for the later cracks in the illusion. Early dungeons should mostly read as fantasy dungeon content; the deeper/later dungeons can gradually reveal that the world is stranger than it first looked.
+
+---
+
 ## Current State
 
 ### Core Gameplay
@@ -56,6 +71,7 @@ The current product direction is an immersive painterly mining adventure/tycoon.
 - Map panel expands to a full-screen travel surface using `.map-mode`.
 - The map preserves the generated image's 3:2 aspect ratio so the art is not cropped.
 - The backpack back button is positioned inside the map corner during map mode.
+- The world map opens through `openWorldMap()` and runs above normal panels at `z-index:260`.
 - Location data is in `MAP_LOCATIONS` in `js/data/ui-data.js`.
 - Map nodes use generated icons from `images/map-icons/`.
 - Non-Tavern / non-SYS map nodes use square generated frames:
@@ -69,10 +85,10 @@ The current product direction is an immersive painterly mining adventure/tycoon.
   - Trader
   - Tavern
   - SYS Terminal
-  - Deep Lift locked
+  - Deep Lift level 5 dungeon test
   - Crystal Vein locked
 - Tavern appears as a world node and opens the full-screen underground saloon zone.
-- SYS Terminal appears as a world node and routes to the existing terminal upgrade screen.
+- SYS Terminal appears as a world node and routes through `openTerminalScreen()` to the terminal upgrade screen.
 
 ### Marketplace
 - Marketplace is now an immersive full-screen cave market scene.
@@ -132,6 +148,9 @@ The current product direction is an immersive painterly mining adventure/tycoon.
 - SYS screen is styled as a rugged mining Pip-Boy style terminal.
 - Green monochrome look, scanlines, flicker, dark industrial casing.
 - Upgrade rows are simplified for terminal readability.
+- SYS Terminal is a backpack/map sub-screen, not a separate detail panel.
+- It opens through `.terminal-mode` at the same high interaction layer as the world map.
+- The back button should return to the map when opened from the map node, and to inventory when opened from backpack inventory.
 
 ### Trader
 - Trader uses a centered mysterious merchant scene with layered UI:
@@ -235,6 +254,52 @@ The current product direction is an immersive painterly mining adventure/tycoon.
   - `images/tavern/gambling/devils-draw/`
 - Tavern/SYS map icons in `images/map-icons/` were reprocessed with extra padding and cleaner background removal while preserving map node coordinates.
 
+### Deep Lift MVP
+- Deep Lift unlocks from the travel map at level 5.
+- It opens as a full-screen test dungeon mode, not a normal side panel.
+- Current implementation uses placeholder emoji/symbol art so the combat loop can be tested before final sprites.
+- Entering Deep Lift opens a full-screen dungeon route map first. Combat starts only after selecting an unlocked dungeon route.
+- Dungeon route nodes are placeholders for future map art/icons. Hovering a route shows enemy types, clear status, lock status, and an enter action.
+- Controls:
+  - WASD / arrow keys move the player.
+  - Click enemies to attack.
+  - Click glowing weak points for critical damage.
+  - A small hit dot/crosshair shows the exact attack point.
+- Dungeon combat has its own crit chain counter:
+  - consecutive weak-point hits increase the chain
+  - misses, glancing body hits, taking damage, wave clear, or timeout reset it
+  - crit chains add modest bonus damage so accuracy matters
+- Attack pacing:
+  - Attacks have a cooldown so spam-clicking is heavily reduced.
+  - Body hits are weak glancing blows.
+  - Weak-point accuracy is the main damage source.
+- Current weapon behavior:
+  - Combat uses the active pickaxe tier for damage scaling and cursor/weapon visuals.
+  - The player sprite remains a simple circle with a placeholder pickaxe emoji.
+- Current enemies:
+  - Cave Spider placeholder
+  - Bone Guard placeholder
+  - Deep Goblin placeholder with projectiles
+  - Lift Warden boss placeholder every 5 floors
+- Melee chase enemies can perform short straight-line charge bursts with `CHARGE` feedback and a small trail. During the burst they commit to their lane so the player can dodge instead of being perfectly tracked.
+- Current run loop:
+  - Open the Deep Lift dungeon map
+  - Select an unlocked dungeon
+  - Start from floor 1 every run
+  - Clear required waves for each floor
+  - Between waves, choose Next Wave or Extract
+  - Clear all 5 floors in one go to complete the dungeon
+  - Floor 5 is the current dungeon boss floor
+  - Completing Dungeon 1 unlocks Dungeon 2
+  - Extraction shows a run-haul popup
+  - Extract converts run loot into saved Deep Lift materials, coins, and XP
+- Current materials:
+  - Echo Shards
+  - Bone Scrap
+  - Glitch Ore
+- The mode stores best floor, total runs, materials, and story flags in the main save.
+- Deep Lift story hints should stay almost invisible in the first dungeon. The larger reveal belongs to later dungeons after the combat loop is already familiar.
+
 ---
 
 ## File Structure
@@ -251,9 +316,9 @@ css/
   workbench.css  - workbench, crafting, forge result, item tooltip
   tavern.css     - tavern scene, missions, shop, gambling views
   trader.css     - trader scene and upgrade cards
+  deep-lift.css  - full-screen Deep Lift dungeon test mode
   responsive.css - mobile and small-screen overrides
 js/
-  state.js      - legacy note; active state files are split below
   tavern.js     - tavern buffs, missions, barkeep states, slots, blackjack, dice, Devil's Draw
   layout.js     - ore layout, rock creation, break-stage helper, weak-point placement
   effects.js    - particles, ore pickup movement, backpack receive pulse
@@ -272,6 +337,7 @@ js/
     workbench.js        - crafting and forge flow
     inventory-market.js - character, inventory, tooltip, and marketplace rendering
     init-ui.js          - panel event wiring and per-frame UI updates
+  deep-lift.js  - Deep Lift dungeon MVP: movement, enemies, boss, loot, story hints
   game.js       - input, swing logic, hit resolution, main loop
 images/
   cursors/
@@ -330,6 +396,7 @@ images/
   - `data/ui-data.js`
   - `shop.js`
   - `ui/panels.js`
+  - `deep-lift.js`
   - `ui/economy-upgrades.js`
   - `ui/workbench.js`
   - `ui/inventory-market.js`
@@ -343,6 +410,7 @@ images/
 - `MAP_LOCATIONS`, `MARKET_ORE_ICONS`, and trader UI asset mappings live in `data/ui-data.js`.
 - `pulseBackpackReceive()` lives in `effects.js`.
 - Cursor mode detection lives in `game.js` and rendering lives in `render.js`.
+- Deep Lift is intentionally isolated in `js/deep-lift.js` and should stay separate from mining hit logic until the combat rules settle.
 - The game still has no bundler, package manager, or build step.
 
 ---
@@ -363,6 +431,9 @@ Layering rules:
 - World objects are drawn above the background inside the game canvas.
 - HUD and UI buttons sit above the world.
 - Panels and modal-style popups sit above HUD buttons.
+- Full-screen world map and SYS Terminal sub-screens use `#backpack-map-panel.map-mode.open` / `.terminal-mode.open` at `z-index:260`.
+- Detail-panel backdrops use `body.map-detail-open #ui-backdrop` at `z-index:270`.
+- Detail panels opened from the map, including Market, Workbench, Trader, Tavern, and Deep Lift, use `body.map-detail-open ... .open` at `z-index:280`.
 - `#cursor-canvas` is intentionally highest at `z-index:300` and has `pointer-events:none`.
 
 Interaction rules:
@@ -370,6 +441,47 @@ Interaction rules:
 - UI buttons should scale around `1.05-1.1`, glow softly, and use `:active` / `.ui-pressed` for quick press feedback.
 - Hitboxes should be larger than visible art. For image buttons, keep the button element larger and inset the image.
 - Panel and tab changes should fade and move slightly instead of appearing instantly.
+- World map entry points should call `openWorldMap()`.
+- SYS Terminal entry points should call `openTerminalScreen()`.
+- Map destinations that open separate screens should call `openMapDetail(panel)` so they receive the detail-panel layer and do not sit underneath the map/backdrop.
+
+---
+
+## Quality Control Checks
+
+Run these checks after changing map, panel, cursor, or dungeon code:
+
+1. Continue flow:
+   - Hard refresh.
+   - Press Continue.
+   - Confirm the first screen after the menu is the world map, without a visible mine flash.
+   - Confirm map nodes hover and click.
+
+2. Map destination click stack:
+   - From the world map, open Market, Workbench, Trader, Tavern, SYS Terminal, and Deep Lift.
+   - In each destination, click at least one primary action and the back/close control.
+   - Return to the world map and open a second destination without refreshing.
+
+3. SYS Terminal:
+   - Open SYS from the map node.
+   - Click an affordable upgrade or confirm disabled upgrades visually read as disabled.
+   - Press back and confirm it returns to the map.
+   - Open SYS from backpack inventory and confirm back returns to inventory.
+
+4. Deep Lift:
+   - Open Deep Lift from the map.
+   - Enter Dungeon 1, fight one wave, then extract or exit.
+   - Return to the main map, re-enter Deep Lift, and confirm dungeon routes still render and can be selected.
+   - Confirm the Deep Lift back/actions buttons stay clickable over the route map.
+
+5. Cursor layers:
+   - World mine should show the pickaxe cursor and mine nodes should be clickable.
+   - Map/panels should show the UI hand cursor.
+   - Deep Lift combat should hide the normal cursor canvas and show the dungeon dot cursor.
+
+6. Regression console check:
+   - Keep DevTools Console open while testing.
+   - Any `UI action failed`, `Map travel failed`, or `Game initialization failed` message should be treated as a blocker.
 
 ---
 
@@ -448,34 +560,57 @@ Includes:
 - inventory
 - crafted items
 - tavern active buffs, available missions, active missions, and next mission refresh timestamp
+- Deep Lift best floor, total runs, materials, and story flags
 
 ---
 
 ## Recommended Next Session Tasks
 
-1. Visually test inventory alignment in browser.
+1. Playtest the Deep Lift MVP.
+   - Confirm level 5 unlock feels early enough.
+   - Tune player speed, enemy speed, projectile pressure, and weak-point size.
+   - Decide whether click attacks should be melee range, ranged, or weapon-specific.
+
+2. Decide the first real Deep Lift weapon set.
+   - Starter pickaxe combat.
+   - Hammer for slow stun damage.
+   - Dagger or short blade for fast crit-chain play.
+
+3. Connect Deep Lift loot to forge recipes.
+   - Bone Scrap for early weapon upgrades.
+   - Echo Shards for weak-point and dodge upgrades.
+   - Glitch Ore for story/progression unlocks.
+
+4. Expand Tavern buffs for dungeon runs.
+   - Max HP.
+   - Dodge speed.
+   - Projectile resistance.
+   - Boss loot chance.
+   - One-time revive.
+
+5. Visually test inventory alignment in browser.
    - If needed, tune `.inv-ui-frame` padding and `.inventory-grid` transform.
 
-2. Continue replacing flat UI with generated assets.
+6. Continue replacing flat UI with generated assets.
    - Character panel
    - Crafting result screen
    - Remaining terminal upgrade buttons/icons
 
-3. Tune Tavern balancing after playtesting.
+7. Tune Tavern balancing after playtesting.
    - Buff prices and durations.
    - Mission payouts and refresh cadence.
    - Gambling payout weights.
 
-4. Improve interactive button states.
+8. Improve interactive button states.
    - Add more hover/selected image pairs.
    - Add optional hover sound by setting `window.UI_HOVER_SOUND_SRC`.
    - Mirror generated plaque treatments into any remaining non-image action buttons.
 
-5. Optimize large generated PNGs.
+9. Optimize large generated PNGs.
    - Some source sheets are kept for slicing but are not loaded by the game.
    - Consider converting large non-transparent backgrounds to WebP later.
 
-6. Keep game logic data-driven.
+10. Keep game logic data-driven.
    - New locations should be added to `MAP_LOCATIONS` in `js/data/ui-data.js`.
    - New ore icons should be added to `MARKET_ORE_ICONS` in `js/data/ui-data.js`.
    - New ore node sprites should follow `images/ore-nodes/{type}-{stage}.png`.
