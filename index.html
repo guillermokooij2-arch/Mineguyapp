@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Drunk Dwarf | 12pg</title>
-  <link rel="icon" type="image/webp" href="images/miner-portrait-bust.webp">
-  <link rel="apple-touch-icon" href="images/miner-portrait-bust.png">
+  <link rel="icon" type="image/webp" href="images/miner/miner-portrait-bust.webp">
+  <link rel="apple-touch-icon" href="images/miner/miner-portrait-bust.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -143,8 +143,8 @@
 
   <!-- BACKPACK BUTTON — at old miner position (left ~35%, ~67% from top) -->
   <button id="backpack-toggle" class="backpack-btn" type="button" aria-label="Open backpack and map">
-    <img class="backpack-img backpack-img-closed" src="images/backpackicon.webp" alt="">
-    <img class="backpack-img backpack-img-open"   src="images/backpackiconopen.png" alt="">
+    <img class="backpack-img backpack-img-closed" src="images/inventory/backpackicon.webp" alt="">
+    <img class="backpack-img backpack-img-open"   src="images/inventory/backpackiconopen.png" alt="">
     <span class="backpack-fallback">Bag</span>
   </button>
 
@@ -166,30 +166,41 @@
 
     <!-- INVENTORY TAB — inventoryui.png is the visual frame -->
     <div class="bmp-section" id="bmp-inventory">
-      <div class="inventory-nav-row">
-        <button class="inventory-nav-btn ui-img-btn" id="backpack-map-close" type="button" aria-label="Close backpack">
-          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
-          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
-        </button>
-        <button class="inventory-nav-btn ui-img-btn" data-bmp-go="map" type="button" aria-label="Open map">
-          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/map-normal.png" alt="">
-          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/map-hover.png" alt="">
-        </button>
-        <button class="inventory-nav-btn inventory-nav-sys ui-img-btn" data-bmp-go="terminal" type="button" aria-label="Open system terminal">
-          <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/terminal-normal.png" alt="">
-          <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/terminal-hover.png" alt="">
-        </button>
-      </div>
-      <div class="inv-ui-frame">
-        <div class="inventory-grid" id="inventory-grid"></div>
-      </div>
-      <!-- Storage capacity bar below the frame -->
-      <div class="storage-row">
-        <span class="storage-label">Storage</span>
-        <div class="storage-bar-wrap">
-          <div class="storage-bar-fill" id="storage-bar-fill"></div>
+      <div class="inventory-layout">
+        <aside class="inventory-nav-rail">
+          <div class="inventory-nav-row">
+            <button class="inventory-nav-btn ui-img-btn" id="backpack-map-close" type="button" aria-label="Close backpack">
+              <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+              <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+            </button>
+            <button class="inventory-nav-btn ui-img-btn" data-bmp-go="map" type="button" aria-label="Open map">
+              <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/map-normal.png" alt="">
+              <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/map-hover.png" alt="">
+            </button>
+          </div>
+        </aside>
+        <div class="inventory-main">
+          <div class="inv-ui-frame">
+            <div class="inventory-grid" id="inventory-grid"></div>
+          </div>
+          <!-- Storage capacity bar below the frame -->
+          <div class="storage-row">
+            <span class="storage-label">Storage</span>
+            <div class="storage-bar-wrap">
+              <div class="storage-bar-fill" id="storage-bar-fill"></div>
+            </div>
+            <span class="storage-count" id="storage-count">0 / 20</span>
+          </div>
         </div>
-        <span class="storage-count" id="storage-count">0 / 20</span>
+        <aside class="inventory-equipment-rail">
+          <section class="equipment-panel" aria-label="Equipped forged items">
+            <div class="equipment-head">
+              <span>Equipment</span>
+              <strong>Any gear mix, unlocked by Stack Compression</strong>
+            </div>
+            <div class="equipment-grid" id="equipment-grid"></div>
+          </section>
+        </aside>
       </div>
     </div>
 
@@ -270,8 +281,13 @@
     <!-- MAP TAB — image-backed travel map -->
     <div class="bmp-section hidden" id="bmp-map">
       <div class="travel-map" id="travel-map" aria-label="Travel map">
-        <img class="travel-map-bg" src="images/mineshaftmap-expanded.webp" alt="Mineshaft travel map">
+        <img class="travel-map-bg" src="images/mines/mineshaftmap-expanded.webp" alt="Mineshaft travel map">
         <div class="travel-map-nodes" id="travel-map-nodes"></div>
+        <div id="travel-loader" class="travel-loader" aria-live="polite" hidden>
+          <span>Traveling</span>
+          <strong id="travel-loader-label">Preparing destination</strong>
+          <div class="travel-loader-bar" aria-hidden="true"><i id="travel-loader-fill"></i></div>
+        </div>
       </div>
     </div>
   </div>
@@ -330,7 +346,7 @@
       </button>
     </div>
     <div class="market-hero" aria-hidden="true">
-      <img src="images/market/market-stall.webp" alt="">
+      <img data-asset-src="images/market/market-stall.webp" alt="">
     </div>
     <div class="market-trade-layout">
       <section class="market-side market-ores-side" aria-label="Ore trading">
@@ -356,7 +372,7 @@
         <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
       </button>
     </div>
-    <p class="panel-desc">Offer mined ore by value. Richer ore and bigger offerings improve the roll, but the anvil still decides.</p>
+    <p class="panel-desc" hidden>Forge rules are kept in the miner journal.</p>
 
     <div id="craft-recipe-list" class="craft-recipe-list"></div>
 
@@ -365,15 +381,14 @@
         <span>Crafting</span>
         <strong>Ore Offering</strong>
       </div>
-      <p class="craft-offering-copy">Higher value lowers junk. Higher-tier ore shifts chances toward stronger rarity bands.</p>
     </div>
 
     <div id="craft-forge" class="craft-forge hidden">
       <div class="craft-forge-stage">
-        <video id="craft-forge-video" class="craft-forge-video" preload="auto" muted playsinline>
-          <source src="images/workbench/forginganimated.webm" type="video/webm">
-          <source src="images/workbench/forginganimated.mp4" type="video/mp4">
-          <source src="images/workbench/forginganimation.webm" type="video/webm">
+        <video id="craft-forge-video" class="craft-forge-video" preload="metadata" muted playsinline>
+          <source data-asset-src="images/workbench/forginganimated.webm" type="video/webm">
+          <source data-asset-src="images/workbench/forginganimated.mp4" type="video/mp4">
+          <source data-asset-src="images/workbench/forginganimation.webm" type="video/webm">
         </video>
         <img id="craft-forge-hammer" class="craft-forge-hammer" src="images/workbench/hammer.png" alt="">
         <div class="craft-spark craft-spark-a"></div>
@@ -404,13 +419,22 @@
         <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
         <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
       </button>
-      <img class="trader-scene-bg" src="images/trader/trader-cart-bg.webp" alt="">
+      <img class="trader-scene-bg" data-asset-src="images/trader/trader-cart-bg.webp" alt="">
       <button class="trader-character" id="trader-character" type="button" aria-label="Talk to trader" data-state="idle">
         <img id="trader-character-img" src="images/trader/trader-idle.png" alt="">
       </button>
-      <div class="trader-speech" id="trader-speech">Care to improve your fortune?</div>
+      <div class="trader-dialogue-panel" id="trader-dialogue-panel">
+        <span>Trader</span>
+        <div class="trader-speech" id="trader-speech">Care to improve your fortune?</div>
+        <div class="trader-actions" id="trader-actions" hidden>
+          <button id="trader-upgrades-open" type="button">Trade Upgrades</button>
+          <button id="trader-combine-open" type="button">Combine Forge Stock</button>
+        </div>
+      </div>
     </div>
     <div id="trader-list" class="upgrade-list"></div>
+    <div id="trader-combine-result" class="trader-combine-result" aria-live="polite" hidden></div>
+    <section id="trader-turnin-panel" class="trader-turnin-panel" aria-label="Trader forged item turn-ins" aria-live="polite" hidden></section>
   </div>
 
   <div id="tavern-panel">
@@ -439,6 +463,7 @@
       <img id="tavern-barkeep-img" src="images/tavern/barkeep/barkeep-idle.png" alt="">
     </div>
     <div class="tavern-dialogue-wrap">
+      <span>Barkeep</span>
       <div id="tavern-dialogue">Back from the rocks, are ya?</div>
     </div>
     <div class="tavern-hud">
@@ -457,11 +482,22 @@
       <div><span>Loot</span><strong id="deep-lift-loot">0</strong></div>
       <div><span>Best</span><strong id="deep-lift-best">0</strong></div>
     </div>
-    <div class="deep-lift-hp-panel" id="deep-lift-hp-panel" aria-label="Dungeon health">
-      <span>HP</span>
+    <div class="deep-lift-hp-panel" id="deep-lift-hp-panel" role="button" tabindex="0" aria-label="Open dungeon stats between waves. Dungeon health">
+      <div class="deep-lift-portrait" aria-hidden="true">
+        <img src="images/miner/miner-portrait-bust.webp" alt="">
+      </div>
       <strong id="deep-lift-hp">100</strong>
       <div class="deep-lift-hp-bar" aria-hidden="true"><i></i></div>
     </div>
+    <button class="deep-lift-backpack-btn" id="deep-lift-backpack" type="button" aria-label="Open dungeon backpack" hidden>
+      <img class="deep-lift-backpack-normal" src="images/inventory/backpackicon.png" alt="">
+      <img class="deep-lift-backpack-hover" src="images/inventory/backpackiconopen.png" alt="">
+    </button>
+    <section class="deep-lift-stats-popover" id="deep-lift-stats-popover" aria-label="Dungeon stats" hidden>
+      <button id="deep-lift-stats-close" type="button" aria-label="Close dungeon stats">&times;</button>
+      <span>Dungeon Stats</span>
+      <div id="deep-lift-stats-list" class="deep-lift-stats-list"></div>
+    </section>
     <div id="deep-lift-crit" class="deep-lift-crit" aria-live="polite" hidden>
       <strong id="deep-lift-crit-num">1</strong>
       <span>CRIT CHAIN</span>
@@ -492,6 +528,7 @@
     </div>
     <div class="deep-lift-actions">
       <button id="deep-lift-start" class="deep-lift-plaque-btn" type="button">Enter Floor</button>
+      <button id="deep-lift-weapon-switch" class="deep-lift-plaque-btn" type="button" hidden>Weapon</button>
       <button id="deep-lift-descend" class="deep-lift-plaque-btn" type="button" hidden>Descend</button>
       <button id="deep-lift-extract" class="deep-lift-plaque-btn" type="button">Extract</button>
     </div>
@@ -499,6 +536,7 @@
       <span>WASD move</span>
       <span>Click enemies</span>
       <span>Hit glowing weak points</span>
+      <span id="deep-lift-weapon-help">Q switches weapon</span>
     </div>
     <div id="deep-lift-cursor" class="deep-lift-cursor" aria-hidden="true"></div>
     <div id="deep-lift-reward" class="deep-lift-reward" hidden>
@@ -513,6 +551,83 @@
 
   <div id="zone-lbl" hidden></div>
   <div id="hint">Mine ore · Hit the weak point to chain crits · Click miner for stats</div>
+
+  <button id="miner-journal-button" class="miner-journal-button" type="button" aria-label="Open miner journal" hidden>
+    <img src="images/main-menu/miner-journal-closed.png" alt="">
+  </button>
+
+  <section id="miner-journal-modal" class="miner-journal-modal" role="dialog" aria-modal="true" aria-labelledby="miner-journal-title" hidden>
+    <button class="miner-journal-scrim" type="button" data-journal-close aria-label="Close miner journal"></button>
+    <div class="miner-journal-book" role="document">
+      <img class="miner-journal-book-art" src="images/ui/miner-journal-open.png" alt="">
+      <button class="miner-journal-close ui-img-btn" type="button" data-journal-close aria-label="Close miner journal">
+        <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/back-normal.png" alt="">
+        <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/back-hover.png" alt="">
+      </button>
+      <h2 id="miner-journal-title">Miner Journal</h2>
+      <nav class="miner-journal-tabs" aria-label="Journal pages">
+        <button type="button" data-journal-tab="mineshaft">Mineshaft</button>
+        <button type="button" data-journal-tab="workbench">Workbench</button>
+        <button type="button" data-journal-tab="trader">Trader</button>
+      </nav>
+      <div class="miner-journal-pages">
+        <article class="miner-journal-page" data-journal-page="mineshaft">
+          <div>
+            <h3>Mineshaft</h3>
+            <ul>
+              <li>Weak points start crit chains. Missing during a chain drops the streak.</li>
+              <li>Auto-crits can jump to nearby rocks when pickaxe tier and forged gear stack enough chance.</li>
+              <li>Large ore bursts are bundled before they fly to the backpack to keep mining smooth.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Backpack</h3>
+            <ul>
+              <li>Ore that fits is added immediately, then shown as grouped count-up rows.</li>
+              <li>If the backpack is full, overflow is rejected and the full notice is rate-limited.</li>
+              <li>Rare ore value is improved by luck, gear, tavern buffs, and specific forged effects.</li>
+            </ul>
+          </div>
+        </article>
+        <article class="miner-journal-page" data-journal-page="workbench" hidden>
+          <div>
+            <h3>Offerings</h3>
+            <ul>
+              <li>Each ore adds its market value to the offering. Meeting the minimum unlocks the anvil strike.</li>
+              <li>Higher total value reduces junk and pushes more weight into better rarity bands.</li>
+              <li>Higher ore quality matters separately, so rare ore can improve the shape of the chance table.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Forge Rolls</h3>
+            <ul>
+              <li>Forge skill unlocks stronger tiers, but junk and common stay possible by design.</li>
+              <li>Forge luck and junk reduction make the chance list visibly better before you strike.</li>
+              <li>Forged items can be equipped, stored, sold, or turned in to the trader for upgrades.</li>
+            </ul>
+          </div>
+        </article>
+        <article class="miner-journal-page" data-journal-page="trader" hidden>
+          <div>
+            <h3>Upgrades</h3>
+            <ul>
+              <li>Pickaxe tiers add yield and auto-crit chain identity.</li>
+              <li>Rare Finder improves rare ore spawning and stacks with luck-based bonuses.</li>
+              <li>Stack Compression multiplies ore stack caps, reaching about 999 stone per stack at max level.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Forge Stock</h3>
+            <ul>
+              <li>Trader upgrades use forged backpack items as parts instead of coins.</li>
+              <li>Equipped gear is protected from turn-ins.</li>
+              <li>Lower-rarity forged items can be combined into stronger stock when you have enough copies.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
 
   <script src="js/data/ores.js"></script>
   <script src="js/data/upgrades.js"></script>
@@ -530,6 +645,7 @@
   <script src="js/ui/economy-upgrades.js"></script>
   <script src="js/ui/workbench.js"></script>
   <script src="js/ui/inventory-market.js"></script>
+  <script src="js/ui/journal.js"></script>
   <script src="js/ui/init-ui.js"></script>
   <script src="js/game.js"></script>
 </body>

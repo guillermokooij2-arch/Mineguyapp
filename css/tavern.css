@@ -23,9 +23,14 @@
 .tavern-bg-layer {
   background-image:
     radial-gradient(circle at 48% 38%,rgba(255,139,42,0.12),transparent 26%),
+    linear-gradient(180deg,rgba(0,0,0,0.03),rgba(0,0,0,0.54));
+  filter:saturate(1.02) contrast(1.04);
+}
+#tavern-panel.assets-ready .tavern-bg-layer {
+  background-image:
+    radial-gradient(circle at 48% 38%,rgba(255,139,42,0.12),transparent 26%),
     linear-gradient(180deg,rgba(0,0,0,0.03),rgba(0,0,0,0.54)),
     url('../images/tavern/tavern-background-v2.png');
-  filter:saturate(1.02) contrast(1.04);
 }
 .tavern-approach-layer {
   z-index:1;
@@ -187,46 +192,51 @@
   filter:drop-shadow(0 20px 18px rgba(0,0,0,0.72)) drop-shadow(0 0 18px rgba(255,164,68,0.22));
 }
 .tavern-dialogue-wrap {
-  --barkeep-speech-right:10%;
-  --barkeep-speech-bottom:62%;
-  --barkeep-speech-width:min(306px,26vw);
-  --barkeep-speech-padding:16px 25px;
+  --barkeep-speech-bottom:clamp(236px,37vh,326px);
+  --barkeep-speech-width:min(520px,52vw);
+  --barkeep-speech-padding:13px 22px 15px;
   position:absolute;
-  right:var(--barkeep-speech-right);
+  left:50%;
   bottom:var(--barkeep-speech-bottom);
   z-index:8;
   width:var(--barkeep-speech-width);
-  aspect-ratio:437 / 180;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  min-height:68px;
+  display:grid;
+  align-content:center;
+  gap:4px;
   padding:var(--barkeep-speech-padding);
-  text-align:center;
+  border:1px solid rgba(218,151,72,0.34);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(35,18,8,0.9),rgba(9,5,3,0.94));
+  box-shadow:inset 0 0 0 1px rgba(255,216,137,0.1),0 14px 26px rgba(0,0,0,0.54);
   color:#fff0c8;
   font-family:'Cinzel','Cormorant Garamond','Merriweather',Georgia,serif;
-  font-size:13px;
-  font-weight:800;
-  line-height:1.18;
-  letter-spacing:.01em;
-  background:url('../images/trader/trader-speech-plaque.png') center/contain no-repeat;
-  filter:drop-shadow(0 10px 11px rgba(0,0,0,0.52));
   opacity:0;
-  transform:translateY(10px);
+  transform:translateX(-50%) translateY(10px);
   transition:opacity .18s ease,transform .22s ease;
   text-shadow:0 2px 3px rgba(37,18,5,0.92),0 0 10px rgba(255,194,102,0.18);
   pointer-events:none;
   overflow:hidden;
 }
+.tavern-dialogue-wrap > span {
+  color:#c89454;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.6px;
+  line-height:1;
+  text-transform:uppercase;
+}
 #tavern-dialogue {
   width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:100%;
+  color:#fff0c8;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.22;
+  text-align:left;
 }
 #tavern-panel[data-tavern-station="bar"] .tavern-dialogue-wrap {
   opacity:1;
-  transform:translateY(0);
+  transform:translateX(-50%) translateY(0);
 }
 .tavern-hud {
   position:absolute;
@@ -634,9 +644,10 @@
   pointer-events:auto;
 }
 #tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone {
-  right:10vw;
+  left:14vw;
+  right:auto;
   top:9vh;
-  width:min(760px,58vw);
+  width:min(760px,60vw);
 }
 #tavern-panel[data-tavern-station="missions"] .tavern-active-contract-zone {
   left:34px;
@@ -698,7 +709,7 @@
   transform:rotate(-1.5deg);
 }
 #tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(4) {
-  right:2%;
+  left:72%;
   top:3%;
   transform:rotate(3deg);
 }
@@ -718,7 +729,7 @@
   transform:rotate(2.5deg);
 }
 #tavern-panel[data-tavern-station="missions"] .tavern-mission-board-zone .tavern-mission-note:nth-child(8) {
-  right:0;
+  left:72%;
   top:45%;
   transform:rotate(-2deg);
 }
@@ -784,6 +795,11 @@
   height:70px;
   object-fit:contain;
   filter:drop-shadow(0 8px 9px rgba(0,0,0,0.45));
+}
+.tavern-reward-item-art {
+  width:70px;
+  height:70px;
+  font-size:22px;
 }
 .tavern-reward-popup-items b {
   max-width:150px;
@@ -1546,6 +1562,7 @@
 }
 .devils-card:hover:not(:disabled),
 .devils-card:focus-visible {
+  opacity:1;
   animation:devilTemptCard 2.65s cubic-bezier(.34,.02,.32,1) infinite;
   filter:drop-shadow(0 0 16px rgba(190,33,24,0.42)) drop-shadow(0 12px 13px rgba(0,0,0,0.58));
 }
@@ -1648,11 +1665,11 @@
   70% { transform:translateY(-5px) rotate(1deg); }
 }
 @keyframes devilTemptCard {
-  0% { transform:translateY(0) rotate(0deg) scale(1); }
-  34% { transform:translateY(-7px) rotate(-.7deg) scale(1.018); }
-  68% { transform:translateY(-17px) rotate(-1.8deg) scale(1.065); }
-  86% { transform:translateY(-13px) rotate(.7deg) scale(1.05); }
-  100% { transform:translateY(-9px) rotate(-.4deg) scale(1.035); }
+  0%,100% { transform:translateY(-7px) rotate(-.5deg) scale(1.03); }
+  18% { transform:translateY(-12px) rotate(1.1deg) scale(1.055); }
+  38% { transform:translateY(-9px) rotate(-1.2deg) scale(1.042); }
+  58% { transform:translateY(-18px) rotate(-2deg) scale(1.075); }
+  76% { transform:translateY(-13px) rotate(1deg) scale(1.055); }
 }
 @keyframes devilTemptGlow {
   0%,100% { opacity:.12; transform:scale(.9); }

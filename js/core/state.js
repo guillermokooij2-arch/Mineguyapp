@@ -32,9 +32,190 @@ function isScreenInWorld(x,y){
 
 // ── IMAGES ───────────────────────────────────────────────────────────────────
 function loadImg(src){ const i=new Image(); i.src=src; return i; }
-const imgBg    = loadImg('images/backgroundhero-remake.png');
-const imgFront = loadImg('images/miner-main-v2.webp');
-const imgBack  = loadImg('images/miner-main-v2.webp');
+const GAME_ASSET_GROUPS={
+  menu:[
+    'images/main-menu/mine-entrance-camp-bg.png',
+    'images/main-menu/mine-sign-logo-board.png',
+    'images/main-menu/miner-journal-closed.png',
+    'images/main-menu/mining-contract-parchment.png',
+    'images/main-menu/brass-gear-box-closed.png',
+    'images/main-menu/credits-plaque-notice.png',
+  ],
+  map:[
+    'images/mines/mineshaftmap-expanded.webp',
+    'images/map-icons/mineshaft.png',
+    'images/map-icons/market.png',
+    'images/map-icons/workbench.png',
+    'images/map-icons/trader.png',
+    'images/map-icons/tavern.png',
+    'images/map-icons/sys-terminal.png',
+    'images/map-icons/deep-lift.png',
+    'images/map-icons/crystal-vein.png',
+    'images/inventory/backpack-frame.png',
+    'images/inventory/inventory-slot.png',
+    'images/inventory/backpackicon.webp',
+    'images/inventory/backpackiconopen.png',
+    'images/ui-buttons/back-normal.png',
+    'images/ui-buttons/back-hover.png',
+    'images/ui-buttons/map-normal.png',
+    'images/ui-buttons/map-hover.png',
+    'images/ui-buttons/terminal-normal.png',
+    'images/ui-buttons/terminal-hover.png',
+    'images/main-menu/miner-journal-closed.png',
+    'images/ui/miner-journal-open.png',
+  ],
+  marketplace:[
+    'images/market/market-stall.webp',
+    'images/market/market-box-ore.png',
+    'images/market/market-box-forged.png',
+    'images/ui/wood-plaque.png',
+    'images/ore-icons/mined-stone.png',
+    'images/ore-icons/mined-copper.png',
+    'images/ore-icons/mined-iron.png',
+    'images/ore-icons/mined-gold.png',
+    'images/ore-icons/mined-hardstone.png',
+    'images/ore-icons/mined-diamond.png',
+    'images/ore-icons/mined-ruby.png',
+    'images/ore-icons/mined-aether.png',
+  ],
+  trader:[
+    'images/trader/trader-cart-bg.webp',
+    'images/trader/trader-cart-bg.png',
+    'images/trader/trader-idle.png',
+    'images/trader/trader-interested.png',
+    'images/trader/trader-persuasive.png',
+    'images/trader/trader-dangerous.png',
+    'images/trader/pickaxe-tier-0.png',
+    'images/trader/pickaxe-tier-1.png',
+    'images/trader/pickaxe-tier-2.png',
+    'images/trader/pickaxe-tier-3.png',
+    'images/trader/pickaxe-tier-4.png',
+    'images/trader/pickaxe-tier-5.png',
+    'images/trader/pickaxe-tier-6.png',
+    'images/trader/upgrade-rare-finder.png',
+    'images/trader/upgrade-stack-compression.png',
+    'images/trader/upgrade-forge-skill.png',
+    'images/market/market-box-forged.png',
+    'images/ui/wood-plaque.png',
+  ],
+  workbench:[
+    'images/workbench/forge-workstation-bg.png',
+    'images/workbench/forge-ambience.png',
+    'images/workbench/anvil-normal.png',
+    'images/workbench/anvil-hover.png',
+    'images/workbench/anvil-forging.png',
+    'images/workbench/hammer.png',
+    'images/workbench/strike-sparks.png',
+    'images/workbench/tiers/basic.png',
+    'images/workbench/tiers/copper.png',
+    'images/workbench/tiers/iron.png',
+    'images/workbench/tiers/gold.png',
+    'images/workbench/tiers/grand.png',
+    'images/market/market-box-ore.png',
+    'images/market/market-box-forged.png',
+    'images/ui/wood-plaque.png',
+  ],
+  terminal:[
+    'images/sys-terminal/sys-room.png',
+    'images/sys-terminal/sys-screen-pov.png',
+  ],
+  tavern:[
+    'images/tavern/tavern-background-v2.png',
+    'images/tavern/approach/bar-approach.png',
+    'images/tavern/approach/missions-approach.png',
+    'images/tavern/approach/slots-approach.png',
+    'images/tavern/approach/tables-approach.png',
+    'images/tavern/barkeep/barkeep-idle.png',
+    'images/tavern/items/pint.png',
+    'images/tavern/items/barcelo-imperial.png',
+    'images/tavern/items/miner-tonic.png',
+    'images/tavern/items/cigarettes.png',
+    'images/tavern/items/cigar.png',
+    'images/tavern/items/joint.png',
+  ],
+  'deep-lift':[
+    'images/deep-lift/dungeon-route-map-v2.png',
+    'images/deep-lift/dungeon-route-intel.png',
+    'images/deep-lift/dungeon-floor-01.png',
+    'images/deep-lift/dungeon1/actors/player/player-top.png',
+    'images/deep-lift/dungeon1/actors/spider/spider-static.png',
+    'images/deep-lift/dungeon1/actors/skeleton/skeleton-static.png',
+    'images/deep-lift/dungeon1/actors/goblin/goblin-static.png',
+    'images/deep-lift/dungeon1/actors/boss/boss-static.png',
+  ],
+};
+const assetImageCache=new Map();
+function uniqueAssetSources(sources=[]){
+  return Array.from(new Set(sources.filter(Boolean)));
+}
+function waitForAssetImage(image){
+  return new Promise(resolve=>{
+    if(!image){ resolve({image:null,ok:false}); return; }
+    let done=false;
+    const finish=ok=>{
+      if(done)return;
+      done=true;
+      const decoded=ok&&typeof image.decode==='function'?image.decode().catch(()=>{}):Promise.resolve();
+      decoded.then(()=>resolve({image,ok:ok&&!!image.naturalWidth}));
+    };
+    if(image.complete){ finish(!!image.naturalWidth); return; }
+    image.addEventListener('load',()=>finish(true),{once:true});
+    image.addEventListener('error',()=>finish(false),{once:true});
+  });
+}
+function loadAssetImageSource(src){
+  if(assetImageCache.has(src))return assetImageCache.get(src).promise;
+  const image=new Image();
+  image.decoding='async';
+  image.src=src;
+  const promise=waitForAssetImage(image).then(result=>({...result,src}));
+  assetImageCache.set(src,{image,promise});
+  return promise;
+}
+function trackAssetWork(work,onProgress){
+  const total=work.length;
+  let loaded=0;
+  const report=src=>{
+    if(typeof onProgress==='function')onProgress({loaded,total,src});
+  };
+  report();
+  return Promise.all(work.map(({src,promise})=>promise.finally(()=>{
+    loaded++;
+    report(src);
+  })));
+}
+function preloadAssetSources(sources,onProgress){
+  const unique=uniqueAssetSources(sources);
+  return trackAssetWork(unique.map(src=>({src,promise:loadAssetImageSource(src)})),onProgress);
+}
+function waitForAssetImages(images,onProgress){
+  const unique=Array.from(new Set(images.filter(Boolean)));
+  return trackAssetWork(unique.map(image=>({
+    src:image.currentSrc||image.src||'',
+    promise:waitForAssetImage(image),
+  })),onProgress);
+}
+function hydrateDeferredAssets(root=document){
+  if(!root||!root.querySelectorAll)return;
+  const mediaToLoad=new Set();
+  root.querySelectorAll('img[data-asset-src],source[data-asset-src]').forEach(asset=>{
+    asset.src=asset.dataset.assetSrc;
+    asset.removeAttribute('data-asset-src');
+    if(asset.tagName==='SOURCE'&&asset.parentElement&&asset.parentElement.load)mediaToLoad.add(asset.parentElement);
+  });
+  mediaToLoad.forEach(media=>media.load());
+}
+window.GameAssets={
+  groups:GAME_ASSET_GROUPS,
+  groupSize:name=>uniqueAssetSources(GAME_ASSET_GROUPS[name]||[]).length,
+  loadGroup:(name,options={})=>preloadAssetSources(GAME_ASSET_GROUPS[name]||[],options.onProgress),
+  preloadSources:preloadAssetSources,
+  waitForImages:waitForAssetImages,
+  hydrateDeferredAssets,
+};
+const imgBg    = loadImg('images/mines/backgroundhero-remake.png');
+const imgFront = loadImg('images/miner/miner-main-v2.webp');
+const imgBack  = loadImg('images/miner/miner-main-v2.webp');
 const PICKAXE_CURSOR_PATHS = [
   'images/trader/pickaxe-tier-0.png',
   'images/cursors/pickaxe-tier-1.png',
@@ -68,6 +249,17 @@ const LAYOUT = {
 // ── GAME STATE ───────────────────────────────────────────────────────────────
 const INVENTORY_SIZE    = 20;
 const MAX_CRAFTED_ITEMS = 8;
+const EQUIPMENT_SLOT_DEFS = [
+  {id:'slot1',label:'Slot 1',unlockStackLevel:0},
+  {id:'slot2',label:'Slot 2',unlockStackLevel:0},
+  {id:'slot3',label:'Slot 3',unlockStackLevel:2},
+  {id:'slot4',label:'Slot 4',unlockStackLevel:4},
+  {id:'slot5',label:'Slot 5',unlockStackLevel:6},
+  {id:'slot6',label:'Slot 6',unlockStackLevel:8},
+  {id:'slot7',label:'Slot 7',unlockStackLevel:9},
+  {id:'slot8',label:'Slot 8',unlockStackLevel:10},
+];
+const MAX_EQUIPMENT_SLOTS = EQUIPMENT_SLOT_DEFS.length;
 const gs = { breaks:0, shakeX:0, shakeY:0, shakeAmt:0, mx:600, my:300, wx:600, wy:300 };
 const uiCursor = { mode:'world', overInteractive:false, pressed:false, pressT:0 };
 const SAVE_KEY        = 'mineTycoonPhase2Save';
@@ -85,10 +277,11 @@ const DEFAULT_STATS = {
   totalCoinsEarned: 0,
   totalForgedItems: 0,
   bestForgedRarity: 'common',
+  recentForgeItemIds: [],
 };
 const MINE_ZONES = {
-  starter:{id:'starter',name:'Mineshaft',background:'images/backgroundhero-remake.png',ambience:'oldMine'},
-  crystal:{id:'crystal',name:'Crystal Vein',background:'images/crystal-vein-mineshaft.png',ambience:'dangerousMine',minLevel:30},
+  starter:{id:'starter',name:'Mineshaft',background:'images/mines/backgroundhero-remake.png',ambience:'oldMine'},
+  crystal:{id:'crystal',name:'Crystal Vein',background:'images/mines/crystal-vein-mineshaft.png',ambience:'dangerousMine',minLevel:30},
 };
 let currentMineZoneId='starter';
 function currentMineZone(){ return MINE_ZONES[currentMineZoneId]||MINE_ZONES.starter; }
@@ -125,6 +318,9 @@ const DEFAULT_DEEP_LIFT_STATE = {
   },
   storyFlags: {},
 };
+const DUNGEON_ITEM_SOURCE = 'dungeon';
+const REWARD_ONLY_ITEM_SOURCES = ['gambling','boss'];
+const NON_FORGE_ITEM_SOURCES = [DUNGEON_ITEM_SOURCE,...REWARD_ONLY_ITEM_SOURCES];
 const AUTO_CRIT_LIMITS = {
   maxAutoCritsPerSwing: 9,
   delayBetweenAutoCritsMs: 85,
@@ -146,6 +342,7 @@ const player = {
   stats: {...DEFAULT_STATS},
   inventory:    new Array(INVENTORY_SIZE).fill(null),
   craftedItems: new Array(MAX_CRAFTED_ITEMS).fill(null),
+  equipment:    new Array(MAX_EQUIPMENT_SLOTS).fill(null),
   tavern: {...DEFAULT_TAVERN_STATE},
   deepLift: {
     ...DEFAULT_DEEP_LIFT_STATE,
@@ -165,19 +362,24 @@ function upgradesByLocation(loc){
 }
 
 // ── ITEM HELPERS ──────────────────────────────────────────────────────────────
-function itemBonus(stat){
+function itemBonus(stat,options={}){
   let t=0;
-  for(const s of player.inventory){
-    if(!s||s.kind!=='item')continue;
+  for(let i=0;i<player.equipment.length;i++){
+    if(i===options.excludeEquipmentIndex)continue;
+    const s=player.equipment[i];
+    if(!isForgedItemSlot(s))continue;
     const d=CRAFT_ITEM_DEFS[s.itemId];
     if(d&&d.effect[stat])t+=d.effect[stat];
   }
-  for(const s of player.craftedItems){
-    if(!s)continue;
-    const d=CRAFT_ITEM_DEFS[s.id];
-    if(d&&d.effect[stat])t+=d.effect[stat];
-  }
   return t;
+}
+function equippedItemIdsByGroup(group){
+  return player.equipment
+    .map(slot=>isForgedItemSlot(slot)&&forgedItemEquipmentGroup(slot.itemId)===group?slot.itemId:null)
+    .filter(Boolean);
+}
+function equippedItemDefsByGroup(group){
+  return equippedItemIdsByGroup(group).map(id=>({id,def:CRAFT_ITEM_DEFS[id]})).filter(item=>item.def);
 }
 
 function tavernBuffMult(key){ return typeof getBuffMultiplier==='function'?getBuffMultiplier(key):1; }
@@ -192,13 +394,16 @@ function xpMultBonus()     { return itemBonus('xpMult'); }
 function forgeLuckBonus()   { return Math.floor((player.upgrades.forgeSkill||0)/2)*0.01+itemBonus('forgeLuck')+tavernBuffBonus('forgeLuckBonus')+luckBonus()*0.35; }
 function yieldChanceBonus(){ return Math.min(0.95,luckBonus()*0.55); }
 function gamblingLuckMult(){ return tavernBuffMult('gamblingLuckMultiplier')*(1+luckBonus()*0.75+itemBonus('gamblingLuck')); }
-function pickaxeTierProxyDamageBonus(){ const tier=pickaxeTierLevel(); return tier>=3?(tier-2)*0.06:0; }
-function proxyDamageBonus(){ return itemBonus('proxyDamage')+pickaxeTierProxyDamageBonus(); }
+function proxyDamageBonus(){ return itemBonus('proxyDamage'); }
 function autoCritChanceBonus(){ return luckBonus()*0.15+itemBonus('autoCritChance')+tavernBuffBonus('autoCritChanceBonus'); }
 function autoCritExtraHits(){ return Math.max(0,Math.floor(itemBonus('autoCritHits'))); }
 function pickaxeTierLevel(){ return clamp(Math.floor(player.upgrades.pickaxeTier||0),0,6); }
 function pickaxeTierAutoCritChance(){ return pickaxeTierLevel()*0.05; }
 function pickaxeTierAutoCritAmount(){ return PICKAXE_TIER_AUTO_CRITS[pickaxeTierLevel()]||0; }
+function pickaxeTierRarity(){
+  const tier=pickaxeTierLevel();
+  return tier>=6?'mythic':tier>=5?'legendary':tier>=4?'epic':tier>=3?'rare':tier>=2?'uncommon':'common';
+}
 function activePickaxeImage(){ return PICKAXE_CURSOR_IMAGES[pickaxeTierLevel()]||imgPick; }
 function weakPointUpgradePower(){
   return Math.max(0,(player.upgrades.accuracy||0)+(itemBonus('swingSpeed')*0.65));
@@ -222,7 +427,145 @@ function forgedSellMultBonus(){ return itemBonus('forgedSellMult'); }
 function upgradeDiscountBonus(){ return Math.min(0.35,itemBonus('upgradeDiscount')); }
 function pickupRangeBonus(){ return itemBonus('pickupRange'); }
 function activeInventorySize(){ return INVENTORY_SIZE+Math.floor(itemBonus('inventoryCapacity')); }
-function effectiveMaxStack(type){ return ORE[type].maxStack+(player.upgrades.stackSize||0)*10; }
+function occupiedInventorySize(){
+  for(let i=player.inventory.length-1;i>=0;i--)if(player.inventory[i])return i+1;
+  return INVENTORY_SIZE;
+}
+function inventoryDisplaySize(){ return Math.max(activeInventorySize(),occupiedInventorySize()); }
+const STACK_COMPRESSION_MAX_MULT=99.9;
+function stackCompressionMultiplier(level=player.upgrades.stackSize||0){
+  const maxLevel=Math.max(1,UPGRADE_DEFS.stackSize&&UPGRADE_DEFS.stackSize.max||5);
+  const progress=clamp(level/maxLevel,0,1);
+  return Math.pow(STACK_COMPRESSION_MAX_MULT,progress);
+}
+function effectiveMaxStack(type){
+  const ore=ORE[type];
+  if(!ore)return 1;
+  return Math.max(1,Math.round(ore.maxStack*stackCompressionMultiplier()));
+}
+function isForgedItemSlot(slot){ return !!(slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId]); }
+function isConsumableSlot(slot){ return !!(slot&&slot.kind==='consumable'&&slot.itemId&&slot.count>0); }
+function isOreSlot(slot){ return !!(slot&&!slot.kind&&slot.type&&ORE[slot.type]&&slot.count>0); }
+function equipmentSlotDef(index){ return EQUIPMENT_SLOT_DEFS[index]||null; }
+function isEquipmentSlotUnlocked(index){
+  const def=equipmentSlotDef(index);
+  if(!def)return false;
+  return (player.upgrades.stackSize||0)>=(def.unlockStackLevel||0);
+}
+function itemSources(def){
+  return Array.isArray(def&&def.sources)?def.sources:[];
+}
+function itemHasSource(def,source){
+  return itemSources(def).includes(source);
+}
+function itemForgeSources(def){
+  if(Array.isArray(def&&def.forgeSources))return def.forgeSources;
+  return itemSources(def).filter(source=>!NON_FORGE_ITEM_SOURCES.includes(source));
+}
+function itemCanAppearInForgeRecipe(def,recipe=null){
+  if(!def||def.rewardOnly||def.dropOnly||def.bossOnly)return false;
+  if(itemHasSource(def,'gambling')||itemHasSource(def,'boss'))return false;
+  if(itemHasSource(def,DUNGEON_ITEM_SOURCE)&&!def.forgeable)return false;
+  const forgeSources=itemForgeSources(def);
+  if(recipe&&recipe.id){
+    if(recipe.id==='grand')return forgeSources.length>0||!itemSources(def).length;
+    return forgeSources.length?forgeSources.includes(recipe.id):true;
+  }
+  return forgeSources.length>0||!itemSources(def).length;
+}
+function forgedItemDisplayCategory(def){
+  if(!def)return 'Gear';
+  if(def.displayCategory)return def.displayCategory;
+  const labels={
+    pickaxe:'Mining Tool',
+    mining_tool:'Mining Tool',
+    tool:'Mining Tool',
+    ring:'Jewelry',
+    trinket:'Jewelry',
+    amulet:'Jewelry',
+    charm:'Trinket',
+    relic:'Ancient Relic',
+    gem:'Gem',
+    utility:'Utility Gear',
+    armor:'Armor',
+    helmet:'Armor',
+    chest:'Armor',
+    gloves:'Armor',
+    boots:'Armor',
+    shield:'Armor',
+    melee:'Weapon',
+    weapon:'Weapon',
+    ranged:'Weapon',
+    wand:'Weapon',
+    bow:'Weapon',
+    projectile:'Weapon',
+    junk:'Forge Scrap',
+  };
+  return labels[def.type]||'Gear';
+}
+function forgedItemEquipmentGroup(itemId){
+  const def=CRAFT_ITEM_DEFS[itemId];
+  if(!def||def.rarity==='junk'||def.type==='junk')return '';
+  if(def.equipGroup)return def.equipGroup;
+  if(['pickaxe','mining_tool','tool'].includes(def.type))return 'tool';
+  if(['weapon','melee','ranged','wand','bow','projectile'].includes(def.type))return 'weapon';
+  if(['armor','helmet','chest','gloves','boots','shield'].includes(def.type))return 'armor';
+  if(['ring','trinket','charm','amulet','relic','gem','utility'].includes(def.type))return 'utility';
+  return '';
+}
+function canEquipItemInSlot(itemId,index){
+  const def=equipmentSlotDef(index),group=forgedItemEquipmentGroup(itemId);
+  return !!(def&&group&&isEquipmentSlotUnlocked(index));
+}
+function inventorySizeWithoutEquipment(index){
+  return INVENTORY_SIZE+Math.floor(itemBonus('inventoryCapacity',{excludeEquipmentIndex:index}));
+}
+function inventoryFitsLimit(limit){
+  return player.inventory.every((slot,index)=>!slot||index<limit);
+}
+function compactInventoryToLimit(limit){
+  const items=player.inventory.filter(Boolean);
+  if(items.length>limit)return false;
+  player.inventory=new Array(Math.max(player.inventory.length,limit,INVENTORY_SIZE)).fill(null);
+  items.forEach((item,index)=>{ player.inventory[index]=item; });
+  return true;
+}
+function firstInventoryEmptyIndex(limit=activeInventorySize()){
+  for(let i=0;i<limit;i++)if(!player.inventory[i])return i;
+  return -1;
+}
+function equipForgedInventoryItem(inventoryIndex){
+  const slot=player.inventory[inventoryIndex];
+  if(!isForgedItemSlot(slot)||!forgedItemEquipmentGroup(slot.itemId))return false;
+  const equipmentIndex=player.equipment.findIndex((equipped,index)=>!equipped&&canEquipItemInSlot(slot.itemId,index));
+  if(equipmentIndex<0)return false;
+  player.equipment[equipmentIndex]={kind:'item',itemId:slot.itemId,count:1};
+  player.inventory[inventoryIndex]=null;
+  applyUpgradeStats();
+  saveGame();
+  return true;
+}
+function unequipForgedItem(equipmentIndex){
+  const slot=player.equipment[equipmentIndex];
+  if(!isForgedItemSlot(slot))return false;
+  const nextLimit=inventorySizeWithoutEquipment(equipmentIndex);
+  if(player.inventory.filter(Boolean).length+1>nextLimit)return false;
+  player.equipment[equipmentIndex]=null;
+  const compacted=compactInventoryToLimit(nextLimit);
+  if(!compacted){
+    player.equipment[equipmentIndex]=slot;
+    return false;
+  }
+  const inventoryIndex=firstInventoryEmptyIndex(nextLimit);
+  if(inventoryIndex<0){
+    player.equipment[equipmentIndex]=slot;
+    return false;
+  }
+  player.inventory[inventoryIndex]={kind:'item',itemId:slot.itemId,count:1};
+  applyUpgradeStats();
+  saveGame();
+  return true;
+}
 function oreValueMult(type){
   let mult=coinMultBonus()+itemBonus('oreValue')+itemBonus(type+'Value');
   if(ORE[type]&&ORE[type].rarity==='rare')mult+=itemBonus('rareOreValue');
@@ -251,13 +594,43 @@ function addCraftedItem(id){
 function forgeSkillPartCost(level=player.upgrades.forgeSkill||0){
   return Math.round(40*Math.pow(1.85,level));
 }
+const TRADER_PART_VALUE_MULT_BY_RARITY={
+  junk:1,
+  common:0.75,
+  uncommon:0.62,
+  rare:0.50,
+  epic:0.40,
+  legendary:0.32,
+  mythic:0.25,
+  god:0.20,
+};
+function forgedItemTraderValue(id){
+  const def=CRAFT_ITEM_DEFS[id];
+  if(!def)return 0;
+  const mult=TRADER_PART_VALUE_MULT_BY_RARITY[def.rarity]??0.5;
+  return Math.max(1,Math.round((def.sell||0)*mult));
+}
 function craftedPartValue(){
-  return player.inventory.reduce((sum,slot)=>slot&&slot.kind==='item'?sum+forgedItemSellValue(slot.itemId):sum,0);
+  return player.inventory.reduce((sum,slot)=>slot&&slot.kind==='item'?sum+forgedItemTraderValue(slot.itemId):sum,0);
+}
+function craftedPartValueFromIndices(indices=[]){
+  return Array.from(new Set(indices.map(Number)))
+    .reduce((sum,index)=>{
+      const slot=player.inventory[index];
+      return isForgedItemSlot(slot)?sum+forgedItemTraderValue(slot.itemId):sum;
+    },0);
+}
+function consumeCraftedPartIndices(indices=[],valueNeeded=0){
+  const selected=Array.from(new Set(indices.map(Number))).filter(index=>isForgedItemSlot(player.inventory[index]));
+  if(craftedPartValueFromIndices(selected)<valueNeeded)return false;
+  selected.forEach(index=>{ player.inventory[index]=null; });
+  applyUpgradeStats();
+  return true;
 }
 function consumeCraftedParts(valueNeeded){
   let paid=0;
   const parts=player.inventory
-    .map((slot,idx)=>slot&&slot.kind==='item'?{idx,value:forgedItemSellValue(slot.itemId)}:null)
+    .map((slot,idx)=>slot&&slot.kind==='item'?{idx,value:forgedItemTraderValue(slot.itemId)}:null)
     .filter(Boolean)
     .sort((a,b)=>a.value-b.value);
   for(const part of parts){
@@ -287,8 +660,82 @@ function offeringOreQuality(offer=null){
 }
 function recipeItemPool(recipe, rarity=null){
   return Object.entries(CRAFT_ITEM_DEFS)
-    .filter(([,def])=>(!rarity||def.rarity===rarity))
+    .filter(([,def])=>{
+      if(rarity&&def.rarity!==rarity)return false;
+      return itemCanAppearInForgeRecipe(def,recipe);
+    })
     .map(([id])=>id);
+}
+function recentForgeRepeatPenalty(id){
+  const recent=player&&player.stats&&Array.isArray(player.stats.recentForgeItemIds)?player.stats.recentForgeItemIds:[];
+  const idx=recent.indexOf(id);
+  if(idx<0)return 1;
+  if(idx===0)return 0.05;
+  if(idx===1)return 0.14;
+  if(idx===2)return 0.28;
+  return 0.55;
+}
+function craftItemRollWeight(id,options={}){
+  const def=CRAFT_ITEM_DEFS[id];
+  const base=Math.max(0.05,Number(def&&def.rollWeight)||1);
+  return Math.max(0.01,base*(options.avoidRecent?recentForgeRepeatPenalty(id):1));
+}
+const FORGE_MIN_CHANCE_BY_RARITY={
+  junk:0.03,
+  common:0.08,
+  uncommon:0.002,
+  rare:0.001,
+  epic:0.0005,
+  legendary:0.0002,
+  mythic:0.00008,
+  god:0.00002,
+};
+function applyForgeChanceFloors(weights,recipe){
+  const available=RARITY_ORDER.filter(r=>recipe.rarities.includes(r)&&recipeItemPool(recipe,r).length>0);
+  const total=available.reduce((sum,r)=>sum+Math.max(0,weights[r]||0),0);
+  if(total<=0)return weights;
+  const original={};
+  available.forEach(r=>{ original[r]=Math.max(0,weights[r]||0)/total; });
+  const locked=new Set();
+  const next={};
+  for(let pass=0;pass<=available.length;pass++){
+    const lockedTotal=Array.from(locked).reduce((sum,r)=>sum+(FORGE_MIN_CHANCE_BY_RARITY[r]||0),0);
+    const remaining=Math.max(0,1-lockedTotal);
+    const dynamic=available.filter(r=>!locked.has(r));
+    const dynamicTotal=dynamic.reduce((sum,r)=>sum+original[r],0);
+    let changed=false;
+    for(const rarity of dynamic){
+      const floor=FORGE_MIN_CHANCE_BY_RARITY[rarity]||0;
+      const candidate=dynamicTotal>0?(original[rarity]/dynamicTotal)*remaining:remaining/Math.max(1,dynamic.length);
+      if(candidate<floor){
+        locked.add(rarity);
+        next[rarity]=floor;
+        changed=true;
+      }
+    }
+    if(!changed){
+      dynamic.forEach(r=>{
+        next[r]=dynamicTotal>0?(original[r]/dynamicTotal)*remaining:remaining/Math.max(1,dynamic.length);
+      });
+      break;
+    }
+  }
+  available.forEach(r=>{ weights[r]=Math.max(0,next[r]||0)*100; });
+  RARITY_ORDER.forEach(r=>{ if(!available.includes(r))weights[r]=0; });
+  return weights;
+}
+function pickWeightedCraftItem(pool=[],options={}){
+  const weighted=pool
+    .map(id=>({id,weight:craftItemRollWeight(id,options)}))
+    .filter(entry=>entry.weight>0);
+  const total=weighted.reduce((sum,entry)=>sum+entry.weight,0);
+  if(total<=0)return pool[0]||null;
+  let roll=Math.random()*total;
+  for(const entry of weighted){
+    roll-=entry.weight;
+    if(roll<=0)return entry.id;
+  }
+  return weighted[weighted.length-1].id;
 }
 function forgeRarityWeights(recipe, offer=null){
   const value=offeringValue(recipe,offer);
@@ -326,7 +773,7 @@ function forgeRarityWeights(recipe, offer=null){
     if(!recipe.rarities.includes(r)||recipeItemPool(recipe,r).length===0)weights[r]=0;
     weights[r]=Math.max(0,weights[r]||0);
   });
-  return weights;
+  return applyForgeChanceFloors(weights,recipe);
 }
 function rollForgeRecipe(recipe, offer=null){
   const weights=forgeRarityWeights(recipe,offer);
@@ -335,7 +782,7 @@ function rollForgeRecipe(recipe, offer=null){
   for(const r of RARITY_ORDER){ roll-=weights[r]; if(roll<=0){ rarity=r; break; } }
   const pool=recipeItemPool(recipe,rarity);
   if(pool.length===0)return null;
-  return pool[Math.floor(Math.random()*pool.length)];
+  return pickWeightedCraftItem(pool,{avoidRecent:true});
 }
 function forgedItemSellValue(id){
   const def=CRAFT_ITEM_DEFS[id];
@@ -350,6 +797,8 @@ function noteForgedItemStats(itemId){
   if(!def)return;
   player.stats={...DEFAULT_STATS,...(player.stats||{})};
   player.stats.totalForgedItems=(Number(player.stats.totalForgedItems)||0)+1;
+  const recent=Array.isArray(player.stats.recentForgeItemIds)?player.stats.recentForgeItemIds:[];
+  player.stats.recentForgeItemIds=[itemId,...recent.filter(id=>id!==itemId)].slice(0,8);
   const current=player.stats.bestForgedRarity||'common';
   if(rarityRank(def.rarity)>rarityRank(current))player.stats.bestForgedRarity=def.rarity;
 }
@@ -375,34 +824,59 @@ function setPlayerUsername(name){
 function getBestPickaxeChainAbility(){
   const tierChance=pickaxeTierAutoCritChance();
   const tierHits=pickaxeTierAutoCritAmount();
-  let best=tierHits>0?{
+  const sources=[];
+  if(tierHits>0)sources.push({
     kind:'chain_auto_crit',
     chance:tierChance,
     minHits:tierHits,
     maxHits:tierHits,
-    rarity:'trader',
+    rarity:pickaxeTierRarity(),
+    effect:'lightning',
     itemId:`pickaxeTier${pickaxeTierLevel()}`,
-  }:null;
-  const slots=[...player.inventory,...player.craftedItems];
-  for(const slot of slots){
+  });
+  for(const slot of player.equipment){
     const itemId=slot&&(slot.itemId||slot.id);
     const def=itemId&&CRAFT_ITEM_DEFS[itemId];
     const ability=def&&def.ability&&def.ability.kind==='chain_auto_crit'?def.ability:null;
     if(!ability)continue;
-    if(!best||rarityRank(def.rarity)>rarityRank(best.rarity)||ability.maxHits>best.maxHits){
-      best={...ability,rarity:def.rarity,itemId};
-    }
+    sources.push({...ability,rarity:def.rarity,itemId,color:def.glow||def.col});
   }
-  if(best&&tierHits>0){
-    best.chance=Math.max(best.chance||0,tierChance);
-    best.minHits=Math.max(best.minHits||1,tierHits);
-    best.maxHits=Math.max(best.maxHits||1,tierHits);
-  }
-  if(best&&autoCritExtraHits()>0){
-    best.minHits+=autoCritExtraHits();
-    best.maxHits+=autoCritExtraHits();
-  }
-  return best;
+  const supportChance=autoCritChanceBonus();
+  const extraHits=autoCritExtraHits();
+  if(!sources.length&&supportChance<=0)return null;
+  const dominant=sources.reduce((best,source)=>{
+    if(!best)return source;
+    const sourceRank=rarityRank(source.rarity);
+    const bestRank=rarityRank(best.rarity);
+    if(sourceRank!==bestRank)return sourceRank>bestRank?source:best;
+    return (source.maxHits||0)>(best.maxHits||0)?source:best;
+  },null)||{
+    kind:'chain_auto_crit',
+    chance:0,
+    minHits:1,
+    maxHits:1,
+    rarity:'common',
+    effect:'lightning',
+    itemId:'autoCritSupport',
+  };
+  const sourceChance=sources.reduce((sum,source)=>sum+(Number(source.chance)||0),0);
+  const minHits=Math.max(1,...sources.map(source=>Number(source.minHits)||1));
+  const maxHits=Math.max(minHits,...sources.map(source=>Number(source.maxHits)||1));
+  const equippedVisualSource=sources
+    .filter(source=>source.itemId&&!String(source.itemId).startsWith('pickaxeTier')&&source.itemId!=='autoCritSupport')
+    .sort((a,b)=>rarityRank(b.rarity)-rarityRank(a.rarity)||(b.maxHits||0)-(a.maxHits||0))[0];
+  const visualSource=equippedVisualSource||dominant;
+  return {
+    ...dominant,
+    itemId:visualSource.itemId,
+    effect:visualSource.effect||dominant.effect,
+    color:visualSource.color||dominant.color,
+    chance:Math.min(0.95,sourceChance+supportChance),
+    minHits:minHits+extraHits,
+    maxHits:Math.max(maxHits+extraHits,minHits+extraHits),
+    sources:sources.map(source=>source.itemId).filter(Boolean),
+    sourceCount:sources.length,
+  };
 }
 
 // ── XP / LEVEL ────────────────────────────────────────────────────────────────
@@ -417,13 +891,13 @@ function xpProgress(){
 
 // ── INVENTORY HELPERS ─────────────────────────────────────────────────────────
 function inventoryValue(){
-  return player.inventory.reduce((s,slot)=>slot&&slot.kind!=='item'?s+Math.round(slot.count*ORE[slot.type].val*(1+oreValueMult(slot.type))):s,0);
+  return player.inventory.reduce((s,slot)=>isOreSlot(slot)?s+Math.round(slot.count*ORE[slot.type].val*(1+oreValueMult(slot.type))):s,0);
 }
 function hasInventorySpace(){
   return player.inventory.some((slot,idx)=>idx<activeInventorySize()&&slot===null);
 }
 function countInventoryOre(type){
-  return player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'&&slot.type===type?slot.count:0),0);
+  return player.inventory.reduce((sum,slot)=>sum+(isOreSlot(slot)&&slot.type===type?slot.count:0),0);
 }
 function countInventoryCraftedByRarity(rarity){
   return player.inventory.reduce((sum,slot)=>{
@@ -434,11 +908,25 @@ function countInventoryCraftedByRarity(rarity){
 function countInventoryCraftedAny(){
   return player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId]?1:0),0);
 }
+function consumeInventoryCraftedByRarity(rarity,amount){
+  const parts=player.inventory
+    .map((slot,idx)=>{
+      const def=isForgedItemSlot(slot)?CRAFT_ITEM_DEFS[slot.itemId]:null;
+      return def&&def.rarity===rarity?{idx,itemId:slot.itemId,value:forgedItemSellValue(slot.itemId)}:null;
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.value-b.value)
+    .slice(0,amount);
+  if(parts.length<amount)return [];
+  parts.forEach(part=>{ player.inventory[part.idx]=null; });
+  applyUpgradeStats();
+  return parts.map(part=>part.itemId);
+}
 function consumeInventoryOre(type,amount){
   let remaining=amount;
   for(const slot of player.inventory){
     if(remaining<=0)break;
-    if(slot&&slot.kind!=='item'&&slot.type===type){
+    if(isOreSlot(slot)&&slot.type===type){
       const take=Math.min(remaining,slot.count);
       slot.count-=take;
       remaining-=take;
@@ -449,7 +937,7 @@ function consumeInventoryOre(type,amount){
 function consumeInventoryOreValue(valueNeeded){
   let paid=0;
   const oreSlots=player.inventory
-    .map((slot,idx)=>slot&&slot.kind!=='item'&&ORE[slot.type]?{idx,type:slot.type,value:ORE[slot.type].val}:null)
+    .map((slot,idx)=>isOreSlot(slot)?{idx,type:slot.type,value:ORE[slot.type].val}:null)
     .filter(Boolean)
     .sort((a,b)=>a.value-b.value);
   for(const part of oreSlots){
@@ -460,17 +948,6 @@ function consumeInventoryOreValue(valueNeeded){
     }
     if(slot&&slot.count<=0)player.inventory[part.idx]=null;
     if(paid>=valueNeeded)break;
-  }
-}
-function consumeInventoryCraftedByRarity(rarity,amount){
-  let remaining=amount;
-  for(let i=0;i<player.inventory.length&&remaining>0;i++){
-    const slot=player.inventory[i];
-    const def=slot&&slot.kind==='item'&&CRAFT_ITEM_DEFS[slot.itemId];
-    if(def&&def.rarity===rarity){
-      player.inventory[i]=null;
-      remaining--;
-    }
   }
 }
 function consumeInventoryCraftedAny(amount){
@@ -484,26 +961,32 @@ function consumeInventoryCraftedAny(amount){
     }
   }
 }
-function addToInventory(type, count){
+function addToInventoryDetailed(type,count){
+  const requested=Math.max(0,Math.floor(Number(count)||0));
+  let remaining=requested;
+  if(!ORE[type]||remaining<=0)return {added:0,rejected:remaining};
   const maxStack=effectiveMaxStack(type);
   const limit=activeInventorySize();
   for(let i=0;i<limit;i++){
     const slot=player.inventory[i];
-    if(slot&&slot.kind!=='item'&&slot.type===type&&slot.count<maxStack){
-      const add=Math.min(count,maxStack-slot.count);
-      slot.count+=add; count-=add;
-      if(count<=0)return true;
+    if(isOreSlot(slot)&&slot.type===type&&slot.count<maxStack){
+      const add=Math.min(remaining,maxStack-slot.count);
+      slot.count+=add; remaining-=add;
+      if(remaining<=0)return {added:requested,rejected:0};
     }
   }
-  while(count>0){
+  while(remaining>0){
     let emptyIdx=-1;
     for(let i=0;i<limit;i++) if(!player.inventory[i]){emptyIdx=i;break;}
-    if(emptyIdx===-1)return false;
-    const add=Math.min(count,maxStack);
+    if(emptyIdx===-1)break;
+    const add=Math.min(remaining,maxStack);
     player.inventory[emptyIdx]={type,count:add};
-    count-=add;
+    remaining-=add;
   }
-  return true;
+  return {added:requested-remaining,rejected:remaining};
+}
+function addToInventory(type, count){
+  return addToInventoryDetailed(type,count).rejected<=0;
 }
 
 // ── CHAIN STATE ───────────────────────────────────────────────────────────────
@@ -542,6 +1025,12 @@ function loadSave(){
     player.stats={...DEFAULT_STATS,...(data.stats||{})};
     if(Array.isArray(data.inventory)){
       for(let i=0;i<data.inventory.length;i++) player.inventory[i]=data.inventory[i]||null;
+    }
+    if(Array.isArray(data.equipment)){
+      for(let i=0;i<MAX_EQUIPMENT_SLOTS;i++){
+        const slot=data.equipment[i]||null;
+        player.equipment[i]=isForgedItemSlot(slot)?{kind:'item',itemId:slot.itemId,count:1}:null;
+      }
     }
     if(Array.isArray(data.craftedItems)){
       for(let i=0;i<MAX_CRAFTED_ITEMS;i++){
@@ -603,6 +1092,7 @@ function saveGame(){
       stats:player.stats,
       inventory:player.inventory,
       craftedItems:[],
+      equipment:player.equipment,
       tavern:player.tavern,
       deepLift:player.deepLift,
     }));

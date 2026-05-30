@@ -5,6 +5,11 @@ const PERF_LIMITS = {
   maxUiParticles: 60,
   maxCoinFlyers: 24,
   maxAutoCritsPerSwing: 9,
+  maxOrePickups: 42,
+  maxVisibleOrePickups: 12,
+  reducedVisibleOrePickups: 6,
+  backpackPulseCooldownMs: 120,
+  backpackFullNoticeCooldownMs: 900,
 };
 const EFFECT_LIMITS = {
   maxParticles: PERF_LIMITS.maxCanvasParticles,
@@ -16,15 +21,26 @@ const MAX_FLOAT_TEXTS=60;
 let activeUiParticles=0;
 let inventoryRenderPending=false;
 let backpackTarget={x:0,y:0,valid:false,checkedAt:0};
+let lastBackpackPulseAt=0;
+let lastBackpackFullNoticeAt=0;
+let backpackGainFlushPending=false;
+const pendingBackpackGains={};
+const backpackGainRows={};
 function reducedMiningMotion(){
   return !!(window.MINE_TYCOON_SETTINGS&&window.MINE_TYCOON_SETTINGS.reducedMotion);
 }
 function miningFxCount(amount,min=0){
   return reducedMiningMotion()?Math.max(min,Math.ceil(amount*0.45)):amount;
 }
+function miningFxSaturated(){
+  return reducedMiningMotion()
+    || particles.length>PERF_LIMITS.maxCanvasParticles*0.78
+    || orePickups.length>PERF_LIMITS.maxOrePickups*0.72
+    || dtScale>1.45;
+}
 function hasMiningItem(itemId){
   if(!itemId||!player)return false;
-  const slots=[...(player.inventory||[]),...(player.craftedItems||[])];
+  const slots=[...(player.equipment||[])];
   return slots.some(slot=>slot&&(slot.itemId||slot.id)===itemId);
 }
 function miningPickaxeAbility(){
@@ -59,6 +75,67 @@ function getBackpackTarget(){
     backpackTarget={x:W*0.15,y:H*0.67,valid:true,checkedAt:now};
   }
   return backpackTarget;
+}
+function ensureBackpackGainColumn(){
+  let column=document.getElementById('backpack-gain-column');
+  if(!column){
+    column=document.createElement('div');
+    column.id='backpack-gain-column';
+    column.className='backpack-gain-column';
+    column.setAttribute('aria-hidden','true');
+    document.body.appendChild(column);
+  }
+  const bpBtn=document.getElementById('backpack-toggle');
+  if(bpBtn){
+    const r=bpBtn.getBoundingClientRect();
+    column.style.left=`${Math.round(r.right+8)}px`;
+    column.style.top=`${Math.round(r.top+r.height*0.18)}px`;
+  }
+  return column;
+}
+function queueBackpackGain(type,count){
+  const amount=Math.max(0,Math.floor(Number(count)||0));
+  if(!ORE[type]||amount<=0)return;
+  pendingBackpackGains[type]=(pendingBackpackGains[type]||0)+amount;
+  if(backpackGainFlushPending)return;
+  backpackGainFlushPending=true;
+  requestAnimationFrame(flushBackpackGains);
+}
+function flushBackpackGains(){
+  backpackGainFlushPending=false;
+  const column=ensureBackpackGainColumn();
+  Object.entries(pendingBackpackGains).forEach(([type,count])=>{
+    if(count<=0)return;
+    pendingBackpackGains[type]=0;
+    const ore=ORE[type];
+    let row=backpackGainRows[type];
+    if(!row){
+      row=document.createElement('div');
+      row.className='backpack-gain-row';
+      row.style.setProperty('--ore-glow',ore.glow||ore.hi||'#ffd27a');
+      backpackGainRows[type]=row;
+      column.appendChild(row);
+    }
+    row._amount=(row._amount||0)+count;
+    row.textContent=`+${row._amount} ${ore.lbl}`;
+    row.classList.remove('leaving');
+    row.hidden=false;
+    clearTimeout(row._hideTimer);
+    clearTimeout(row._removeTimer);
+    row._hideTimer=setTimeout(()=>{
+      row.classList.add('leaving');
+      row._removeTimer=setTimeout(()=>{
+        row.remove();
+        delete backpackGainRows[type];
+      },260);
+    },1050);
+  });
+}
+function notifyBackpackFull(x,y){
+  const now=performance.now();
+  if(now-lastBackpackFullNoticeAt<PERF_LIMITS.backpackFullNoticeCooldownMs)return;
+  lastBackpackFullNoticeAt=now;
+  floatTxt(x+50,y,'Backpack Full','#ff6644',false);
 }
 // Keep these for breakRock and stage-transition effects (still used, just not for normal hits)
 function spawnSparks(x,y,n,col,spd=1){
@@ -138,6 +215,15 @@ function spawnArcLine(x1,y1,x2,y2,col,life=30,weight=2){
 }
 function spawnWeakPointPath(x1,y1,x2,y2,col,ability=miningPickaxeAbility()){
   if(!Number.isFinite(x1)||!Number.isFinite(y1)||!Number.isFinite(x2)||!Number.isFinite(y2))return;
+  if(ability&&ability.itemId==='dull_stone_pick'){
+    spawnDirLine(x1,y1,x2,y2,'#b7b2c2',28);
+    return;
+  }
+  if(ability&&ability.itemId==='copper_pick'){
+    spawnDirLine(x1,y1,x2,y2,'#ef9a4a',30);
+    if(!reducedMiningMotion())spawnSparks(x2,y2,2,'#ef9a4a',0.82);
+    return;
+  }
   if(ability&&ability.itemId==='iron_pick'){
     spawnArcLine(x1,y1,x2,y2,'#a7efff',30,2.2);
     if(!reducedMiningMotion())spawnArcLine(x1,y1,x2,y2,'rgba(214,249,255,0.7)',18,1);
@@ -145,6 +231,11 @@ function spawnWeakPointPath(x1,y1,x2,y2,col,ability=miningPickaxeAbility()){
   }
   if(ability&&ability.itemId==='starforged_pick'){
     spawnArcLine(x1,y1,x2,y2,'#dbe6ff',34,2.4);
+    return;
+  }
+  if(ability&&ability.itemId==='clockwork_strike_gauntlet'){
+    spawnArcLine(x1,y1,x2,y2,'#ffd078',28,1.8);
+    spawnDirLine(x1,y1,x2,y2,'#c48a48',18);
     return;
   }
   spawnDirLine(x1,y1,x2,y2,col);
@@ -174,6 +265,7 @@ function autoCritVisualPower(ability){
   return Math.max(rarityPower[ability&&ability.rarity]||1,1+Math.min(10,(ability&&ability.maxHits)||1)*0.12);
 }
 function autoCritVisualColor(ability){
+  if(ability&&ability.color)return ability.color;
   const effect=ability&&ability.effect;
   if(effect==='fire')return '#ff7a34';
   if(effect==='gold')return '#ffe071';
@@ -182,10 +274,22 @@ function autoCritVisualColor(ability){
 }
 function spawnForgedCritFlavor(rock,x,y,ability=miningPickaxeAbility()){
   if(!ability)return;
-  if(ability.itemId==='sunlit_pick'){
+  if(ability.itemId==='dull_stone_pick'){
+    pushFlash(x,y,'#b7b2c2',rock.radius*0.2,8,0.24);
+    spawnDust(x,y,miningFxCount(3,1),0.38);
+  }else if(ability.itemId==='sunlit_pick'){
     pushFlash(x,y,'#ff8a42',rock.radius*0.34,12,0.48);
     spawnSparks(x,y,miningFxCount(5,2),'#ff8b3f',1.18);
     particles.push({type:'streak',x,y,life:20,maxL:20,col:'#ff7a34',count:miningFxCount(8,4)});
+  }else if(ability.itemId==='copper_pick'){
+    pushFlash(x,y,'#ef9a4a',rock.radius*0.24,10,0.34);
+    spawnSparks(x,y,miningFxCount(4,2),'#ef9a4a',0.92);
+  }else if(ability.itemId==='iron_pick'){
+    pushFlash(x,y,'#9fc8e0',rock.radius*0.28,10,0.36);
+    spawnArcLine(x-14,y-8,x+14,y+8,'#a7efff',14,1.5);
+  }else if(ability.itemId==='clockwork_strike_gauntlet'){
+    spawnRing(x,y,'#ffd078',rock.radius*0.52);
+    particles.push({type:'streak',x,y,life:18,maxL:18,col:'#ffd078',count:miningFxCount(7,3)});
   }else if(ability.itemId==='alloy_king_pick'){
     spawnRing(x,y,'#ffe071',rock.radius*0.86);
     pushFlash(rock.x,rock.y,'#fff09a',rock.radius*0.62,12,0.34);
@@ -208,23 +312,26 @@ function spawnForgedBreakFlavor(rock){
 function spawnRockHitEffect(rock,x,y,isCrit=false,combo=0){
   if(!rock||rock.dead)return;
   const p=hitPoint(rock,x,y);
+  const cheap=miningFxSaturated();
   if(!isCrit){
     pushFlash(p.x,p.y,rock.glow||'#f6d399',Math.max(9,rock.radius*0.18),8,0.28);
-    spawnImpactChips(rock,p.x,p.y,2+Math.floor(Math.random()*3));
+    spawnDust(p.x,p.y,miningFxCount(cheap?2:3,1),0.42);
+    if(!cheap)spawnImpactChips(rock,p.x,p.y,1+Math.floor(Math.random()*2));
     rock.flash=Math.max(rock.flash||0,0.42);
-    rock.shakeF=Math.max(rock.shakeF||0,reducedMiningMotion()?2:4);
-    if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,1.6);
+    rock.shakeF=Math.max(rock.shakeF||0,reducedMiningMotion()?2:cheap?2:4);
+    if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,cheap?0.8:1.4);
     return;
   }
   const col=rock.glow||'#ffe071';
-  pushFlash(p.x,p.y,col,Math.max(18,rock.radius*0.34),12,0.44);
-  spawnRing(p.x,p.y,col,Math.max(38,rock.radius*0.82));
-  spawnSparks(p.x,p.y,miningFxCount(combo>0?5:4,2),col,1.05);
-  particles.push({type:'streak',x:p.x,y:p.y,life:18,maxL:18,col,count:miningFxCount(7,4)});
+  pushFlash(p.x,p.y,col,Math.max(16,rock.radius*0.3),10,0.4);
+  spawnDust(p.x,p.y,miningFxCount(cheap?2:4,1),0.62);
+  if(!cheap)spawnRing(p.x,p.y,col,Math.max(34,rock.radius*0.74));
+  spawnSparks(p.x,p.y,miningFxCount(cheap?2:combo>0?4:3,1),col,0.95);
+  particles.push({type:'streak',x:p.x,y:p.y,life:cheap?14:18,maxL:cheap?14:18,col,count:miningFxCount(cheap?4:6,3)});
   rock.flash=Math.max(rock.flash||0,0.9);
-  rock.shakeF=Math.max(rock.shakeF||0,reducedMiningMotion()?3:7);
-  if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,Math.min(7,3.2+combo*0.08));
-  spawnForgedCritFlavor(rock,p.x,p.y);
+  rock.shakeF=Math.max(rock.shakeF||0,reducedMiningMotion()?3:cheap?4:6);
+  if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,Math.min(5.5,2.8+combo*0.05));
+  if(!cheap)spawnForgedCritFlavor(rock,p.x,p.y);
 }
 function spawnStageFractureEffect(rock,x,y,stage){
   if(!rock||rock.dead)return;
@@ -236,10 +343,11 @@ function spawnStageFractureEffect(rock,x,y,stage){
 }
 function spawnRockBreakEffect(rock){
   if(!rock)return;
-  spawnDust(rock.x,rock.y,miningFxCount(24,8),1.25);
-  spawnChunks(rock.x,rock.y,rock.col,miningFxCount(18,6));
+  const cheap=miningFxSaturated();
+  spawnDust(rock.x,rock.y,miningFxCount(cheap?12:18,7),1.18);
+  spawnChunks(rock.x,rock.y,rock.col,miningFxCount(cheap?4:7,3));
   pushFlash(rock.x,rock.y,rock.glow||'#ffd060',rock.radius*1.02,18,0.42);
-  spawnForgedBreakFlavor(rock);
+  if(!cheap)spawnForgedBreakFlavor(rock);
 }
 function spawnChainMilestoneEffect(rock,x,y,combo){
   if(!rock||combo<=0)return;
@@ -272,29 +380,49 @@ function spawnProxyEchoEffect(source,target,x,y){
 }
 function spawnAutoCritImpact(x,y,rock,ability,combo,fromX,fromY){
   const power=autoCritVisualPower(ability), col=autoCritVisualColor(ability);
+  const cheap=miningFxSaturated()||combo>PERF_LIMITS.maxAutoCritsPerSwing;
+  if(cheap&&combo%3!==0){
+    if(rock)rock.flash=Math.max(rock.flash||0,0.55);
+    if(combo%6===0)floatTxt(x,y-24,`CRIT STORM x${combo}`,col,false);
+    return;
+  }
   spawnWeakPointPath(fromX,fromY,x,y,col,ability);
-  spawnSparks(x,y,miningFxCount(Math.round(5*power),2),col,0.8+power*0.25);
-  spawnRing(x,y,col,34+power*18);
-  particles.push({type:'streak',x,y,life:18+power*7,maxL:18+power*7,col,count:miningFxCount(Math.round(5+power*3),4)});
-  if(power>=1.5)spawnDust(x,y,miningFxCount(Math.round(3*power),1),0.8+power*0.15);
-  if(power>=2&&rock)spawnImpactChips(rock,x,y,Math.round(2+power));
-  if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,Math.min(12,2.5+power*2.4));
-  if(rock)spawnForgedCritFlavor(rock,x,y,ability);
-  if(combo%3===0)floatTxt(x,y-24,power>=2?'CRIT STORM':'AUTO CRIT',col,false);
+  spawnSparks(x,y,miningFxCount(cheap?2:Math.round(4*power),1),col,0.8+power*0.18);
+  if(!cheap)spawnRing(x,y,col,30+power*14);
+  particles.push({type:'streak',x,y,life:cheap?14:18+power*5,maxL:cheap?14:18+power*5,col,count:miningFxCount(cheap?4:Math.round(4+power*2),3)});
+  if(power>=1.5)spawnDust(x,y,miningFxCount(cheap?1:Math.round(2*power),1),0.72+power*0.12);
+  if(!cheap&&power>=2&&rock)spawnImpactChips(rock,x,y,Math.round(1+power));
+  if(!reducedMiningMotion())gs.shakeAmt=Math.max(gs.shakeAmt,Math.min(8,2+power*1.6));
+  if(rock&&!cheap)spawnForgedCritFlavor(rock,x,y,ability);
+  if(combo%3===0)floatTxt(x,y-24,power>=2?`CRIT STORM x${combo}`:'AUTO CRIT',col,false);
 }
 function spawnOre(x,y,type,n){
   const o=ORE[type];
-  for(let i=0;i<n;i++){
+  const total=Math.max(0,Math.floor(Number(n)||0));
+  if(!o||total<=0)return;
+  const cap=miningFxSaturated()?PERF_LIMITS.reducedVisibleOrePickups:PERF_LIMITS.maxVisibleOrePickups;
+  const available=PERF_LIMITS.maxOrePickups-orePickups.length;
+  if(available<=0){
+    const bp=getBackpackTarget();
+    collectOreAmount(type,total,bp.x,bp.y);
+    return;
+  }
+  const visible=Math.max(1,Math.min(total,cap,available));
+  const base=Math.floor(total/visible);
+  let extra=total%visible;
+  for(let i=0;i<visible;i++){
+    const count=base+(extra>0?1:0);
+    if(extra>0)extra--;
     const a=-Math.PI*0.5+(Math.random()-0.5)*Math.PI*1.3;
     const s=2.5+Math.random()*4;
     orePickups.push({
-      x,y,type,
+      x,y,type,count,
       col:o.col,
       glow:o.glow,
       val:o.val,
       vx:Math.cos(a)*s+(Math.random()-0.5)*2,
       vy:Math.sin(a)*s-1,
-      sz:6+Math.random()*5,
+      sz:6+Math.random()*4+Math.min(4,Math.log2(count+1)),
       rot:Math.random()*Math.PI*2,
       rotSpd:(Math.random()-0.5)*0.18,
       life:200,
@@ -310,6 +438,9 @@ function floatTxt(x,y,txt,col,big=false){
 function pulseBackpackReceive(){
   const bpBtn=document.getElementById('backpack-toggle');
   if(!bpBtn)return;
+  const now=performance.now();
+  if(now-lastBackpackPulseAt<PERF_LIMITS.backpackPulseCooldownMs)return;
+  lastBackpackPulseAt=now;
   bpBtn.classList.remove('receiving');
   void bpBtn.offsetWidth;
   bpBtn.classList.add('receiving');
@@ -359,6 +490,27 @@ function updateParticles(){
     if(p.life<=0)particles.splice(i,1);
   }
 }
+function collectOreAmount(type,amount,noticeX,noticeY){
+  const ore=ORE[type];
+  const total=Math.max(0,Math.floor(Number(amount)||0));
+  if(!ore||total<=0)return;
+  const result=typeof addToInventoryDetailed==='function'
+    ? addToInventoryDetailed(type,total)
+    : {added:addToInventory(type,total)?total:0,rejected:0};
+  if(result.added>0){
+    addPlayerXp(Math.round((ore.xp||1)*result.added*(1+xpMultBonus())));
+    if(window.GameAudio)GameAudio.playOreCollect({rare:ore.rarity==='rare',count:result.added});
+    if(typeof trackTavernMission==='function'){
+      trackTavernMission('oreCollected',{type,count:result.added});
+      if(ore.rarity==='rare')trackTavernMission('rareDrop',{type,count:result.added});
+    }
+    pulseBackpackReceive();
+    queueBackpackGain(type,result.added);
+    scheduleSave();
+    requestInventoryRender();
+  }
+  if(result.rejected>0)notifyBackpackFull(noticeX,noticeY);
+}
 function updateOrePickups(){
   const bp=getBackpackTarget(),bpX=bp.x,bpY=bp.y;
   for(let i=orePickups.length-1;i>=0;i--){
@@ -373,24 +525,8 @@ function updateOrePickups(){
     const d=dist2(bpX,bpY,o.x,o.y);
     if(d<36*(1+pickupRangeBonus())){
       o.done=true;
-      const ore=ORE[o.type];
-      const added=addToInventory(o.type,1);
-      if(!added){
-        floatTxt(bpX+50,bpY,'Backpack Full','#ff6644',false);
-      }else{
-        addPlayerXp(Math.round((ore.xp||1)*(1+xpMultBonus())));
-        if(window.GameAudio)GameAudio.playOreCollect({rare:ore.rarity==='rare'});
-        if(typeof trackTavernMission==='function'){
-          trackTavernMission('oreCollected',{type:o.type,count:1});
-          if(ore.rarity==='rare')trackTavernMission('rareDrop',{type:o.type,count:1});
-        }
-        pulseBackpackReceive();
-        floatTxt(bpX+50+(Math.random()-0.5)*20,bpY-20,`+1 ${ore.lbl}`,ore.glow||ore.hi,false);
-        spawnSparks(bpX,bpY,6,ore.glow||'#ffcc55',0.9);
-        spawnRing(bpX,bpY,ore.glow||'#ffcc55',32);
-        scheduleSave();
-        requestInventoryRender();
-      }
+      const amount=Math.max(1,Math.floor(o.count||1));
+      collectOreAmount(o.type,amount,bpX,bpY);
     }
     if(o.life<=0)orePickups.splice(i,1);
   }

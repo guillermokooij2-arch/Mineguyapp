@@ -1,9 +1,18 @@
 // Workbench crafting
 const RARITY_COLS={ junk:'#7b7469', common:'#88bb55', uncommon:'#5599dd', rare:'#cc77ff', epic:'#ff66aa', legendary:'#ff9900', mythic:'#f7f0b8', god:'#66f7ff' };
-function craftItemIconSrc(itemId){ return `images/workbench/items/${itemId}.png`; }
-function craftItemIconHtml(itemId,def,className='crafted-item-art'){
+function craftItemIconSrc(itemId){
+  const def=typeof CRAFT_ITEM_DEFS==='object'&&CRAFT_ITEM_DEFS?CRAFT_ITEM_DEFS[itemId]:null;
+  return def&&def.iconSrc?def.iconSrc:`images/workbench/items/${itemId}.png`;
+}
+function craftItemArtHtml(itemId,def,className='crafted-item-art'){
   const glow=(def&&def.glow)||(def&&def.col)||'#ffd27a';
-  return `<img class="${className}" src="${craftItemIconSrc(itemId)}" alt="" style="--item-glow:${glow}">`;
+  if(def&&def.placeholderIcon&&def.forcePlaceholderIcon){
+    return `<span class="${className} crafted-letter-art" style="--item-glow:${glow}">${def.placeholderIcon}</span>`;
+  }
+  return `<img class="${className}" src="${craftItemIconSrc(itemId)}" alt="" style="--item-glow:${glow}" draggable="false">`;
+}
+function craftItemIconHtml(itemId,def,className='crafted-item-art'){
+  return craftItemArtHtml(itemId,def,className);
 }
 function craftTierIconHtml(recipe){
   const iconMap={relic:'gold'};
@@ -15,7 +24,7 @@ let craftOfferings={};
 
 function oreCounts(){
   const counts={};
-  player.inventory.forEach(s=>{if(s&&s.kind!=='item')counts[s.type]=(counts[s.type]||0)+s.count;});
+  player.inventory.forEach(s=>{if(isOreSlot(s))counts[s.type]=(counts[s.type]||0)+s.count;});
   return counts;
 }
 function getCraftOffer(recipe, counts=oreCounts()){
@@ -54,6 +63,13 @@ function forgeChancePercentages(weights){
   return RARITY_ORDER
     .filter(r=>weights[r]>0)
     .map(r=>({rarity:r,pct:weights[r]/total*100}));
+}
+function formatForgeChancePct(pct){
+  if(pct>=10)return `${Math.round(pct)}%`;
+  if(pct>=1)return `${pct.toFixed(1)}%`;
+  if(pct>=0.1)return `${pct.toFixed(1)}%`;
+  if(pct>=0.01)return `${pct.toFixed(2)}%`;
+  return `${pct.toFixed(3)}%`;
 }
 function hasCraftInventorySpace(){
   return typeof hasInventorySpace==='function'?hasInventorySpace():player.inventory.some((slot,idx)=>idx<activeInventorySize()&&slot===null);
@@ -100,6 +116,7 @@ function getCraftRecipeViewModel(recipe,counts,hasItemSpace,forgeLevel,nextRecip
   const offerTypes=Object.entries(offer).filter(([,n])=>n>0).map(([type,n])=>`${n} ${ORE[type].lbl}`).join(' + ')||'No ore selected';
   const offerAmount=Object.values(offer).reduce((sum,n)=>sum+n,0);
   const weights=forgeRarityWeights(recipe,offer);
+  const selectedOfferEntries=Object.entries(offer).filter(([,n])=>n>0);
   return {
     offer,
     value,
@@ -110,9 +127,11 @@ function getCraftRecipeViewModel(recipe,counts,hasItemSpace,forgeLevel,nextRecip
     quality:Math.round(offeringOreQuality(offer)*100),
     offerTypes,
     offerAmount,
+    selectedOreHtml:selectedOfferEntries.length
+      ? selectedOfferEntries.map(([type,n])=>`<span style="--ore-col:${ORE[type].col};--ore-glow:${ORE[type].glow||ORE[type].hi}">${ORE[type].lbl} <strong>x${n}</strong></span>`).join('')
+      : '<em>No ore selected</em>',
     nextText:nextRecipe?`${nextRecipe.name} at Forge Lv ${nextRecipe.minForgeLevel}`:'Max forge tier',
-    raritiesHtml:recipe.rarities.map(rarity=>`<span class="rarity-chip" style="color:${RARITY_COLS[rarity]};border-color:${RARITY_COLS[rarity]}40">${RARITY_LABELS[rarity]||rarity}</span>`).join(''),
-    chancesHtml:forgeChancePercentages(weights).map(({rarity,pct})=>`<span style="color:${RARITY_COLS[rarity]||'#d6a85f'}">${RARITY_LABELS[rarity]||rarity}: ${pct<1?pct.toFixed(1):Math.round(pct)}%</span>`).join(''),
+    chancesHtml:forgeChancePercentages(weights).map(({rarity,pct})=>`<span class="craft-chance-entry" style="--rarity-col:${RARITY_COLS[rarity]||'#d6a85f'}"><b>${RARITY_LABELS[rarity]||rarity}</b><strong>${formatForgeChancePct(pct)}</strong></span>`).join(''),
     forgeStatus:!hasItemSpace?'Backpack Full':canForge?'Strike Anvil':value>0?`Need ${Math.max(0,minValue-value)} more value`:'Select Ore',
   };
 }
@@ -144,21 +163,20 @@ function craftRecipeInfoHtml(recipe,counts,view){
       <div class="craft-card-info">
         <div class="craft-card-name">${recipe.name}</div>
         <div class="craft-card-desc">${recipe.desc}</div>
+        <div class="craft-tier-inline">
+          <span><em>Forge Level</em><strong>${view.forgeLevel}</strong></span>
+          <span><em>Next Unlock</em><strong>${view.nextText}</strong></span>
+        </div>
       </div>
     </div>
     <div class="craft-cost-row">${craftOfferControlsHtml(recipe,counts,view)}</div>
     <div class="craft-offer-row">
-      <span>Selected Ore <strong>${view.offerTypes}</strong></span>
-      <span>Amount <strong>${view.offerAmount}</strong></span>
-      <span>Minimum Value <strong>${view.minValue}v</strong></span>
-      <span>Offering Value <strong>${view.value}v</strong></span>
-      <span>Ore Quality <strong>${view.quality}%</strong></span>
+      <span><em>Amount</em><strong>${view.offerAmount}</strong></span>
+      <span><em>Minimum</em><strong>${view.minValue}v</strong></span>
+      <span><em>Value</em><strong>${view.value}v</strong></span>
+      <span><em>Quality</em><strong>${view.quality}%</strong></span>
+      <div class="craft-selected-ores">${view.selectedOreHtml}</div>
     </div>
-    <div class="craft-tier-row">
-      <span>Current Forge Level <strong>${view.forgeLevel}</strong></span>
-      <span>Next Unlock <strong>${view.nextText}</strong></span>
-    </div>
-    <div class="craft-rar-row">${view.raritiesHtml}</div>
     <div class="craft-chance-row">${view.chancesHtml}</div>`;
 }
 function craftAnvilHtml(recipe,view){
@@ -203,6 +221,8 @@ function createCraftRecipeCard(recipe,counts,view){
 function renderCraftRecipes(){
   const list=document.getElementById('craft-recipe-list');
   if(!list)return;
+  const previousListScroll=list.scrollTop;
+  const previousOfferScroll=list.querySelector('.craft-cost-row')?list.querySelector('.craft-cost-row').scrollTop:0;
   const counts=oreCounts();
   const hasItemSpace=hasCraftInventorySpace();
   const forgeLevel=player.upgrades.forgeSkill||0;
@@ -211,6 +231,9 @@ function renderCraftRecipes(){
   const nextRecipe=nextSmeltRecipe();
   const view=getCraftRecipeViewModel(recipe,counts,hasItemSpace,forgeLevel,nextRecipe);
   list.appendChild(createCraftRecipeCard(recipe,counts,view));
+  list.scrollTop=previousListScroll;
+  const nextOfferRow=list.querySelector('.craft-cost-row');
+  if(nextOfferRow)nextOfferRow.scrollTop=previousOfferScroll;
 }
 
 function attemptCraft(recipe){
@@ -226,7 +249,7 @@ function attemptCraft(recipe){
     let rem=need;
     for(let i=0;i<player.inventory.length&&rem>0;i++){
       const s=player.inventory[i];
-      if(s&&s.kind!=='item'&&s.type===type){ const take=Math.min(s.count,rem); s.count-=take; rem-=take; if(s.count<=0)player.inventory[i]=null; }
+      if(isOreSlot(s)&&s.type===type){ const take=Math.min(s.count,rem); s.count-=take; rem-=take; if(s.count<=0)player.inventory[i]=null; }
     }
   }
   saveGame(); renderInventory();

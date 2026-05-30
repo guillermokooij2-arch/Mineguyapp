@@ -119,8 +119,8 @@
   filter:drop-shadow(0 8px 10px rgba(0,0,0,0.38));
 }
 .market-shelf-action:hover:not(:disabled) {
-  filter:brightness(1.14) drop-shadow(0 0 14px rgba(255,190,82,0.34));
   transform:scale(1.04) translateY(-2px);
+  box-shadow:0 0 0 1px rgba(255,190,82,0.18),0 10px 16px rgba(0,0,0,0.34);
 }
 .market-shelf-action:disabled {
   opacity:.42;
@@ -153,9 +153,13 @@
   border:0;
   border-radius:0;
   box-shadow:0 12px 18px rgba(0,0,0,0.34),0 0 14px rgba(255,159,54,0.05);
+  transform:translateZ(0);
+  transition:transform .12s ease,box-shadow .12s ease;
+  will-change:transform;
 }
 .market-row:hover {
-  filter:brightness(1.05);
+  transform:translate3d(0,-2px,0);
+  box-shadow:0 14px 20px rgba(0,0,0,0.38),0 0 0 1px rgba(255,190,92,0.12),0 0 18px rgba(255,159,54,0.11);
 }
 .market-forged-row {
   grid-template-rows:68px 38px 30px;
@@ -199,10 +203,8 @@
   width:64px;
   height:64px;
   object-fit:contain;
-  filter:
-    drop-shadow(0 10px 7px rgba(0,0,0,0.56))
-    drop-shadow(0 0 8px color-mix(in srgb,var(--ore-glow,#d0c0a0),transparent 66%));
-  transition:transform .16s ease,filter .16s ease;
+  filter:drop-shadow(0 8px 6px rgba(0,0,0,0.52));
+  transition:transform .12s ease;
 }
 .market-row-stone .market-ore-img { width:56px; height:56px; }
 .market-row-copper .market-ore-img { width:66px; height:66px; }
@@ -210,9 +212,6 @@
 .market-row-gold .market-ore-img { width:70px; height:70px; }
 .market-row:hover .market-ore-img {
   transform:translateY(-3px) scale(1.06);
-  filter:
-    drop-shadow(0 18px 12px rgba(0,0,0,0.64))
-    drop-shadow(0 0 14px color-mix(in srgb,var(--ore-glow,#ffd080),transparent 50%));
 }
 .market-ore-name { font-weight:bold; color:#f3c981; font-size:11px; display:block; text-shadow:0 2px 4px rgba(0,0,0,0.84); line-height:1.05; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .market-ore-rarity { display:none; }
@@ -249,9 +248,9 @@
   justify-self:center;
   text-shadow:0 2px 3px rgba(0,0,0,0.9),0 0 9px rgba(255,200,90,0.30);
   box-shadow:none;
-  filter:drop-shadow(0 4px 6px rgba(0,0,0,0.34));
+  box-shadow:0 4px 6px rgba(0,0,0,0.28);
 }
-.market-sell-btn:hover:not(:disabled) { filter:brightness(1.2) drop-shadow(0 7px 8px rgba(0,0,0,0.48)) drop-shadow(0 0 15px rgba(255,190,84,0.38)); transform:scale(1.05) translateY(-2px); }
+.market-sell-btn:hover:not(:disabled) { filter:none; transform:scale(1.05) translateY(-2px); box-shadow:0 7px 10px rgba(0,0,0,0.42),0 0 0 1px rgba(255,190,84,0.18); }
 .market-sell-btn:disabled { opacity:.38; cursor:not-allowed; filter:saturate(.58) brightness(.72); }
 .market-forged-icon {
   width:52px;
@@ -261,7 +260,8 @@
   justify-content:center;
   margin:2px auto 0;
   background:transparent;
-  filter:drop-shadow(0 8px 9px rgba(0,0,0,0.58)) drop-shadow(0 0 10px color-mix(in srgb,var(--item-glow),transparent 44%));
+  filter:drop-shadow(0 7px 7px rgba(0,0,0,0.52));
+  transform:translateZ(0);
 }
 .market-forged-icon img {
   width:100%;
@@ -270,6 +270,11 @@
   display:block;
   clip-path:none;
   border-radius:6px;
+}
+.market-forged-item-art {
+  width:100%;
+  height:100%;
+  font-size:15px;
 }
 .market-empty-slot {
   opacity:.42;

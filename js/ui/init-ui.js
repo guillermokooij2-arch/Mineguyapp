@@ -34,9 +34,11 @@ function initPanels(){
   marketClose.addEventListener('click',()=>runUiAction(()=>toggleMarketplace(false)));
   workbenchClose.addEventListener('click',()=>runUiAction(()=>toggleWorkbench(false)));
   traderClose.addEventListener('click',()=>runUiAction(()=>toggleTrader(false)));
+  if(traderUpgradesOpen)traderUpgradesOpen.addEventListener('click',()=>runUiAction(openTraderUpgradeShelf));
+  if(traderCombineOpen)traderCombineOpen.addEventListener('click',()=>runUiAction(openTraderCombinePanel));
   if(traderCharacterBtn){
-    traderCharacterBtn.addEventListener('mouseenter',advanceTraderState);
-    traderCharacterBtn.addEventListener('click',advanceTraderState);
+    traderCharacterBtn.addEventListener('mouseenter',handleTraderCharacterHover);
+    traderCharacterBtn.addEventListener('click',handleTraderCharacterInteract);
   }
   characterClose.addEventListener('click',()=>runUiAction(()=>toggleCharacter(false)));
   if(charUsernameSave)charUsernameSave.addEventListener('click',()=>{ setPlayerUsername(charUsernameInput&&charUsernameInput.value); renderCharacter(); });
@@ -48,13 +50,48 @@ function initPanels(){
   if(sellAllForgedBtn) sellAllForgedBtn.addEventListener('click',sellAllForgedItems);
   if(typeof initTavern==='function')initTavern();
   if(typeof initDeepLift==='function')initDeepLift();
+  if(typeof initMinerJournal==='function')initMinerJournal();
   if(inventoryGrid){
     inventoryGrid.addEventListener('mousemove',e=>{
       const slot=e.target.closest('.inventory-slot');
       if(slot&&slot.dataset.itemId)showItemTooltip(slot.dataset.itemId,e.clientX,e.clientY);
+      else if(slot&&slot.dataset.consumableId)showConsumableTooltip(slot.dataset.consumableId,e.clientX,e.clientY);
+      else if(slot&&slot.dataset.oreType)showOreTooltip(slot.dataset.oreType,slot.dataset.oreCount,e.clientX,e.clientY);
       else hideItemTooltip();
     });
+    inventoryGrid.addEventListener('click',e=>{
+      const equipButton=e.target.closest('[data-equip-forged]');
+      if(equipButton){
+        e.preventDefault();
+        if(typeof equipForgedInventoryItem==='function'&&equipForgedInventoryItem(Number(equipButton.dataset.equipForged))){
+          if(typeof pulseElement==='function')pulseElement(equipButton,'inventory-equip-pulse',360);
+          renderInventory();
+        }
+        hideItemTooltip();
+        return;
+      }
+      const useButton=e.target.closest('[data-consume-tavern]');
+      if(!useButton)return;
+      e.preventDefault();
+      if(typeof consumeTavernInventoryItem==='function')consumeTavernInventoryItem(Number(useButton.dataset.consumeTavern),useButton);
+      hideItemTooltip();
+    });
     inventoryGrid.addEventListener('mouseleave',hideItemTooltip);
+  }
+  if(equipmentGrid){
+    equipmentGrid.addEventListener('mousemove',e=>{
+      const slot=e.target.closest('.equipment-slot[data-item-id]');
+      if(slot)showItemTooltip(slot.dataset.itemId,e.clientX,e.clientY,{equipped:true});
+      else hideItemTooltip();
+    });
+    equipmentGrid.addEventListener('click',e=>{
+      const slot=e.target.closest('[data-unequip-slot]');
+      if(!slot)return;
+      e.preventDefault();
+      if(typeof unequipForgedItem==='function'&&unequipForgedItem(Number(slot.dataset.unequipSlot)))renderInventory();
+      hideItemTooltip();
+    });
+    equipmentGrid.addEventListener('mouseleave',hideItemTooltip);
   }
   setTraderState(0);
   renderTravelMap();
@@ -77,7 +114,7 @@ function buildCharacterCommandBar(){
   minerHud.innerHTML=`
     <div class="command-id-portrait">
       <span class="portrait-lamp"></span>
-      <img src="images/miner-portrait-bust.webp" alt="">
+      <img src="images/miner/miner-portrait-bust.webp" alt="">
     </div>
     <div class="command-id-progress">
       <div class="mhud-level-label">Miner Level</div>
@@ -136,10 +173,23 @@ function buildCharacterCommandBar(){
 
   const sideStack=document.createElement('div');
   sideStack.className='command-side-stack';
+  const backpackMapQuick=document.createElement('button');
+  backpackMapQuick.id='backpack-map-quick';
+  backpackMapQuick.className='backpack-map-quick ui-img-btn';
+  backpackMapQuick.type='button';
+  backpackMapQuick.setAttribute('aria-label','Open map');
+  backpackMapQuick.innerHTML=`
+    <img class="ui-btn-state ui-btn-normal" src="images/ui-buttons/map-normal.png" alt="">
+    <img class="ui-btn-state ui-btn-hover" src="images/ui-buttons/map-hover.png" alt="">`;
+  backpackMapQuick.addEventListener('click',e=>{
+    e.stopPropagation();
+    toggleBackpackMap(true,'map');
+  });
 
   terminalInfo.classList.add('command-resources-lite');
   sideStack.appendChild(terminalInfo);
   sideStack.appendChild(backpackToggle);
+  sideStack.appendChild(backpackMapQuick);
   bar.appendChild(sideStack);
   elCoins=document.getElementById('v-coins');
   elOre=document.getElementById('v-ore');
@@ -253,6 +303,14 @@ function updateUI(){
       chainDisplay.classList.remove('chain-hit');
       chainDisplay.addEventListener('animationend',()=>chainDisplay.classList.remove('chain-hit'),{once:true});
       requestAnimationFrame(()=>chainDisplay.classList.add('chain-hit'));
+    }
+    if(typeof worldToScreen==='function'&&typeof LAYOUT==='object'){
+      const img=typeof imgFront!=='undefined'?imgFront:null;
+      const dW=Math.round(W*LAYOUT.minerScale);
+      const dH=img&&img.naturalWidth?Math.round(dW*(img.naturalHeight/img.naturalWidth)):Math.round(H*0.28);
+      const anchor=worldToScreen(W*LAYOUT.playerFx,Math.round(H*LAYOUT.groundFy)-dH+LAYOUT.minerYOffset+18);
+      chainDisplay.style.left=`${anchor.x}px`;
+      chainDisplay.style.top=`${Math.max(18,anchor.y-10)}px`;
     }
     _prevCombo=c;
   }else{

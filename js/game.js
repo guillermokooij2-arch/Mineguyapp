@@ -31,11 +31,22 @@ function normalHit(rock,dmg,isCrit,critCombo=0,hitX=rock.x,hitY=rock.y){
   rock.hp-=isCrit?dmg:Math.max(0.1,dmg*0.1);
   if(typeof spawnRockHitEffect==='function')spawnRockHitEffect(rock,hitX,hitY,isCrit,critCombo);
   addCrack(rock); if(isCrit) addCrack(rock);
-  if(isCrit)applyProxyDamage(rock,Math.max(1,dmg*proxyDamageBonus()),rock.x,rock.y);
+  const proxyBonus=isCrit?proxyDamageBonus():0;
+  if(proxyBonus>0)applyProxyDamage(rock,Math.max(1,dmg*proxyBonus),rock.x,rock.y);
   const nextStage=rockBreakStage(rock);
   if(nextStage>prevStage&&rock.hp>0&&typeof spawnStageFractureEffect==='function')spawnStageFractureEffect(rock,hitX,hitY,nextStage);
   if(nextStage>prevStage&&rock.hp>0&&nextStage>=4) floatTxt(rock.x,rock.y-rock.radius-22,nextStage>=5?'BREAKING!':'FRACTURE!',rock.glow||'#ff9b48',true);
   if(rock.hp<=0) breakRock(rock);
+}
+
+function findNextWeakPointRockNear(x,y,exclude=null){
+  let best=null,bestD=Infinity;
+  for(const candidate of rocks){
+    if(!candidate||candidate.dead||candidate===exclude)continue;
+    const d=dist2(x,y,candidate.x,candidate.y);
+    if(d<bestD){ bestD=d; best=candidate; }
+  }
+  return best;
 }
 
 function applyProxyDamage(source,dmg,x,y){
@@ -51,7 +62,6 @@ function applyProxyDamage(source,dmg,x,y){
     target.bonusOreChance=Math.min(0.85,target.bonusOreChance+0.03);
     addCrack(target);
     if(typeof spawnProxyEchoEffect==='function')spawnProxyEchoEffect(source,target,x,y);
-    floatTxt(target.x,target.y-target.radius-18,'ECHO HIT','#9fe8ff',false);
     if(target.hp<=0)breakRock(target);
     hits++;
     if(hits>=3)break;
@@ -60,7 +70,7 @@ function applyProxyDamage(source,dmg,x,y){
 
 function maybeTriggerPickaxeChainReaction(rock,wpX,wpY){
   const ability=getBestPickaxeChainAbility();
-  const chance=ability?Math.min(0.95,(ability.chance||0)+autoCritChanceBonus()):0;
+  const chance=ability?Math.min(0.95,ability.chance||0):0;
   if(!ability||Math.random()>chance)return;
   const maxHits=Math.min(AUTO_CRIT_LIMITS.maxAutoCritsPerSwing,PERF_LIMITS.maxAutoCritsPerSwing,ability.maxHits||1);
   const minHits=Math.max(1,Math.min(ability.minHits||1,maxHits));
@@ -124,8 +134,8 @@ function chainHit(rock, wpX, wpY){
   const labelCol=chain.combo>=20?(rock.glow||'#f6f0ff'):chain.combo>=10?(rock.glow||'#fff4a0'):chain.combo>=5?'#fff287':'#ffee00';
   floatTxt(rock.x,rock.y-rock.radius-22,label,labelCol,true);
 
-  if(rock.dead) return;
   maybeTriggerPickaxeChainReaction(rock,wpX,wpY);
+  if(rock.dead) return;
   setWeakPoint(rock,true,wpX,wpY);
 }
 
@@ -133,7 +143,7 @@ function dist2(ax,ay,bx,by){ return Math.sqrt((ax-bx)**2+(ay-by)**2); }
 
 // ── INPUT ─────────────────────────────────────────────────────────────────────
 function isElementClickable(el){
-  const target=el&&el.closest('button,[role="button"],input,.map-node');
+  const target=el&&el.closest('button,[role="button"],input,.map-node,.inventory-slot[data-item-id]:not([data-item-id=""]),.inventory-slot[data-consumable-id]:not([data-consumable-id=""]),.inventory-slot[data-ore-type]:not([data-ore-type=""])');
   if(!target)return false;
   if(target.disabled||target.getAttribute('aria-disabled')==='true')return false;
   return !target.classList.contains('locked');
@@ -141,6 +151,7 @@ function isElementClickable(el){
 function isUiSurface(el){
   if(!el)return false;
   if(el.closest('#start-screen'))return true;
+  if(el.closest('#miner-journal-button,#miner-journal-modal:not([hidden])'))return true;
   if(el.closest('#ui-backdrop'))return document.body.classList.contains('panel-open');
 
   const backpackPanel=el.closest('#backpack-map-panel');
@@ -152,17 +163,28 @@ function isUiSurface(el){
   return false;
 }
 function updateCursorContext(e){
-  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const el=e&&e.target&&e.target.nodeType===1?e.target:document.elementFromPoint(e.clientX,e.clientY);
   uiCursor.overInteractive=isElementClickable(el);
   uiCursor.mode=(uiCursor.overInteractive||isUiSurface(el))?'ui':'world';
 }
 
 // Use window so the custom cursor tracks correctly even over HTML buttons/panels.
+let hoveredRock=null;
 window.addEventListener('mousemove',e=>{ gs.mx=e.clientX; gs.my=e.clientY; updateCursorContext(e);
   const world=screenToWorld(e.clientX,e.clientY);
   gs.wx=world.x; gs.wy=world.y;
-  rocks.forEach(r=>r.hovered=false);
-  if(uiCursor.mode==='world'&&!sw.active&&isScreenInWorld(e.clientX,e.clientY)){ for(const r of rocks){ if(r.dead)continue; if(dist2(world.x,world.y,r.x,r.y)<rockVisualRadius(r)+8){r.hovered=true;break;} } }
+  if(hoveredRock)hoveredRock.hovered=false;
+  hoveredRock=null;
+  if(uiCursor.mode==='world'&&!sw.active&&isScreenInWorld(e.clientX,e.clientY)){
+    for(const r of rocks){
+      if(r.dead)continue;
+      if(dist2(world.x,world.y,r.x,r.y)<rockVisualRadius(r)+8){
+        r.hovered=true;
+        hoveredRock=r;
+        break;
+      }
+    }
+  }
 });
 window.addEventListener('pointerdown',e=>{
   updateCursorContext(e);
@@ -176,6 +198,12 @@ window.addEventListener('pointerdown',e=>{
 });
 window.addEventListener('pointerup',()=>{ uiCursor.pressed=false; });
 window.addEventListener('pointercancel',()=>{ uiCursor.pressed=false; });
+window.addEventListener('dragstart',e=>{
+  if(e.target&&e.target.closest&&e.target.closest('img,video,#game,#cursor-canvas,#start-screen,#backpack-map-panel,#marketplace-panel,#workbench-panel,#trader-panel,#tavern-panel,#deep-lift-panel')){
+    e.preventDefault();
+    uiCursor.pressed=false;
+  }
+});
 function startWorldSwing(clientX,clientY){
   if(!isScreenInWorld(clientX,clientY))return;
   if(sw.active)return;
@@ -229,7 +257,13 @@ function updateSwing(){
       }
       const startsChain=!canceledChain;
       normalHit(r,(1+powerBonus())*damageMultiplier(),false,0,sw.clickX,sw.clickY);
-      if(startsChain&&!r.dead&&chain.timer===0) setWeakPoint(r,false,sw.clickX,sw.clickY);
+      if(startsChain&&chain.timer===0){
+        if(!r.dead) setWeakPoint(r,false,sw.clickX,sw.clickY);
+        else {
+          const nextRock=findNextWeakPointRockNear(sw.clickX,sw.clickY,r);
+          if(nextRock)setWeakPoint(nextRock,false,sw.clickX,sw.clickY);
+        }
+      }
       hit=true; break;
     }
     if(!hit){
@@ -356,6 +390,9 @@ function frame(ts){
   const reducedMotionInput=document.getElementById('menu-reduced-motion');
   const saveSummary=document.getElementById('menu-save-summary');
   const gameMenuButton=document.getElementById('game-menu-button');
+  const loadingBar=screen.querySelector('.menu-loading-bar');
+  const loadingBarFill=loadingBar&&loadingBar.querySelector('span');
+  const loadingCopy=screen.querySelector('.menu-loading-copy');
   const SETTINGS_KEY='mineTycoonSettings';
   const AUTO_START_KEY='mineTycoonAutoStart';
   const MODAL_FADE_MS=220;
@@ -392,6 +429,7 @@ function frame(ts){
     if(save.currentMineZoneId&&save.currentMineZoneId!=='starter')return true;
     if(save.upgrades&&Object.values(save.upgrades).some(v=>(Number(v)||0)>0))return true;
     if(Array.isArray(save.inventory)&&save.inventory.some(Boolean))return true;
+    if(Array.isArray(save.equipment)&&save.equipment.some(Boolean))return true;
     if(Array.isArray(save.craftedItems)&&save.craftedItems.some(Boolean))return true;
     if(save.stats&&Object.entries(save.stats).some(([key,value])=>key!=='bestForgedRarity'&&(Number(value)||0)>0))return true;
     if(save.deepLift&&((Number(save.deepLift.bestFloor)||0)>0||(Number(save.deepLift.totalRuns)||0)>0))return true;
@@ -429,11 +467,16 @@ function frame(ts){
       if(!document.body.classList.contains('game-active')&&GameAudio.startMenuAudioSequence)GameAudio.startMenuAudioSequence();
     }
   }
-  function waitForCoreAssets(){
+  function coreAssetImages(){
     const imgs=[imgBg,imgFront,imgBack,...PICKAXE_CURSOR_IMAGES,imgHandOpen,imgHandPoint];
     if(typeof ORE_NODE_IMAGES==='object'){
       Object.values(ORE_NODE_IMAGES).forEach(list=>Array.isArray(list)&&imgs.push(...list));
     }
+    return imgs.filter(Boolean);
+  }
+  function waitForCoreAssets(onProgress){
+    const imgs=coreAssetImages();
+    if(window.GameAssets&&GameAssets.waitForImages)return GameAssets.waitForImages(imgs,onProgress);
     const waits=imgs.filter(Boolean).map(img=>{
       if(img.complete&&img.naturalWidth)return Promise.resolve();
       if(typeof img.decode==='function')return img.decode().catch(()=>{});
@@ -443,6 +486,43 @@ function frame(ts){
       });
     });
     return Promise.all(waits);
+  }
+  function setMenuLoadingProgress(loaded,total,label='Loading the claim'){
+    if(loadingBar&&loadingBarFill){
+      const pct=total?Math.max(0.05,Math.min(1,loaded/total)):0.05;
+      loadingBar.classList.add('is-tracked');
+      loadingBarFill.style.setProperty('--load-progress',`${Math.round(pct*100)}%`);
+    }
+    if(loadingCopy)loadingCopy.textContent=total?`${label} ${loaded}/${total}`:label;
+  }
+  function loadMenuBootAssets(){
+    if(!window.GameAssets){
+      setMenuLoadingProgress(0,0);
+      return waitForCoreAssets();
+    }
+    const progress={
+      core:{loaded:0,total:coreAssetImages().length},
+      menu:{loaded:0,total:GameAssets.groupSize('menu')},
+      map:{loaded:0,total:GameAssets.groupSize('map')},
+    };
+    const report=label=>{
+      const counts=Object.values(progress).reduce((sum,item)=>({
+        loaded:sum.loaded+item.loaded,
+        total:sum.total+item.total,
+      }),{loaded:0,total:0});
+      setMenuLoadingProgress(counts.loaded,counts.total,label);
+    };
+    const update=(key,label)=>state=>{
+      progress[key]={loaded:state.loaded,total:state.total};
+      report(label);
+    };
+    report('Loading claim assets');
+    return Promise.all([
+      waitForCoreAssets(update('core','Preparing mine assets')),
+      GameAssets.loadGroup('menu',{onProgress:update('menu','Preparing menu assets')}),
+      GameAssets.loadGroup('map',{onProgress:update('map','Preparing travel map')}),
+      new Promise(resolve=>setTimeout(resolve,700)),
+    ]);
   }
   function closeModals(options={}){
     const {sound=false,immediate=false}=options;
@@ -581,11 +661,8 @@ function frame(ts){
   window.MINE_TYCOON_SETTINGS=readSettings();
   applyMenuSettings();
   renderSaveState();
-  window.addEventListener('load',()=>Promise.all([
-    waitForCoreAssets(),
-    new Promise(resolve=>setTimeout(resolve,3900)),
-  ]).then(setMenuReady),{once:true});
-  setTimeout(setMenuReady,6200);
+  setTimeout(()=>loadMenuBootAssets().then(setMenuReady),0);
+  setTimeout(setMenuReady,9000);
 
   if(continueBtn)continueBtn.addEventListener('click',()=>startGame({resumeToMap:true}));
   if(newGameBtn)newGameBtn.addEventListener('click',()=>{

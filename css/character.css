@@ -197,6 +197,28 @@
   filter:drop-shadow(0 7px 8px rgba(0,0,0,0.26));
   transition:transform .14s ease,filter .14s ease;
 }
+.char-stat-section-head {
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:8px 0 2px;
+  padding:8px 10px;
+  color:#5f3411;
+  border-top:1px solid rgba(92,52,20,.18);
+  border-bottom:1px solid rgba(92,52,20,.12);
+  font-size:12px;
+  font-weight:bold;
+  letter-spacing:0;
+  text-transform:uppercase;
+}
+.char-stat-section-head strong {
+  color:#7a4c1a;
+  font-size:10px;
+  text-align:right;
+  text-transform:none;
+}
 .char-stat-row:hover {
   z-index:5;
   transform:translateY(-3px) rotate(-.4deg);
@@ -407,6 +429,15 @@
 .char-records-head strong,
 .char-leaderboard-head strong {
   color:#e2ff9a;
+}
+.char-stat-section-head {
+  border-color:rgba(111,255,154,.18);
+  color:#e2ff9a;
+  font-family:"Courier New",monospace;
+}
+.char-stat-section-head strong {
+  color:rgba(154,255,166,.66);
+  font-family:"Courier New",monospace;
 }
 .char-record-row,
 .char-leaderboard-row,

@@ -9,6 +9,7 @@ const TAVERN_ITEMS=[
   {id:'pint',name:"Miner's Pint",price:95,type:'drink',effect:'productivity',description:'+35% mining yield for 3 minutes',duration:180000,stacking:'additive',modifiers:{oreYieldMultiplier:1.35}},
   {id:'whiskey',name:'Barcelo Imperial',price:230,type:'drink',effect:'power',description:'+60% mining damage for 90 seconds',duration:90000,stacking:'additive',modifiers:{damageMultiplier:1.60}},
   {id:'miner_tonic',name:"Miner's Tonic",price:210,type:'drink',effect:'auto_crit',description:'+20% auto-crit chain chance for 3 minutes',duration:180000,stacking:'additive',modifiers:{autoCritChanceBonus:0.20}},
+  {id:'lift_salve',name:'Lift Salve',price:180,type:'salve',effect:'deep_lift_heal',description:'Restores 45 health between Deep Lift waves',duration:0,stacking:'instant',modifiers:{deepLiftHeal:45}},
   {id:'cigarettes',name:'Dust Cigarettes',price:125,type:'smoke',effect:'focus',description:'+35% weak point accuracy window for 3 minutes',duration:180000,stacking:'additive',modifiers:{weakPointWindowMultiplier:1.35}},
   {id:'cigar',name:'Lucky Cigar',price:260,type:'smoke',effect:'gambling_luck',description:'+45% gambling luck for 3 minutes',duration:180000,stacking:'additive',modifiers:{gamblingLuckMultiplier:1.45}},
   {id:'joint',name:'Green Vein Roll',price:320,type:'smoke',effect:'rare_ore_luck',description:'+22% rare ore drop chance for 3 minutes, -8% swing speed',duration:180000,stacking:{mode:'diminishing',multiplierPerExtraStack:0.65},modifiers:{rareDropChanceBonus:0.22,swingSpeedMultiplier:0.92}},
@@ -18,6 +19,7 @@ const TAVERN_ITEM_ICONS={
   pint:'images/tavern/items/pint.png',
   whiskey:'images/tavern/items/barcelo-imperial.png',
   miner_tonic:'images/tavern/items/miner-tonic.png',
+  lift_salve:'images/tavern/items/miner-tonic.png',
   cigarettes:'images/tavern/items/cigarettes.png',
   cigar:'images/tavern/items/cigar.png',
   joint:'images/tavern/items/joint.png',
@@ -26,7 +28,7 @@ const TAVERN_ITEM_ICONS={
 const BARKEEP_STATES={
   idle:{image:'images/tavern/barkeep/barkeep-idle-v2.png',text:'Back from the rocks, are ya?'},
   hover:{image:'images/tavern/barkeep/barkeep-greet-v2.png',text:'Need a little courage before heading back down?'},
-  selling:{image:'images/tavern/barkeep/barkeep-serving-v2.png',text:"That'll put fire in your swing."},
+  selling:{image:'images/tavern/barkeep/barkeep-serving-v2.png',text:"It's in your pack. Use it when the rock bites back."},
   gambling:{image:'images/tavern/barkeep/barkeep-serving-v2.png',text:"Luck's a funny thing. Expensive too."},
   warning:{image:'images/tavern/barkeep/barkeep-warning-v2.png',text:'Come back when your pockets weigh more.'},
 };
@@ -74,6 +76,7 @@ const DEVILS_DRAW_OUTCOMES=[
 ];
 const MISSION_REFRESH_TIME=10*60*1000;
 const MAX_TAVERN_BUFFS=7;
+const MAX_TAVERN_CONSUMABLE_STACK=99;
 const TAVERN_SYSTEM_UPDATE_INTERVAL_MS=250;
 const TAVERN_BUFF_RENDER_INTERVAL_MS=1000;
 const tavernPanel=document.getElementById('tavern-panel');
@@ -89,7 +92,7 @@ let diceState=null;
 let devilsDrawState=null;
 let slotState={spinning:false,lastBet:SLOT_BETS[0],heat:0};
 const GAMBLING_CHIPS=[25,50,100,250,500];
-const DEVILS_DRAW_BASE_COST=450;
+const DEVILS_DRAW_BASE_COST=500;
 const CARD_SUITS=['hearts','diamonds','clubs','spades'];
 const CARD_RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const GAMBLING_GAME_LABELS={
@@ -200,6 +203,69 @@ function applyTavernBuff(item){
   player.tavern.activeBuffs.push(nextBuff);
   player.tavern.activeBarItems.push({id:item.id,expiresAt:nextBuff.expiresAt});
   applyUpgradeStats();
+  return true;
+}
+function tavernItemById(id){
+  return TAVERN_ITEMS.find(item=>item.id===id)||null;
+}
+function isTavernConsumableSlot(slot,id=null){
+  return typeof isConsumableSlot==='function'
+    &&isConsumableSlot(slot)
+    &&(!id||slot.itemId===id)
+    &&!!tavernItemById(slot.itemId);
+}
+function canStoreTavernConsumable(id,count=1,reservedEmptySlots=0){
+  if(!tavernItemById(id))return false;
+  const limit=activeInventorySize();
+  let remaining=Math.max(1,Math.floor(Number(count)||1));
+  let emptySlots=0;
+  for(let i=0;i<limit;i++){
+    const slot=player.inventory[i];
+    if(!slot){ emptySlots++; continue; }
+    if(!isTavernConsumableSlot(slot,id))continue;
+    remaining-=Math.max(0,MAX_TAVERN_CONSUMABLE_STACK-slot.count);
+    if(remaining<=0)return true;
+  }
+  return remaining<=Math.max(0,emptySlots-reservedEmptySlots)*MAX_TAVERN_CONSUMABLE_STACK;
+}
+function addTavernConsumableToInventory(id,count=1){
+  const item=tavernItemById(id);
+  if(!item||!canStoreTavernConsumable(id,count))return false;
+  const limit=activeInventorySize();
+  let remaining=Math.max(1,Math.floor(Number(count)||1));
+  for(let i=0;i<limit&&remaining>0;i++){
+    const slot=player.inventory[i];
+    if(!isTavernConsumableSlot(slot,id)||slot.count>=MAX_TAVERN_CONSUMABLE_STACK)continue;
+    const add=Math.min(remaining,MAX_TAVERN_CONSUMABLE_STACK-slot.count);
+    slot.count+=add;
+    remaining-=add;
+  }
+  for(let i=0;i<limit&&remaining>0;i++){
+    if(player.inventory[i])continue;
+    const add=Math.min(remaining,MAX_TAVERN_CONSUMABLE_STACK);
+    player.inventory[i]={kind:'consumable',itemId:item.id,count:add};
+    remaining-=add;
+  }
+  return remaining<=0;
+}
+function consumeTavernInventoryItem(slotIndex,target=null){
+  const slot=player.inventory[slotIndex];
+  if(!isTavernConsumableSlot(slot))return false;
+  const item=tavernItemById(slot.itemId);
+  if(item&&item.modifiers&&item.modifiers.deepLiftHeal){
+    if(!(typeof window.useDeepLiftHealingConsumable==='function'&&window.useDeepLiftHealingConsumable(item.modifiers.deepLiftHeal)))return false;
+  }else if(!applyTavernBuff(item))return false;
+  slot.count--;
+  if(slot.count<=0)player.inventory[slotIndex]=null;
+  if(window.GameAudio)GameAudio.playPurchase();
+  saveGame();
+  if(target){
+    if(typeof pulseElement==='function')pulseElement(target,'inventory-consume-pulse',420);
+    if(typeof spawnUiSparkles==='function')spawnUiSparkles(target,{amount:10,tone:item.type==='smoke'?'purple':'gold',spread:92,lift:72,duration:640});
+    setTimeout(()=>renderInventory(),180);
+  }else renderInventory();
+  renderTavernBuffs();
+  if(typeof renderCommandBuffs==='function')renderCommandBuffs();
   return true;
 }
 function updateTavernSystems(){
@@ -356,24 +422,24 @@ function renderTavernBuffs(){
 function renderTavernShop(){
   tavernContent.innerHTML=`<div class="tavern-station-head"><span>Bar Counter</span><strong>Order before heading back down</strong></div><div class="bar-counter-layout"><div class="tavern-shop-grid">${TAVERN_ITEMS.map((item,i)=>`
     <button type="button" class="tavern-shop-item tavern-shop-item-${i+1}" data-buy-tavern="${item.id}" aria-label="Buy ${item.name} for ${item.price} coins. ${item.description}">
-      <span class="tavern-shop-icon"><img src="${TAVERN_ITEM_ICONS[item.id]}" alt=""></span>
-      <span class="tavern-shop-tooltip" role="tooltip"><strong>${item.name}</strong><em>${item.price}c</em><span>${item.description}</span><small>${item.type} - ${Math.round(item.duration/1000)}s</small></span>
+      <span class="tavern-shop-icon"><img src="${TAVERN_ITEM_ICONS[item.id]}" alt="" draggable="false"></span>
+      <span class="tavern-shop-tooltip" role="tooltip"><strong>${item.name}</strong><em>${item.price}c</em><span>${item.description}</span><small>Backpack ${item.type} - ${Math.round(item.duration/1000)}s</small></span>
     </button>`).join('')}</div></div>`;
   tavernContent.querySelectorAll('[data-buy-tavern]').forEach(btn=>btn.addEventListener('click',()=>buyTavernItem(btn.dataset.buyTavern,btn)));
 }
 function buyTavernItem(id,target=null){
-  const item=TAVERN_ITEMS.find(i=>i.id===id);
+  const item=tavernItemById(id);
   if(!item)return;
   if(player.coins<item.price){
     setBarkeepState('warning');
     return;
   }
-  if(player.tavern.activeBuffs.length>=MAX_TAVERN_BUFFS){
-    applyTavernBuff(item);
+  if(!addTavernConsumableToInventory(item.id,1)){
+    setBarkeepState('warning');
+    if(tavernDialogue)tavernDialogue.textContent="Make room first. I'm not balancing drinks on your helmet.";
     return;
   }
   player.coins-=item.price;
-  if(!applyTavernBuff(item))return;
   if(window.GameAudio)GameAudio.playPurchase();
   if(target){
     target.classList.add('tavern-item-bought');
@@ -384,7 +450,8 @@ function buyTavernItem(id,target=null){
   setBarkeepState(item.effect==='gambling_luck'?'gambling':'selling');
   saveGame();
   tavernMoneyText();
-  renderTavernBuffs();
+  renderInventory();
+  if(typeof pulseBackpackReceive==='function')pulseBackpackReceive();
 }
 function tavernMissionOrePool(level){
   const pool=['stone'];
@@ -409,7 +476,17 @@ function weightedMissionOre(level){
 }
 function missionOreAmount(type,level,kind='delivery'){
   const ore=ORE[type];
-  const targetValue=kind==='rush'?70+level*8:kind==='risk'?120+level*13:95+level*10;
+  const beginner=level<3;
+  const mid=level<5;
+  const targetValue=beginner
+    ? 20+level*7
+    : mid
+      ? (kind==='rush'?38+level*6:52+level*8)
+      : kind==='rush'
+        ? 70+level*8
+        : kind==='risk'
+          ? 120+level*13
+          : 95+level*10;
   const maxByRarity=ore.rarity==='legendary'?3:ore.rarity==='epic'?5:ore.rarity==='rare'?8:ore.rarity==='uncommon'?18:45;
   return Math.max(1,Math.min(maxByRarity,Math.ceil(targetValue/Math.max(1,ore.val))));
 }
@@ -428,17 +505,23 @@ function buildOreDeliveryMission(ctx){
   return {id:ctx.id,type:ctx.type,title:`${ctx.ore.lbl} for the Rail Crew`,description:`Deliver ${amount} ${ctx.ore.lbl}.`,requirement:{ore:ctx.oreType,amount},reward:{coins:Math.round(ctx.ore.val*amount*(2.6+ctx.level*0.08))}};
 }
 function buildMixedValueMission(ctx){
-  const amount=Math.round(90+ctx.level*18);
+  const amount=Math.round(ctx.level<3?28+ctx.level*10:ctx.level<5?58+ctx.level*12:90+ctx.level*18);
   return {id:ctx.id,type:ctx.type,title:'Mixed Ore Tab',description:`Deliver any mined ore worth ${amount} value.`,requirement:{oreValue:amount},reward:{coins:Math.round(amount*1.75),barItemId:ctx.level>=8?'cigarettes':'pint'}};
 }
+function missionRockAmount(ctx){
+  if(ctx.level<3)return ctx.oreType==='stone'?12+ctx.level*4:8+ctx.level*2;
+  if(ctx.level<5)return ctx.ore.rarity==='uncommon'?14:24;
+  return ctx.ore.rarity==='legendary'?4:ctx.ore.rarity==='epic'?7:ctx.ore.rarity==='rare'?12:ctx.ore.rarity==='uncommon'?28:70;
+}
 function buildBreakRocksMission(ctx){
-  const amount=ctx.ore.rarity==='legendary'?4:ctx.ore.rarity==='epic'?7:ctx.ore.rarity==='rare'?12:ctx.ore.rarity==='uncommon'?28:70;
+  const amount=missionRockAmount(ctx);
   return {id:ctx.id,type:ctx.type,title:`Clear the ${ctx.ore.lbl} Shaft`,description:`Break ${amount} ${ctx.ore.lbl} rocks.`,requirement:{rockType:ctx.oreType,amount},progress:0,reward:{coins:Math.round(80+ctx.ore.val*amount*1.6)}};
 }
 function buildTimedContractMission(ctx){
   const amount=missionOreAmount(ctx.oreType,ctx.level,'rush');
-  const limit=150000;
-  return {id:ctx.id,type:ctx.type,title:`${ctx.ore.lbl} Rush`,description:`Mine ${amount} ${ctx.ore.lbl} within ${Math.round(limit/60000)} minutes.`,timeLimit:limit,requirement:{ore:ctx.oreType,amount},progress:0,reward:{coins:Math.round(140+ctx.ore.val*amount*4.2)}};
+  const limit=ctx.level<5?180000:150000;
+  const itemRarity=ctx.level>=30?'rare':ctx.level>=10?'uncommon':'common';
+  return {id:ctx.id,type:ctx.type,title:`${ctx.ore.lbl} Rush`,description:`Mine ${amount} ${ctx.ore.lbl} within ${Math.round(limit/60000)} minutes.`,timeLimit:limit,requirement:{ore:ctx.oreType,amount},progress:0,reward:{coins:Math.round(140+ctx.ore.val*amount*4.2),itemRarity}};
 }
 function buildRareFindMission(ctx){
   return {id:ctx.id,type:'rare_find',title:'Something Shiny',description:`Find ${ctx.level>=12?5:3} rare ore drops while mining.`,requirement:{rareDrops:ctx.level>=12?5:3},progress:0,reward:{coins:ctx.level>=12?520:250,buffItem:'Lucky Cigar'}};
@@ -456,33 +539,49 @@ function buildForgeAnyMission(ctx){
 function buildBlackjackWinningsMission(ctx){
   const amount=Math.round(1800+ctx.level*400);
   const rarity=ctx.level>=14?'epic':'rare';
-  return {id:ctx.id,type:ctx.type,title:'Blackjack Marker',description:`Win ${amount} total coins at Blackjack. It can happen across many hands.`,requirement:{gamblingGame:'blackjack',amount},progress:0,reward:{coins:Math.round(260+ctx.level*30),itemRarity:rarity}};
+  return {id:ctx.id,type:ctx.type,title:'Blackjack Marker',description:`Win ${amount} total coins at Blackjack. It can happen across many hands.`,requirement:{gamblingGame:'blackjack',amount},progress:0,reward:{coins:Math.round(260+ctx.level*30),itemRarity:rarity,itemSource:'gambling'}};
 }
 function buildDiceWinningsMission(ctx){
   const amount=Math.round(900+ctx.level*260);
-  const rarity=ctx.level>=10?'rare':'common';
-  return {id:ctx.id,type:ctx.type,title:'Dice Cup Debt',description:`Win ${amount} total coins at the Dice Table.`,requirement:{gamblingGame:'dice',amount},progress:0,reward:{coins:Math.round(180+ctx.level*24),itemRarity:rarity}};
+  const reward=ctx.level>=8?{itemRarity:'rare',itemSource:'gambling',barItemId:'cigar'}:{barItemId:'cigar'};
+  return {id:ctx.id,type:ctx.type,title:'Dice Cup Debt',description:`Win ${amount} total coins at the Dice Table.`,requirement:{gamblingGame:'dice',amount},progress:0,reward:{coins:Math.round(180+ctx.level*24),...reward}};
 }
 function buildSlotsWinningsMission(ctx){
   const amount=ctx.level>=16?5:ctx.level>=9?4:3;
   const rarity=ctx.level>=16?'epic':'rare';
-  return {id:ctx.id,type:ctx.type,title:'Three-of-a-Kind Tab',description:`Hit ${amount} three-of-a-kind slot results. Any symbol counts, even skulls.`,requirement:{slotTriples:amount},progress:0,reward:{coins:Math.round(500+ctx.level*58),itemRarity:rarity}};
+  return {id:ctx.id,type:ctx.type,title:'Three-of-a-Kind Tab',description:`Hit ${amount} three-of-a-kind slot results. Any symbol counts, even skulls.`,requirement:{slotTriples:amount},progress:0,reward:{coins:Math.round(500+ctx.level*58),itemRarity:rarity,itemSource:'gambling'}};
 }
 function buildDevilCursesMission(ctx){
   const amount=ctx.level>=13?5:3;
   const rarity=ctx.level>=13?'epic':'rare';
-  return {id:ctx.id,type:ctx.type,title:'Curse Collector',description:`Take ${amount} curses from Devil's Draw and bring proof you survived.`,requirement:{devilCurses:amount},progress:0,reward:{coins:Math.round(320+ctx.level*32),itemRarity:rarity}};
+  return {id:ctx.id,type:ctx.type,title:'Curse Collector',description:`Take ${amount} curses from Devil's Draw and bring proof you survived.`,requirement:{devilCurses:amount},progress:0,reward:{coins:Math.round(320+ctx.level*32),itemRarity:rarity,itemSource:'gambling'}};
 }
 function buildDevilBoostsMission(ctx){
   const amount=ctx.level>=12?6:4;
-  const rarity=ctx.level>=12?'rare':'common';
-  return {id:ctx.id,type:ctx.type,title:'Good Cards Only',description:`Reveal ${amount} helpful Devil's Draw cards.`,requirement:{devilBoosts:amount},progress:0,reward:{coins:Math.round(240+ctx.level*26),itemRarity:rarity,barItemId:'joint'}};
+  return {id:ctx.id,type:ctx.type,title:'Good Cards Only',description:`Reveal ${amount} helpful Devil's Draw cards.`,requirement:{devilBoosts:amount},progress:0,reward:{coins:Math.round(240+ctx.level*26),barItemId:'joint'}};
+}
+function buildDeepLiftWavesMission(ctx){
+  const amount=ctx.level>=16?9:6;
+  const rarity=ctx.level>=16?'rare':'uncommon';
+  return {id:ctx.id,type:ctx.type,title:'Lift Shift',description:`Clear ${amount} Deep Lift waves. Extracting is optional, surviving is not.`,requirement:{deepLiftWaves:amount},progress:0,reward:{coins:Math.round(360+ctx.level*42),barItemId:'lift_salve',itemRarity:rarity,itemSource:'dungeon'}};
+}
+function buildDeepLiftLootMission(ctx){
+  const amount=Math.round(10+ctx.level*0.8);
+  const rarity=ctx.level>=12?'uncommon':'common';
+  return {id:ctx.id,type:ctx.type,title:'Bone and Echo Tab',description:`Collect ${amount} Deep Lift materials from defeated enemies.`,requirement:{deepLiftLoot:amount},progress:0,reward:{coins:Math.round(260+ctx.level*36),itemRarity:rarity,itemSource:'dungeon'}};
+}
+function buildDeepLiftFloorMission(ctx){
+  const amount=ctx.level>=18?3:2;
+  const rarity=ctx.level>=18?'epic':'rare';
+  return {id:ctx.id,type:ctx.type,title:'Below the Last Lantern',description:`Clear ${amount} Deep Lift floors while on a run.`,requirement:{deepLiftFloors:amount},progress:0,reward:{coins:Math.round(520+ctx.level*54),barItemId:'lift_salve',itemRarity:rarity,itemSource:'dungeon'}};
 }
 function buildRiskContractMission(ctx){
   const riskOre=ctx.level>=30?ctx.oreType:(ctx.level>=5?'iron':'copper');
   const risk=ORE[riskOre];
   const amount=missionOreAmount(riskOre,ctx.level,'risk');
-  return {id:ctx.id,type:'risk_contract',title:'Double or Dust',description:`Pay ${80+ctx.level*5}c. Mine ${amount} ${risk.lbl} within 3 minutes.`,entryCost:80+ctx.level*5,timeLimit:180000,requirement:{ore:riskOre,amount},progress:0,reward:{coins:Math.round(260+risk.val*amount*5)}};
+  const entryCost=80+ctx.level*5;
+  const itemRarity=ctx.level>=30?'rare':ctx.level>=12?'uncommon':'common';
+  return {id:ctx.id,type:'risk_contract',title:'Double or Dust',description:`Pay ${entryCost}c. Mine ${amount} ${risk.lbl} within 3 minutes.`,entryCost,timeLimit:180000,requirement:{ore:riskOre,amount},progress:0,reward:{coins:Math.max(Math.round(260+risk.val*amount*5),Math.round(entryCost*1.25)),itemRarity}};
 }
 const TAVERN_MISSION_BUILDERS={
   ore_delivery:buildOreDeliveryMission,
@@ -497,6 +596,9 @@ const TAVERN_MISSION_BUILDERS={
   slots_winnings:buildSlotsWinningsMission,
   devil_curses:buildDevilCursesMission,
   devil_boosts:buildDevilBoostsMission,
+  deep_lift_waves:buildDeepLiftWavesMission,
+  deep_lift_loot:buildDeepLiftLootMission,
+  deep_lift_floors:buildDeepLiftFloorMission,
   risk_contract:buildRiskContractMission,
 };
 function missionTemplate(type,level){
@@ -507,24 +609,36 @@ const TAVERN_BASE_MISSION_TYPES=[
   'ore_delivery',
   'mixed_value',
   'break_rocks',
-  'timed_contract',
+];
+const TAVERN_UNLOCKED_MISSION_TYPES=[
+  {level:3,type:'timed_contract'},
+  {level:3,type:'rare_find'},
+  {level:5,type:'deep_lift_waves'},
+  {level:6,type:'deep_lift_loot'},
+  {level:7,type:'risk_contract'},
+  {level:10,type:'deep_lift_floors'},
+];
+const TAVERN_GAMBLING_MISSION_TYPES=[
   'blackjack_winnings',
   'dice_winnings',
   'slots_winnings',
   'devil_curses',
   'devil_boosts',
 ];
-const TAVERN_UNLOCKED_MISSION_TYPES=[
-  {level:3,type:'rare_find'},
-  {level:5,type:'crafted_delivery'},
-  {level:6,type:'forge_any'},
-  {level:7,type:'risk_contract'},
-];
-function generateTavernMissions(level){
-  const missionTypes=[
+function canOfferGamblingMissions(level){
+  const minBet=Math.min(...SLOT_BETS);
+  return level>=5&&(player.coins||0)>=minBet;
+}
+function tavernMissionTypesForLevel(level){
+  const types=[
     ...TAVERN_BASE_MISSION_TYPES,
     ...TAVERN_UNLOCKED_MISSION_TYPES.filter(entry=>level>=entry.level).map(entry=>entry.type),
   ];
+  if(canOfferGamblingMissions(level))types.push(...TAVERN_GAMBLING_MISSION_TYPES);
+  return Array.from(new Set(types));
+}
+function generateTavernMissions(level){
+  const missionTypes=tavernMissionTypesForLevel(level);
   const pool=missionTypes.map(type=>missionTemplate(type,level));
   return pool.sort(()=>Math.random()-0.5).slice(0,Math.min(8,pool.length));
 }
@@ -550,6 +664,7 @@ function renderMissionBoard(){
   tavernContent.querySelectorAll('[data-accept-mission]').forEach(btn=>btn.addEventListener('click',()=>acceptMission(btn.dataset.acceptMission)));
   tavernContent.querySelectorAll('[data-turnin-mission]').forEach(btn=>btn.addEventListener('click',()=>turnInMission(btn.dataset.turninMission)));
   tavernContent.querySelectorAll('[data-remove-mission]').forEach(btn=>btn.addEventListener('click',()=>removeExpiredMission(btn.dataset.removeMission)));
+  tavernContent.querySelectorAll('[data-cancel-mission]').forEach(btn=>btn.addEventListener('click',()=>cancelMission(btn.dataset.cancelMission)));
 }
 function missionRequirementText(m){
   if(m.type==='ore_delivery')return `${ORE[m.requirement.ore].lbl}: ${inventoryOreCount(m.requirement.ore)}/${m.requirement.amount}`;
@@ -563,6 +678,9 @@ function missionRequirementText(m){
   if(m.type==='slots_winnings')return `Three of a kind: ${m.progress||0}/${m.requirement.slotTriples||m.requirement.amount||3}`;
   if(m.type==='devil_curses')return `Curses taken: ${m.progress||0}/${m.requirement.devilCurses}`;
   if(m.type==='devil_boosts')return `Good cards: ${m.progress||0}/${m.requirement.devilBoosts}`;
+  if(m.type==='deep_lift_waves')return `Waves cleared: ${m.progress||0}/${m.requirement.deepLiftWaves}`;
+  if(m.type==='deep_lift_loot')return `Lift materials: ${m.progress||0}/${m.requirement.deepLiftLoot}`;
+  if(m.type==='deep_lift_floors')return `Floors cleared: ${m.progress||0}/${m.requirement.deepLiftFloors}`;
   return '';
 }
 function missionRewardText(m){
@@ -570,19 +688,29 @@ function missionRewardText(m){
     ? (m.reward.rareParts>1?'uncommon':'common')
     : null;
   const itemRarity=m.reward.itemRarity||legacyRarity;
-  return `${m.reward.coins||0} coins${m.reward.buffItem?`, ${m.reward.buffItem}`:''}${m.reward.barItemId?`, ${barItemName(m.reward.barItemId)}`:''}${itemRarity?`, random ${RARITY_LABELS[itemRarity]} forged item`:''}`;
+  const consumableId=missionRewardConsumableId(m.reward);
+  const sourceLabel=m.reward.itemSource==='gambling'?' gambling':m.reward.itemSource==='dungeon'?' dungeon':'';
+  return `${m.reward.coins||0} coins${consumableId?`, ${barItemName(consumableId)} backpack item`:''}${itemRarity?`, random ${RARITY_LABELS[itemRarity]}${sourceLabel} gear`:''}`;
 }
 function gamblingGameLabel(game){return game==='blackjack'?'Blackjack':game==='dice'?'Dice':game==='slots'?'Slots':game;}
 function barItemName(id){const item=TAVERN_ITEMS.find(i=>i.id===id);return item?item.name:id;}
+function missionRewardConsumableId(reward={}){
+  if(reward.barItemId)return reward.barItemId;
+  if(reward.buffItem==='Lucky Cigar')return 'cigar';
+  return '';
+}
 function missionCardHtml(m,active){
   const complete=active&&isMissionComplete(m);
   const expired=active&&isMissionExpired(m);
+  const activeActions=expired
+    ? `<button type="button" data-remove-mission="${m.id}">Remove Expired</button>`
+    : `<button type="button" data-turnin-mission="${m.id}" ${complete?'':'disabled'}>${complete?'Turn In':'In Progress'}</button><button type="button" data-cancel-mission="${m.id}">Cancel</button>`;
   return `<article class="tavern-mission-note${expired?' failed':''}">
     <h4>${m.title}</h4><p>${m.description}</p>
     <span>Need: ${missionRequirementText(m)}</span>
     <span>Reward: ${missionRewardText(m)}</span>
     ${active
-      ? expired?`<button type="button" data-remove-mission="${m.id}">Remove Expired</button>`:`<button type="button" data-turnin-mission="${m.id}" ${complete?'':'disabled'}>${complete?'Turn In':'In Progress'}</button>`
+      ? activeActions
       : `<button type="button" data-accept-mission="${m.id}">${m.entryCost?`Pay ${m.entryCost}c`:'Accept'}</button>`}
   </article>`;
 }
@@ -614,6 +742,9 @@ function isMissionComplete(m){
   if(m.type==='slots_winnings')return (m.progress||0)>=(m.requirement.slotTriples||m.requirement.amount||3);
   if(m.type==='devil_curses')return (m.progress||0)>=m.requirement.devilCurses;
   if(m.type==='devil_boosts')return (m.progress||0)>=m.requirement.devilBoosts;
+  if(m.type==='deep_lift_waves')return (m.progress||0)>=m.requirement.deepLiftWaves;
+  if(m.type==='deep_lift_loot')return (m.progress||0)>=m.requirement.deepLiftLoot;
+  if(m.type==='deep_lift_floors')return (m.progress||0)>=m.requirement.deepLiftFloors;
   return (m.progress||0)>=m.requirement.amount;
 }
 function isMissionExpired(m){
@@ -628,12 +759,21 @@ function removeExpiredMission(id){
   saveGame();
   renderMissionBoard();
 }
+function cancelMission(id){
+  const idx=player.tavern.activeMissions.findIndex(m=>m.id===id);
+  if(idx<0)return;
+  player.tavern.activeMissions.splice(idx,1);
+  if(window.GameAudio)GameAudio.playMapOpenClose();
+  saveGame();
+  renderMissionBoard();
+}
 function turnInMission(id){
   const idx=player.tavern.activeMissions.findIndex(m=>m.id===id);
   if(idx<0)return;
   const m=player.tavern.activeMissions[idx];
   if(!isMissionComplete(m))return;
   const reward={...m.reward};
+  const rewardConsumableId=missionRewardConsumableId(reward);
   if(reward.rareParts&&!reward.itemRarity&&!reward.barItemId&&!reward.buffItem){
     reward.itemRarity=reward.rareParts>1?'uncommon':'common';
   }
@@ -644,20 +784,24 @@ function turnInMission(id){
       if(tavernDialogue)tavernDialogue.textContent='Make room in your backpack before I hand over that forged item.';
       return;
     }
-    rewardItemId=randomCraftedItemByRarity(reward.itemRarity);
+    rewardItemId=randomCraftedItemByRarity(reward.itemRarity,reward.itemSource||'standard');
     if(!rewardItemId){
       setBarkeepState('warning');
       if(tavernDialogue)tavernDialogue.textContent='The reward crate came up empty. Try another contract.';
       return;
     }
   }
+  if(rewardConsumableId&&!canStoreTavernConsumable(rewardConsumableId,1,rewardItemId?1:0)){
+    setBarkeepState('warning');
+    if(tavernDialogue)tavernDialogue.textContent='Make room in your backpack before I hand over that tavern item.';
+    return;
+  }
   if(m.type==='ore_delivery')consumeOre(m.requirement.ore,m.requirement.amount);
   if(m.type==='mixed_value')consumeOreValue(m.requirement.oreValue);
   if(m.type==='crafted_delivery')consumeCraftedByRarity(m.requirement.craftedRarity,m.requirement.amount);
   if(m.type==='forge_any')consumeCraftedAny(m.requirement.craftedAny);
   addPlayerCoins(reward.coins||0);
-  if(reward.buffItem==='Lucky Cigar')applyTavernBuff(TAVERN_ITEMS.find(i=>i.id==='cigar'));
-  if(reward.barItemId)applyTavernBuff(TAVERN_ITEMS.find(i=>i.id===reward.barItemId));
+  if(rewardConsumableId)addTavernConsumableToInventory(rewardConsumableId,1);
   if(rewardItemId){
     const added=addCraftedItem(rewardItemId);
     if(!added){
@@ -672,6 +816,7 @@ function turnInMission(id){
   saveGame();
   tavernMoneyText();
   renderInventory();
+  if(rewardConsumableId&&typeof pulseBackpackReceive==='function')pulseBackpackReceive();
   renderMissionBoard();
 }
 function inventoryOreCount(type){return countInventoryOre(type);}
@@ -681,14 +826,35 @@ function consumeOre(type,amount){consumeInventoryOre(type,amount);}
 function consumeOreValue(valueNeeded){consumeInventoryOreValue(valueNeeded);}
 function consumeCraftedByRarity(rarity,amount){consumeInventoryCraftedByRarity(rarity,amount);}
 function consumeCraftedAny(amount){consumeInventoryCraftedAny(amount);}
-function randomCraftedItemByRarity(rarity){
-  const pool=Object.entries(CRAFT_ITEM_DEFS)
-    .filter(([,def])=>def.rarity===rarity&&def.rarity!=='junk')
+function craftedItemPoolBySource(rarity,source='standard'){
+  return Object.entries(CRAFT_ITEM_DEFS)
+    .filter(([,def])=>{
+      if(def.rarity!==rarity||def.rarity==='junk')return false;
+      const sources=typeof itemSources==='function'?itemSources(def):(Array.isArray(def.sources)?def.sources:[]);
+      const hasSource=tag=>sources.includes(tag);
+      if(source==='gambling')return hasSource('gambling');
+      if(source==='dungeon')return hasSource('dungeon')&&!hasSource('boss')&&!def.bossOnly;
+      return !hasSource('gambling')&&!hasSource('dungeon')&&!hasSource('boss')&&!def.bossOnly;
+    })
     .map(([id])=>id);
-  if(!pool.length)return null;
-  return pool[Math.floor(Math.random()*pool.length)];
 }
-function itemIconPath(itemId){return `images/workbench/items/${itemId}.png`;}
+function pickCraftedItemFromPool(pool){
+  if(!pool.length)return null;
+  return typeof pickWeightedCraftItem==='function'?pickWeightedCraftItem(pool):pool[Math.floor(Math.random()*pool.length)];
+}
+function randomCraftedItemByRarity(rarity,source='standard'){
+  const standardPool=craftedItemPoolBySource(rarity,'standard');
+  if(source==='gambling'||source==='dungeon'){
+    const themedPool=craftedItemPoolBySource(rarity,source);
+    const useThemed=themedPool.length&&(!standardPool.length||Math.random()<0.7);
+    return pickCraftedItemFromPool(useThemed?themedPool:standardPool.length?standardPool:themedPool);
+  }
+  return pickCraftedItemFromPool(standardPool);
+}
+function missionRewardItemArt(itemId,item){
+  if(typeof craftItemArtHtml==='function')return craftItemArtHtml(itemId,item,'tavern-reward-item-art');
+  return `<img src="images/workbench/items/${itemId}.png" alt="">`;
+}
 function showMissionRewardPopup(m,itemId){
   const old=document.querySelector('.tavern-reward-popup');
   if(old)old.remove();
@@ -699,7 +865,7 @@ function showMissionRewardPopup(m,itemId){
   wrap.innerHTML=`<div class="tavern-reward-popup-title">Contract Paid</div>
     <div class="tavern-reward-popup-items">
       <span><img src="images/workbench/items/coin_bag_reward.png" alt=""><b>${m.reward.coins||0}c</b></span>
-      ${item?`<span class="rarity-${item.rarity}"><img src="${itemIconPath(itemId)}" alt=""><b>${item.name}</b></span>`:''}
+      ${item?`<span class="rarity-${item.rarity}">${missionRewardItemArt(itemId,item)}<b>${item.name}</b></span>`:''}
       ${barItem?`<span><img src="${TAVERN_ITEM_ICONS[barItem.id]}" alt=""><b>${barItem.name}</b></span>`:''}
     </div>`;
   wrap.addEventListener('click',()=>wrap.remove());
@@ -725,6 +891,9 @@ function trackTavernMission(kind,data={}){
     }
     if(m.type==='devil_curses'&&kind==='devilsDraw'&&data.outcomeType==='curse'){m.progress=Math.min(m.requirement.devilCurses,(m.progress||0)+1);changed=true;}
     if(m.type==='devil_boosts'&&kind==='devilsDraw'&&data.outcomeType==='boost'){m.progress=Math.min(m.requirement.devilBoosts,(m.progress||0)+1);changed=true;}
+    if(m.type==='deep_lift_waves'&&kind==='deepLiftWave'){m.progress=Math.min(m.requirement.deepLiftWaves,(m.progress||0)+1);changed=true;}
+    if(m.type==='deep_lift_loot'&&kind==='deepLiftLoot'){m.progress=Math.min(m.requirement.deepLiftLoot,(m.progress||0)+Math.max(0,Math.round(data.amount||0)));changed=true;}
+    if(m.type==='deep_lift_floors'&&kind==='deepLiftFloor'){m.progress=Math.min(m.requirement.deepLiftFloors,(m.progress||0)+1);changed=true;}
   });
   if(changed)scheduleSave();
 }
@@ -1287,7 +1456,7 @@ function renderDicePopup(){
   </div>`;
 }
 function devilsDrawCost(){
-  return DEVILS_DRAW_BASE_COST+Math.min(900,Math.max(0,playerLevel())*35);
+  return DEVILS_DRAW_BASE_COST;
 }
 function devilsDrawNewRound(){
   const cost=devilsDrawCost();

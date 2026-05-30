@@ -18,12 +18,12 @@ const TRADER_STATES=[
   {
     id:"idle",
     image:"images/trader/trader-idle.png",
-    text:"Light's bad in here. So are most of the deals."
+    text:"Don't let the lanterns burn all night."
   },
   {
     id:"interested",
     image:"images/trader/trader-interested.png",
-    text:"Oh - you've got an eye for it."
+    text:"Oh, you've got an eye for it."
   },
   {
     id:"persuasive",
@@ -36,6 +36,17 @@ const TRADER_STATES=[
     text:"Some prices aren't paid in coin."
   }
 ];
+const TRADER_DIALOGUE={
+  idle:"Don't let the lanterns burn all night.",
+  clicked:"Looking to make something rare?",
+  itemHover:"Oh, you've got an eye for it.",
+  combineOpen:"Let's see what these pieces become.",
+  lacksMaterials:"Not enough stock for that, friend.",
+  upgradeReady:"That pile has weight. I can work with it.",
+  upgradeBought:"There. Sharper than it was.",
+  combineResult:"Now that has a little story in it.",
+  tradeOpen:"Put the right pieces on the table.",
+};
 
 // Map x/y values are percentages of the travel-map image; adjust them to reposition a node.
 const MAP_LOCATIONS=[

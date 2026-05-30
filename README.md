@@ -4,6 +4,9 @@ A browser-based mining tycoon game built with plain HTML, CSS, and vanilla JavaS
 
 The current product direction is an immersive painterly mining adventure/tycoon. Prefer rugged game-art assets, icon states, and environmental panels over standard web UI. Use AI image generation for buttons, icons, panel art, ore sprites, and interactive UI states when it improves immersion.
 
+The tracked equipment, forge-item, trader, mission, and dungeon rollout order is
+in `EQUIPMENT_DUNGEON_ROADMAP.md`.
+
 ---
 
 ## Story Direction
@@ -209,7 +212,8 @@ The Deep Lift is the mechanical foundation for the later cracks in the illusion.
   - `images/tavern/slots/slot-lever-hover.png`
   - `images/tavern/slots/slot-lever-pulled.png`
 - Interactive hotspots:
-  - Bar station for temporary buffs and barkeep orders.
+  - Bar station for stackable backpack consumables that become temporary buffs
+    when consumed.
   - Mission board station for mining contracts.
   - Slot machine station for quick bets.
   - Gambling tables station for blackjack, dice, and Devil's Draw.

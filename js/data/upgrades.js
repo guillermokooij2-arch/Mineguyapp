@@ -27,13 +27,14 @@ const UPGRADE_DEFS = {
   },
   rareFinder: {
     name:'Rare Finder', location:'trader', icon:'RRE',
-    desc:'Higher chance for rare ores to spawn', effect:'+3% rare / lv',
+    desc:'Higher chance for rare ores to spawn and more ore nodes in the mine', effect:'+3% rare / lv, +2 nodes every 2 lv',
     baseCost:120, costMult:2.2, max:8,
   },
   stackSize: {
     name:'Stack Compression', location:'trader', icon:'STK',
-    desc:'Larger max stack per ore type', effect:'+10 max / lv',
-    baseCost:150, costMult:1.8, max:5,
+    desc:'Multiplies ore stack limits and opens more equipment slots',
+    effect:'Curves up to x100 stack cap, unlocks 8 equipment slots',
+    baseCost:150, costMult:1.62, max:10,
   },
   forgeSkill: {
     name:'Forge Skill', location:'trader', icon:'FRG',

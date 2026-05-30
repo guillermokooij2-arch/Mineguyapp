@@ -8,11 +8,12 @@ const backpackBack=document.getElementById('backpack-back');
 const backpackTitle=document.getElementById('backpack-title');
 const backpackKicker=document.getElementById('backpack-kicker');
 const inventoryGrid=document.getElementById('inventory-grid');
+const equipmentGrid=document.getElementById('equipment-grid');
 const itemTooltip=document.getElementById('item-tooltip');
 const backpackMapPanel=document.getElementById('backpack-map-panel'),backpackMapClose=document.getElementById('backpack-map-close');
 const marketplacePanel=document.getElementById('marketplace-panel'),marketClose=document.getElementById('market-close'),sellAllOresBtn=document.getElementById('sell-all-ores'),sellAllForgedBtn=document.getElementById('sell-all-forged'),marketOreList=document.getElementById('market-ore-list'),marketForgedList=document.getElementById('market-forged-list');
 const workbenchPanel=document.getElementById('workbench-panel'),workbenchClose=document.getElementById('workbench-close');
-const traderPanel=document.getElementById('trader-panel'),traderClose=document.getElementById('trader-close'),traderList=document.getElementById('trader-list');
+const traderPanel=document.getElementById('trader-panel'),traderClose=document.getElementById('trader-close'),traderList=document.getElementById('trader-list'),traderTurnInPanel=document.getElementById('trader-turnin-panel'),traderCombineOpen=document.getElementById('trader-combine-open'),traderUpgradesOpen=document.getElementById('trader-upgrades-open'),traderActions=document.getElementById('trader-actions'),traderCombineResult=document.getElementById('trader-combine-result');
 const traderCharacterBtn=document.getElementById('trader-character'),traderCharacterImg=document.getElementById('trader-character-img'),traderSpeech=document.getElementById('trader-speech');
 const deepLiftPanel=document.getElementById('deep-lift-panel');
 const characterPanel=document.getElementById('character-panel'),characterClose=document.getElementById('character-close'),charStatsList=document.getElementById('char-stats-list'),charRecordsList=document.getElementById('char-records-list'),charUsernameInput=document.getElementById('char-username'),charUsernameSave=document.getElementById('char-username-save');
@@ -26,6 +27,8 @@ let _comboBreakerPlayed=false;
 let traderStateIndex=0;
 let traderResetTimer=null;
 let traderAutoTimer=null;
+let traderInteractionUnlocked=false;
+let traderMode='intro';
 
 // Panel management
 const ALL_PANEL_ELS=[backpackMapPanel,marketplacePanel,workbenchPanel,traderPanel,characterPanel,tavernPanel,deepLiftPanel];

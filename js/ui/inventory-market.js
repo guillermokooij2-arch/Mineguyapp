@@ -1,11 +1,43 @@
 // Inventory render
-function inventoryForgedItemHtml(item){
+let _tooltipKey='';
+let _tooltipPendingPos=null;
+let _tooltipFrame=0;
+let _tooltipSize={width:286,height:180};
+
+function positionItemTooltip(x,y){
+  if(!itemTooltip)return;
+  itemTooltip.style.left='0px';
+  itemTooltip.style.top='0px';
+  _tooltipPendingPos={x,y};
+  if(_tooltipFrame)return;
+  _tooltipFrame=requestAnimationFrame(()=>{
+    _tooltipFrame=0;
+    if(!itemTooltip||itemTooltip.classList.contains('hidden')||!_tooltipPendingPos)return;
+    const pad=16;
+    const pos=_tooltipPendingPos;
+    const left=Math.min(window.innerWidth-_tooltipSize.width-pad,pos.x+18);
+    const top=Math.min(window.innerHeight-_tooltipSize.height-pad,pos.y+18);
+    itemTooltip.style.transform=`translate3d(${Math.max(pad,left)}px,${Math.max(pad,top)}px,0)`;
+  });
+}
+function noteTooltipContentChanged(){
+  if(!itemTooltip)return;
+  const rect=itemTooltip.getBoundingClientRect();
+  _tooltipSize={width:Math.max(1,rect.width),height:Math.max(1,rect.height)};
+}
+
+function inventoryForgedItemHtml(item,slotIndex){
   const def=CRAFT_ITEM_DEFS[item.itemId];
   if(!def)return '';
   const rc=RARITY_COLS[def.rarity]||'#aaa';
-  return `<div class="ore-icon ore-icon-art item-icon-art inventory-forged-art" style="--ore-glow:${def.glow||rc}">
-    <img src="${craftItemIconSrc(item.itemId)}" alt="">
+  const art=`<div class="ore-icon ore-icon-art item-icon-art inventory-forged-art" style="--ore-glow:${def.glow||rc}">
+    ${craftItemArtHtml(item.itemId,def,'inventory-forged-item-art')}
   </div>`;
+  if(!forgedItemEquipmentGroup(item.itemId))return art;
+  return `<button class="inventory-forged-use" type="button" data-equip-forged="${slotIndex}" aria-label="Equip ${def.name}">
+    ${art}
+    <span aria-hidden="true">+</span>
+  </button>`;
 }
 function inventoryOreItemHtml(item){
   const ore=ORE[item.type];
@@ -13,14 +45,23 @@ function inventoryOreItemHtml(item){
   const glow=ore.glow||ore.hi;
   if(icon){
     return `<div class="ore-icon ore-icon-art" style="--ore-glow:${glow}">
-      <img src="${icon}" alt="">
+      <img src="${icon}" alt="" draggable="false">
     </div>
-    <div class="ore-slot-name">${ore.lbl}</div>
     <div class="ore-slot-count">x${item.count}</div>`;
   }
   return `<div class="ore-icon" style="background:${ore.col};box-shadow:inset 0 2px 5px rgba(0,0,0,0.55),0 0 8px ${glow}"></div>
-    <div class="ore-slot-name">${ore.lbl}</div>
     <div class="ore-slot-count">x${item.count}</div>`;
+}
+function inventoryConsumableItemHtml(item,slotIndex){
+  const def=typeof tavernItemById==='function'?tavernItemById(item.itemId):null;
+  if(!def)return '';
+  const icon=TAVERN_ITEM_ICONS&&TAVERN_ITEM_ICONS[def.id]?TAVERN_ITEM_ICONS[def.id]:'images/tavern/items/cigar.png';
+  return `<button class="inventory-consumable-use" type="button" data-consume-tavern="${slotIndex}" aria-label="Consume ${def.name}. ${def.description}">
+    <span class="ore-icon ore-icon-art inventory-consumable-art">
+      <img src="${icon}" alt="" draggable="false">
+    </span>
+    <span class="ore-slot-count">x${item.count}</span>
+  </button>`;
 }
 function renderInventory(){
   if(!inventoryGrid)return;
@@ -30,17 +71,27 @@ function renderInventory(){
   slotEls.forEach((el,i)=>{
     const item=player.inventory[i];
     // Build a cheap fingerprint; only re-render when the slot actually changed.
-    const fp=item?(item.kind==='item'?`item:${item.itemId}`:`ore:${item.type}:${item.count}`):'';
+    const fp=item?(isForgedItemSlot(item)?`item:${item.itemId}`:isConsumableSlot(item)?`consumable:${item.itemId}:${item.count}`:isOreSlot(item)?`ore:${item.type}:${item.count}`:'unknown'):'';
     if(el.dataset.fp===fp){ if(item)usedSlots++; return; }
     el.dataset.fp=fp;
     el.dataset.itemId='';
+    el.dataset.consumableId='';
+    el.dataset.oreType='';
+    el.dataset.oreCount='';
     if(item){
       usedSlots++;
-      if(item.kind==='item'){
+      if(isForgedItemSlot(item)){
         el.dataset.itemId=item.itemId;
-        el.innerHTML=inventoryForgedItemHtml(item);
-      }else{
+        el.innerHTML=inventoryForgedItemHtml(item,i);
+      }else if(isConsumableSlot(item)){
+        el.dataset.consumableId=item.itemId;
+        el.innerHTML=inventoryConsumableItemHtml(item,i);
+      }else if(isOreSlot(item)){
+        el.dataset.oreType=item.type;
+        el.dataset.oreCount=item.count;
         el.innerHTML=inventoryOreItemHtml(item);
+      }else{
+        el.innerHTML='';
       }
       el.classList.add('has-item');
     }else{
@@ -51,9 +102,10 @@ function renderInventory(){
   const count=document.getElementById('storage-count');
   const activeSize=activeInventorySize();
   const pct=usedSlots/activeSize;
-  if(fill){ fill.style.width=`${Math.round(pct*100)}%`; fill.classList.toggle('storage-warn',pct>=0.85); }
+  if(fill){ fill.style.width=`${Math.round(Math.min(1,pct)*100)}%`; fill.classList.toggle('storage-warn',pct>=0.85); }
   if(count) count.textContent=`${usedSlots} / ${activeSize}`;
   if(backpackToggle) backpackToggle.style.setProperty('--bag-load',Math.min(1,pct).toFixed(3));
+  renderEquipment();
 }
 function itemEffectText(def){
   if(!def||!def.effect)return 'No passive effect.';
@@ -66,7 +118,7 @@ function itemEffectText(def){
     if(key==='yield')return `+${Math.round(val*100)}% ore yield`;
     if(key==='rareFinder')return `+${Math.round(val*100)}% rare ore chance`;
     if(key==='forgeLuck')return `+${Math.round(val*100)}% forge luck`;
-    if(key==='inventoryCapacity')return `+${val} inventory slot`;
+    if(key==='inventoryCapacity')return `+${val} backpack slot${val===1?'':'s'}`;
     if(key==='upgradeDiscount')return `+${Math.round(val*100)}% upgrade discount`;
     if(key==='pickupRange')return `+${Math.round(val*100)}% pickup range`;
     if(key==='autoCritChance')return `+${Math.round(val*100)}% auto-crit chance`;
@@ -76,44 +128,131 @@ function itemEffectText(def){
     if(key==='forgedSellMult')return `+${Math.round(val*100)}% forged sell value`;
     if(key==='rareOreValue')return `+${Math.round(val*100)}% rare ore value`;
     if(key==='junkReduction')return `-${Math.round(val*100)}% junk risk`;
+    if(key==='defense')return `+${Math.round(val*100)}% dungeon defense`;
+    if(key==='maxHp')return `+${val} dungeon health`;
+    if(key==='dungeonRegen')return `+${val} health between dungeon waves`;
+    if(key==='meleeDamage')return `+${Math.round(val*100)}% melee dungeon damage`;
+    if(key==='projectileDamage')return `+${Math.round(val*100)}% projectile dungeon damage`;
+    if(key==='projectileSpeed')return `+${Math.round(val*100)}% projectile speed`;
+    if(key==='projectileCount')return `+${val} extra projectile shot${val===1?'':'s'}`;
+    if(key==='critDamage')return `+${Math.round(val*100)}% weak-point damage`;
+    if(key==='dungeonLoot')return `+${Math.round(val*100)}% dungeon materials`;
+    if(key==='dungeonDropChance')return `+${Math.round(val*100)}% dungeon drop chance`;
     return `${key}: ${val}`;
   });
   if(def.ability&&def.ability.kind==='chain_auto_crit'){
-    parts.push(`${Math.round(def.ability.chance*110)}% auto-crit chain before luck (${def.ability.minHits}-${def.ability.maxHits})`);
+    parts.push(`+${Math.round(def.ability.chance*100)}% auto-crit chance (${def.ability.minHits}-${def.ability.maxHits} chain hits)`);
   }
-  return parts.length?parts.join(', '):'No passive effect.';
+  return parts.length?parts.join(', '):'No equipped effect.';
 }
-function showItemTooltip(itemId,x,y){
+function itemDescriptionText(def){
+  if(!def)return '';
+  if(def.flavor)return def.flavor;
+  const sources=typeof itemSources==='function'?itemSources(def):(Array.isArray(def.sources)?def.sources:[]);
+  const category=typeof forgedItemDisplayCategory==='function'?forgedItemDisplayCategory(def):(def.type||'gear');
+  if(def.rarity==='junk'||def.type==='junk')return 'Failed forge scrap. It is mainly useful for selling or trading as parts.';
+  if(sources.includes('boss'))return `A boss-forged ${category.toLowerCase()} recovered from the Deep Lift.`;
+  if(sources.includes('dungeon'))return `Deep Lift ${category.toLowerCase()} built for combat runs and dungeon survival.`;
+  if(sources.includes('gambling'))return `Risk-marked ${category.toLowerCase()} earned from tavern gambling contracts.`;
+  return `Forged ${category.toLowerCase()} made from offered ore at the workbench.`;
+}
+function itemAutoCritContribution(def){
+  if(!def)return 0;
+  const abilityChance=def.ability&&def.ability.kind==='chain_auto_crit'?Number(def.ability.chance)||0:0;
+  return abilityChance+(Number(def.effect&&def.effect.autoCritChance)||0);
+}
+function showItemTooltip(itemId,x,y,options={}){
   if(!itemTooltip||!itemId)return;
   const def=CRAFT_ITEM_DEFS[itemId];
   if(!def)return;
+  const tooltipKey=`item:${itemId}:${options.equipped?'1':'0'}`;
   const rc=RARITY_COLS[def.rarity]||'#d6a85f';
-  itemTooltip.innerHTML=`
-    <div class="item-tooltip-name" style="color:${def.col}">${def.name}</div>
-    <div class="item-tooltip-rarity" style="color:${rc}">${RARITY_LABELS[def.rarity]||def.rarity}</div>
-    <div class="item-tooltip-row"><span>Effect</span><strong>${def.desc}</strong></div>
-    <div class="item-tooltip-row"><span>Passive</span><strong>${itemEffectText(def)}</strong></div>
-    <div class="item-tooltip-row"><span>Value</span><strong>${forgedItemSellValue(itemId)}c</strong></div>`;
+  const equipGroup=forgedItemEquipmentGroup(itemId);
+  const category=typeof forgedItemDisplayCategory==='function'?forgedItemDisplayCategory(def):(def.type||'Gear');
+  const gearText=!equipGroup
+    ?'Cannot equip. Sell or trade as forge stock.'
+    :options.equipped
+      ?'Equipped effect is active. Click slot to unequip.'
+      :'Equip into any open slot to activate this effect.';
+  const autoCritContribution=itemAutoCritContribution(def);
+  const activeAutoCrit=typeof getBestPickaxeChainAbility==='function'?getBestPickaxeChainAbility():null;
+  const autoCritRow=autoCritContribution>0
+    ? `<div class="item-tooltip-row"><span>Auto-Crit</span><strong>Adds +${Math.round(autoCritContribution*100)}% chance. Current equipped total: ${Math.round(((activeAutoCrit&&activeAutoCrit.chance)||0)*100)}%</strong></div>`
+    : '';
+  if(_tooltipKey!==tooltipKey){
+    _tooltipKey=tooltipKey;
+    itemTooltip.innerHTML=`
+      <div class="item-tooltip-name" style="color:${def.col}">${def.name}</div>
+      <div class="item-tooltip-rarity" style="color:${rc}">${RARITY_LABELS[def.rarity]||def.rarity} - ${category}</div>
+      <div class="item-tooltip-row"><span>Description</span><strong>${itemDescriptionText(def)}</strong></div>
+      <div class="item-tooltip-row"><span>Effect</span><strong>${itemEffectText(def)}</strong></div>
+      ${autoCritRow}
+      <div class="item-tooltip-row"><span>Gear</span><strong>${gearText}</strong></div>
+      <div class="item-tooltip-row"><span>Market</span><strong>${forgedItemSellValue(itemId)}c sale value</strong></div>
+      <div class="item-tooltip-row"><span>Trader</span><strong>${forgedItemTraderValue(itemId)} part value</strong></div>`;
+    itemTooltip.classList.remove('hidden');
+    noteTooltipContentChanged();
+  }
   itemTooltip.classList.remove('hidden');
-  const pad=16;
-  const rect=itemTooltip.getBoundingClientRect();
-  const left=Math.min(window.innerWidth-rect.width-pad,x+18);
-  const top=Math.min(window.innerHeight-rect.height-pad,y+18);
-  itemTooltip.style.left=`${Math.max(pad,left)}px`;
-  itemTooltip.style.top=`${Math.max(pad,top)}px`;
+  positionItemTooltip(x,y);
 }
 function hideItemTooltip(){
+  _tooltipKey='';
+  _tooltipPendingPos=null;
   if(itemTooltip)itemTooltip.classList.add('hidden');
 }
 function ensureInventorySlots(){
   if(!inventoryGrid)return;
-  const target=activeInventorySize();
+  const target=inventoryDisplaySize();
+  const cols=target>20?6:5;
+  const rows=Math.ceil(target/cols);
+  inventoryGrid.style.setProperty('--inventory-cols',cols);
+  inventoryGrid.style.setProperty('--inventory-rows',rows);
+  inventoryGrid.dataset.sizeTier=target>20?'expanded':'base';
   while(player.inventory.length<target) player.inventory.push(null);
   while(inventoryGrid.children.length<target){
     const slot=document.createElement('div');
     slot.className='inventory-slot';
     inventoryGrid.appendChild(slot);
   }
+  while(inventoryGrid.children.length>target)inventoryGrid.lastElementChild.remove();
+}
+function equipmentSlotArtHtml(item){
+  const def=item&&CRAFT_ITEM_DEFS[item.itemId];
+  if(!def)return '';
+  const rc=RARITY_COLS[def.rarity]||'#d6a85f';
+  return `<span class="equipment-item-art" style="--ore-glow:${def.glow||rc}">
+    ${craftItemArtHtml(item.itemId,def,'equipment-forged-item-art')}
+  </span>`;
+}
+function equipmentSlotHtml(slot,index){
+  const def=equipmentSlotDef(index);
+  if(!def)return '';
+  if(!isEquipmentSlotUnlocked(index)){
+    return `<div class="equipment-slot is-locked" aria-label="${def.label} unlocks at Stack Compression ${def.unlockStackLevel}">
+      <span>${def.label}</span><em>STK ${def.unlockStackLevel}</em>
+    </div>`;
+  }
+  if(isForgedItemSlot(slot)){
+    const item=CRAFT_ITEM_DEFS[slot.itemId];
+    return `<button class="equipment-slot has-gear" type="button" data-unequip-slot="${index}" data-item-id="${slot.itemId}" aria-label="Unequip ${item.name} from ${def.label}">
+      ${equipmentSlotArtHtml(slot)}
+      <span>${def.label}</span>
+    </button>`;
+  }
+  return `<div class="equipment-slot is-empty" aria-label="${def.label} equipment slot empty">
+    <span>${def.label}</span><em>Empty</em>
+  </div>`;
+}
+function renderEquipment(){
+  if(!equipmentGrid)return;
+  const fp=EQUIPMENT_SLOT_DEFS.map((def,index)=>{
+    const slot=player.equipment[index];
+    return `${def.id}:${isEquipmentSlotUnlocked(index)?1:0}:${slot&&slot.itemId||''}`;
+  }).join('|');
+  if(equipmentGrid.dataset.fp===fp)return;
+  equipmentGrid.dataset.fp=fp;
+  equipmentGrid.innerHTML=EQUIPMENT_SLOT_DEFS.map((_,index)=>equipmentSlotHtml(player.equipment[index],index)).join('');
 }
 
 // Marketplace render
@@ -123,6 +262,45 @@ function marketOreIconHtml(type,ore){
   }
   const glow=ore.glow?`;box-shadow:0 0 6px ${ore.glow}`:'';
   return `<div class="market-ore-icon" style="background:${ore.col}${glow}"></div>`;
+}
+function showConsumableTooltip(itemId,x,y){
+  if(!itemTooltip||!itemId||typeof tavernItemById!=='function')return;
+  const def=tavernItemById(itemId);
+  if(!def)return;
+  const tooltipKey=`consumable:${itemId}`;
+  const activeCount=player.tavern&&Array.isArray(player.tavern.activeBuffs)?player.tavern.activeBuffs.length:0;
+  if(_tooltipKey!==tooltipKey){
+    _tooltipKey=tooltipKey;
+    itemTooltip.innerHTML=`
+      <div class="item-tooltip-name" style="color:#ffd98a">${def.name}</div>
+      <div class="item-tooltip-rarity" style="color:#d5b06d">${def.type}</div>
+      <div class="item-tooltip-row"><span>Buff</span><strong>${def.description}</strong></div>
+      <div class="item-tooltip-row"><span>Duration</span><strong>${Math.round(def.duration/1000)}s</strong></div>
+      <div class="item-tooltip-row"><span>Use</span><strong>Consume from backpack (${activeCount}/${MAX_TAVERN_BUFFS} buffs active)</strong></div>`;
+    itemTooltip.classList.remove('hidden');
+    noteTooltipContentChanged();
+  }
+  itemTooltip.classList.remove('hidden');
+  positionItemTooltip(x,y);
+}
+function showOreTooltip(type,count,x,y){
+  if(!itemTooltip||!ORE[type])return;
+  const ore=ORE[type];
+  const sellValue=Math.round(ore.val*(1+oreValueMult(type)));
+  const tooltipKey=`ore:${type}:${count}:${sellValue}`;
+  if(_tooltipKey!==tooltipKey){
+    _tooltipKey=tooltipKey;
+    itemTooltip.innerHTML=`
+      <div class="item-tooltip-name" style="color:${ore.glow||ore.hi||'#ffd98a'}">${ore.lbl}</div>
+      <div class="item-tooltip-rarity" style="color:#d5b06d">${ore.rarity||'mined ore'} - Stack x${Math.max(1,Number(count)||1)}</div>
+      <div class="item-tooltip-row"><span>Sell</span><strong>${sellValue}c each at the Market</strong></div>
+      <div class="item-tooltip-row"><span>Forge</span><strong>Offer at the Workbench for ${ore.val} forge value each</strong></div>
+      <div class="item-tooltip-row"><span>Missions</span><strong>Keep ore for tavern delivery and value contracts</strong></div>`;
+    itemTooltip.classList.remove('hidden');
+    noteTooltipContentChanged();
+  }
+  itemTooltip.classList.remove('hidden');
+  positionItemTooltip(x,y);
 }
 function marketOreRowHtml(type,ore,count,effectiveVal,bonus){
   const glowStyle=ore.glow?`--ore-glow:${ore.glow};`:'';
@@ -139,7 +317,7 @@ function marketOreRowHtml(type,ore,count,effectiveVal,bonus){
 function marketForgedRowHtml(item,rarityColor){
   return `<div class="market-ore-info market-forged-info">
     <div class="market-forged-icon" style="--item-col:${item.def.col};--item-glow:${item.def.glow||rarityColor}">
-      <img src="${craftItemIconSrc(item.id)}" alt="">
+      ${craftItemArtHtml(item.id,item.def,'market-forged-item-art')}
     </div>
     <span class="market-ore-name">${item.def.name}</span>
   </div>
@@ -151,7 +329,7 @@ function marketForgedRowHtml(item,rarityColor){
 function renderMarket(){
   if(!marketOreList||!marketForgedList)return;
   const counts={};
-  player.inventory.forEach(slot=>{if(slot&&slot.kind!=='item')counts[slot.type]=(counts[slot.type]||0)+slot.count;});
+  player.inventory.forEach(slot=>{if(isOreSlot(slot))counts[slot.type]=(counts[slot.type]||0)+slot.count;});
   const val=inventoryValue();
   sellAllOresBtn.disabled=val<=0;
   sellAllOresBtn.textContent=val>0?`Sell All Ores (+${val} coins)`:'Sell All Ores';
@@ -253,12 +431,36 @@ function characterLeaderboardRowHtml(row){
     <em>${row.score}</em>
   </div>`;
 }
+function characterNetWorth(){
+  const oreValue=typeof inventoryValue==='function'?inventoryValue():0;
+  const inventorySlots=Array.isArray(player.inventory)?player.inventory:[];
+  const equipmentSlots=Array.isArray(player.equipment)?player.equipment:[];
+  const forgedValue=inventorySlots.reduce((sum,slot)=>isForgedItemSlot(slot)?sum+forgedItemSellValue(slot.itemId):sum,0)
+    +equipmentSlots.reduce((sum,slot)=>isForgedItemSlot(slot)?sum+forgedItemSellValue(slot.itemId):sum,0);
+  return Math.round((Number(player.coins)||0)+oreValue+forgedValue);
+}
+function appendCharacterStatSection(title,summary,stats){
+  const head=document.createElement('div');
+  head.className='char-stat-section-head';
+  head.innerHTML=`<span>${title}</span><strong>${summary}</strong>`;
+  charStatsList.appendChild(head);
+  stats.forEach(s=>{
+    const row=document.createElement('div');
+    const metric=Number(s.metric)||0;
+    const tier=statAchievementTier(s.key,metric);
+    row.className=`char-stat-row ${tier.className}`;
+    row.tabIndex=0;
+    row.dataset.next=nextStatAchievementRequirement(s.key,metric);
+    row.innerHTML=characterStatRowHtml(s,tier);
+    charStatsList.appendChild(row);
+  });
+}
 
 // Overrides the early character renderer with the expanded RPG sheet stats.
 function renderCharacter(){
   if(!charStatsList)return;
   const portrait=document.querySelector('.char-portrait-placeholder');
-  if(portrait&&!portrait.querySelector('img'))portrait.innerHTML='<img src="images/miner-portrait-bust.webp" alt="">';
+  if(portrait&&!portrait.querySelector('img'))portrait.innerHTML='<img src="images/miner/miner-portrait-bust.webp" alt="">';
   const lv=playerLevel(), prog=xpProgress();
   document.getElementById('char-level-badge').textContent=`Level ${lv}`;
   document.getElementById('char-xp-cur').textContent=prog.cur;
@@ -267,7 +469,7 @@ function renderCharacter(){
   document.getElementById('char-xp-fill').style.width=`${Math.round(prog.pct*100)}%`;
   player.stats={...DEFAULT_STATS,...(player.stats||{})};
   const cm=Math.round(coinMultBonus()*100), xm=Math.round(xpMultBonus()*100);
-  const oreCount=player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'?slot.count:0),0);
+  const oreCount=player.inventory.reduce((sum,slot)=>sum+(isOreSlot(slot)?slot.count:0),0);
   const activeBuffs=player.tavern&&Array.isArray(player.tavern.activeBuffs)?player.tavern.activeBuffs:[];
   const bestRarity=player.stats.bestForgedRarity||'common';
   const displayName=player.username||'Miner';
@@ -276,8 +478,15 @@ function renderCharacter(){
   if(charUsernameInput)charUsernameInput.value=displayName;
   renderPersonalRecords();
   const emptyDash='-';
-  const stats=[
+  const activeAutoCrit=typeof getBestPickaxeChainAbility==='function'?getBestPickaxeChainAbility():null;
+  const equipmentSlots=Array.isArray(player.equipment)?player.equipment:[];
+  const slotDefs=Array.isArray(EQUIPMENT_SLOT_DEFS)?EQUIPMENT_SLOT_DEFS:[];
+  const unlockedEquipmentSlots=slotDefs.reduce((sum,slot,index)=>sum+(isEquipmentSlotUnlocked(index)?1:0),0);
+  const equippedItems=equipmentSlots.filter(isForgedItemSlot).length;
+  const netWorth=characterNetWorth();
+  const activityStats=[
     {key:'coins',sprite:'coin',label:'Coins',val:player.coins,metric:player.coins,col:'#f4c84a'},
+    {key:'netWorth',sprite:'net',label:'Net Worth',val:`${netWorth}c`,metric:netWorth,col:'#ffd070'},
     {key:'oreBag',sprite:'ore',label:'Ore in Bag',val:`${oreCount} ore / ${inventoryValue()}c`,metric:oreCount,col:'#d4824a'},
     {key:'rocksBroken',sprite:'rock',label:'Rocks Broken',val:player.stats.rocksBroken,metric:player.stats.rocksBroken,col:'#8898a8'},
     {key:'totalRocks',sprite:'rock',label:'Total Rocks',val:player.stats.totalRocksBroken,metric:player.stats.totalRocksBroken,col:'#a8b4be'},
@@ -285,34 +494,31 @@ function renderCharacter(){
     {key:'currentLevel',sprite:'lvl',label:'Current Level',val:lv,metric:lv,col:'#ffd070'},
     {key:'xpProgress',sprite:'xp',label:'XP Progress',val:`${prog.cur}/${prog.needed}`,metric:prog.cur,col:'#9fe87a'},
     {key:'highestCritChain',sprite:'crit',label:'Max Crit Chain Record',val:player.stats.highestCritChain,metric:player.stats.highestCritChain,col:'#ffb060'},
-    {key:'power',sprite:'power',label:'Total Damage',val:`+${powerBonus()} dmg`,metric:powerBonus(),col:'#ff9955'},
+    {key:'totalForgedItems',sprite:'forge',label:'Forged Items',val:player.stats.totalForgedItems,metric:player.stats.totalForgedItems,col:'#f0a050'},
+    {key:'bestForged',sprite:'forge',label:'Best Forged',val:RARITY_LABELS[bestRarity]||bestRarity,metric:rarityRank(bestRarity)*40,col:RARITY_COLS[bestRarity]||'#f0a050'},
+  ];
+  if(chain.combo>0)activityStats.push({key:'currentCritChain',sprite:'crit',label:'Current Crit Chain',val:chain.combo,metric:chain.combo,col:'#ff8848'});
+  const buffStats=[
+    {key:'baseDamage',sprite:'base',label:'Base Damage',val:'1 dmg',metric:1,col:'#cdd8e0'},
+    {key:'power',sprite:'power',label:'Total Damage',val:`${1+powerBonus()} dmg (+${powerBonus()})`,metric:powerBonus(),col:'#ff9955'},
+    {key:'pickaxeTier',sprite:'pck',label:'Pickaxe Tier Buff',val:`Tier ${pickaxeTierLevel()} / ${UPGRADE_DEFS.pickaxeTier.max}`,metric:pickaxeTierLevel(),col:'#ffd070'},
+    {key:'autoCrit',sprite:'crit',label:'Auto-Crit Chance',val:activeAutoCrit?`${Math.round(activeAutoCrit.chance*100)}% / ${activeAutoCrit.minHits}-${activeAutoCrit.maxHits} hits`:'0%',metric:activeAutoCrit?Math.round(activeAutoCrit.chance*100):0,col:'#9fe8ff'},
     {key:'luck',sprite:'luck',label:'Universal Luck',val:`+${Math.round(luckBonus()*100)}%`,metric:Math.round(luckBonus()*100),col:'#bb88ff'},
     {key:'yield',sprite:'yield',label:'Yield Bonus',val:`+${Math.round(yieldBonus()*100)}%`,metric:Math.round(yieldBonus()*100),col:'#55ddaa'},
     {key:'sellBonus',sprite:'coin',label:'Sell Bonus',val:cm>0?`+${cm}%`:emptyDash,metric:cm,col:'#f4c84a'},
     {key:'xpBonus',sprite:'xp',label:'XP Bonus',val:xm>0?`+${xm}%`:emptyDash,metric:xm,col:'#9fe87a'},
-    {key:'totalForgedItems',sprite:'forge',label:'Forged Items',val:player.stats.totalForgedItems,metric:player.stats.totalForgedItems,col:'#f0a050'},
-    {key:'bestForged',sprite:'forge',label:'Best Forged',val:RARITY_LABELS[bestRarity]||bestRarity,metric:rarityRank(bestRarity)*40,col:RARITY_COLS[bestRarity]||'#f0a050'},
-  ];
-  if(chain.combo>0)stats.push({key:'currentCritChain',sprite:'crit',label:'Current Crit Chain',val:chain.combo,metric:chain.combo,col:'#ff8848'});
-  stats.push(
     {key:'swingSpeed',sprite:'speed',label:'Swing Speed',val:`${Math.round(BASE_SWING_DUR/(sw.durFrames||BASE_SWING_DUR)*100)}%`,metric:Math.round(BASE_SWING_DUR/(sw.durFrames||BASE_SWING_DUR)*100)-100,col:'#ffd070'},
-    {key:'accuracy',sprite:'crit',label:'Accuracy',val:`${Math.round(weakPointBaseRadius())}px / ${Math.round(chain.timeoutFrames)}f`,metric:Math.round(weakPointBaseRadius()+chain.timeoutFrames/8),col:'#ffb060'},
+    {key:'accuracy',sprite:'crit',label:'Weak Point Window',val:`${Math.round(weakPointBaseRadius())}px / ${Math.round(chain.timeoutFrames)}f`,metric:Math.round(weakPointBaseRadius()+chain.timeoutFrames/8),col:'#ffb060'},
     {key:'rareBonus',sprite:'rare',label:'Rare Ore Bonus',val:`+${Math.round(rareFinderBonus()*100)}%`,metric:Math.round(rareFinderBonus()*100),col:'#bb88ff'},
     {key:'forgeBonus',sprite:'forge',label:'Forge Bonus',val:`+${Math.round(forgeLuckBonus()*100)}% luck`,metric:Math.round(forgeLuckBonus()*100),col:'#f0a050'},
+    {key:'stackSize',sprite:'stk',label:'Stack Compression',val:`x${stackCompressionMultiplier().toFixed(1)} (${player.upgrades.stackSize||0}/${UPGRADE_DEFS.stackSize.max})`,metric:player.upgrades.stackSize||0,col:'#9fe87a'},
+    {key:'equipmentSlots',sprite:'gear',label:'Equipment Slots',val:`${equippedItems}/${unlockedEquipmentSlots} equipped`,metric:unlockedEquipmentSlots,col:'#a8e6ff'},
     {key:'gamblingLuck',sprite:'luck',label:'Gambling Luck',val:`${Math.round(gamblingLuckMult()*100)}%`,metric:Math.round(gamblingLuckMult()*100)-100,col:'#d6a8ff'},
     {key:'activeBuffs',sprite:'buff',label:'Tavern Buffs Active',val:activeBuffs.length?`${activeBuffs.length}/7`:'None',metric:activeBuffs.length,col:'#90e08c'}
-  );
+  ];
   charStatsList.innerHTML='';
-  stats.forEach(s=>{
-    const row=document.createElement('div');
-    const metric=Number(s.metric)||0;
-    const tier=statAchievementTier(s.key,Number(s.metric)||0);
-    row.className=`char-stat-row ${tier.className}`;
-    row.tabIndex=0;
-    row.dataset.next=nextStatAchievementRequirement(s.key,metric);
-    row.innerHTML=characterStatRowHtml(s,tier);
-    charStatsList.appendChild(row);
-  });
+  appendCharacterStatSection('Player Activity','run records and economy',activityStats);
+  appendCharacterStatSection('Player Buffs','upgrades, gear, and tavern effects',buffStats);
 }
 
 function leaderboardSnapshot(){
@@ -329,7 +535,7 @@ function leaderboardSnapshot(){
 }
 function localLeaderboardRows(){
   const s=leaderboardSnapshot();
-  const netWorth=(Number(player.coins)||0)+(typeof inventoryValue==='function'?inventoryValue():0)+(typeof craftedPartValue==='function'?craftedPartValue():0);
+  const netWorth=characterNetWorth();
   return [
     {mark:'R',label:'Most Rocks Broken',score:`${s.totalRocksBroken} rocks`},
     {mark:'C',label:'Most Crit Strikes',score:`${s.totalCritStrikes} crits`},
@@ -354,4 +560,3 @@ function renderPersonalRecords(){
     <div class="char-leaderboard-head"><span>Leaderboard Categories</span><strong>Live ranks later</strong></div>
     ${leaderboard.map(characterLeaderboardRowHtml).join('')}`;
 }
-

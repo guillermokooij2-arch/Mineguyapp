@@ -3,6 +3,57 @@
    ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width:760px) {
   #backpack-map-panel { width:96vw; min-width:0; }
+  .inventory-layout {
+    grid-template-columns:1fr;
+    gap:4px;
+  }
+  .inventory-nav-rail,
+  .inventory-equipment-rail {
+    grid-template-columns:auto 1fr;
+    align-items:start;
+    align-content:start;
+    gap:8px;
+    padding:0 4px 2px;
+  }
+  .inventory-equipment-rail {
+    order:2;
+  }
+  .inventory-main {
+    order:3;
+  }
+  .inventory-nav-row {
+    gap:8px;
+  }
+  .inventory-nav-btn {
+    width:70px;
+    height:70px;
+    min-width:70px;
+    min-height:70px;
+  }
+  .inventory-nav-btn[data-bmp-go="map"] {
+    transform:translateX(-14px);
+  }
+  .inventory-nav-btn[data-bmp-go="map"]:hover,
+  .inventory-nav-btn[data-bmp-go="map"]:focus-visible {
+    transform:translateX(-14px) scale(1.08) translateY(-2px);
+  }
+  .inventory-nav-btn[data-bmp-go="map"]:active,
+  .inventory-nav-btn[data-bmp-go="map"].ui-pressed {
+    transform:translateX(-14px) scale(.94);
+  }
+  .equipment-panel {
+    gap:4px;
+  }
+  .equipment-grid {
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:3px;
+  }
+  .equipment-slot {
+    padding:5px 2px 4px;
+  }
+  .equipment-head strong {
+    font-size:8px;
+  }
   #backpack-map-panel.map-mode { width:100vw; height:100vh; }
   #backpack-map-panel.map-mode .bmp-header { left:10px; top:10px; }
   #backpack-map-panel.map-mode #backpack-back { display:none !important; }
@@ -69,7 +120,6 @@
       "cost"
       "offer"
       "tier"
-      "rar"
       "chance"
       "anvil";
     gap:8px;
@@ -78,10 +128,11 @@
   }
   .craft-anvil-wrap { width:min(320px,78vw); margin:4px auto 0; }
   #workbench-panel .craft-offer-row { grid-template-columns:1fr 1fr; font-size:10px; }
+  #workbench-panel .craft-cost-row { grid-template-columns:1fr; max-height:none; }
+  #workbench-panel .craft-chance-row { grid-template-columns:1fr 1fr; min-height:0; }
   #workbench-panel .craft-cost-row,
   #workbench-panel .craft-offer-row,
   #workbench-panel .craft-tier-row,
-  #workbench-panel .craft-rar-row,
   #workbench-panel .craft-chance-row { aspect-ratio:auto; padding:14px 16px; }
   #workbench-panel .craft-card-name { font-size:16px; }
   #workbench-panel .craft-offering-section { position:static; width:auto; margin-top:8px; }
@@ -108,21 +159,25 @@
     bottom:30%;
     left:50%;
   }
+  .trader-dialogue-panel {
+    right:10px;
+    top:74px;
+    width:min(190px,48vw);
+    min-height:74px;
+    padding:10px 11px 12px;
+  }
+  .trader-dialogue-panel span {
+    font-size:7px;
+  }
   .trader-speech {
-    right:8px;
-    top:70px;
-    bottom:auto;
-    width:min(218px,45%);
-    aspect-ratio:437 / 180;
-    padding:10px 17px;
     font-size:10px;
   }
   #trader-list {
     grid-template-columns:repeat(2,minmax(104px,1fr));
     gap:6px 12px;
-    bottom:clamp(48px,7.4vh,68px);
+    bottom:clamp(82px,11vh,104px);
     width:min(360px,82vw);
-    height:min(278px,39vh);
+    height:min(248px,35vh);
     overflow:visible;
     padding:0;
   }
@@ -140,6 +195,52 @@
   #trader-panel .upgrade-buy { width:min(116px,88%); }
   #trader-panel .upgrade-buy span { font-size:14px; }
   #trader-panel .upgrade-buy small { font-size:7px; }
+  .trader-actions {
+    width:100%;
+    gap:7px;
+  }
+  .trader-actions button {
+    min-height:46px;
+    padding:10px 12px;
+    font-size:11px;
+  }
+  .trader-combine-result {
+    left:50%;
+    right:auto;
+    bottom:86px;
+    width:min(148px,38vw);
+    gap:4px;
+    font-size:8px;
+    transform:translateX(-50%);
+  }
+  .trader-result-slot {
+    min-height:96px;
+    padding:12px 10px;
+  }
+  .trader-result-slot img {
+    width:52px;
+    height:52px;
+  }
+  .trader-result-slot strong { font-size:9px; }
+  .trader-result-slot em { font-size:7px; }
+  .trader-turnin-panel {
+    left:50%;
+    top:72px;
+    width:min(420px,92vw);
+    max-height:calc(100% - 112px);
+    gap:8px;
+    padding:12px;
+    transform:translateX(-50%);
+  }
+  .trader-turnin-item {
+    min-height:54px;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    gap:7px;
+  }
+  .trader-turnin-art {
+    width:42px;
+    height:42px;
+  }
   #tavern-close {
     left:10px;
     top:10px;
@@ -153,12 +254,13 @@
     font-size:9px;
   }
   .tavern-dialogue-wrap {
-    --barkeep-speech-right:4vw;
-    --barkeep-speech-bottom:51vh;
-    --barkeep-speech-width:min(238px,58vw);
-    --barkeep-speech-padding:11px 18px;
+    --barkeep-speech-bottom:43vh;
+    --barkeep-speech-width:min(318px,74vw);
+    --barkeep-speech-padding:10px 14px 11px;
     font-size:10px;
   }
+  .tavern-dialogue-wrap > span { font-size:7px; }
+  #tavern-dialogue { font-size:10px; }
   .tavern-hud {
     right:10px;
     top:10px;
@@ -661,9 +763,10 @@
     width:100vw;
     min-height:0;
   }
-  #character-command-bar .backpack-btn {
+#character-command-bar .backpack-btn {
     left:auto;
-    bottom:auto;
+    top:auto;
+    bottom:0;
     width:60px;
     height:60px;
   }
@@ -671,6 +774,12 @@
     inset:0;
     width:100%;
     height:100%;
+  }
+  #character-command-bar .backpack-map-quick {
+    left:66px;
+    bottom:0;
+    width:60px;
+    height:60px;
   }
   #character-command-bar #miner-hud {
     left:auto;
@@ -742,15 +851,14 @@
 
 /* Keep the mineshaft command bar as the original miner button plus compact resources. */
 #character-command-bar .terminal-hud-info {
-  position:relative !important;
-  left:auto !important;
+  position:absolute !important;
+  left:2px !important;
   right:auto !important;
-  bottom:auto !important;
-  align-self:flex-end;
-  width:auto !important;
-  min-width:86px;
+  bottom:112px !important;
+  width:106px !important;
+  min-width:106px;
   min-height:0;
-  margin:0 2px 8px 0 !important;
+  margin:0 !important;
   padding:6px 8px 4px !important;
   border:0 !important;
   border-radius:0 !important;
@@ -791,9 +899,16 @@
 }
 
 @media (max-width:760px) {
+  #character-command-bar .command-side-stack {
+    width:154px;
+    height:104px;
+    margin-bottom:4px;
+  }
   #character-command-bar .terminal-hud-info {
-    min-width:68px;
-    margin-bottom:3px !important;
+    left:1px !important;
+    bottom:94px !important;
+    width:90px !important;
+    min-width:90px;
     padding:2px 3px !important;
   }
   #character-command-bar .terminal-hud-info .terminal-hud-resource span {
@@ -883,15 +998,28 @@
     display:none;
   }
   #character-command-bar .backpack-btn {
+    top:auto;
+    bottom:0;
+    width:94px;
+    height:94px;
+  }
+  #character-command-bar .command-side-stack {
+    width:204px;
+    height:104px;
+  }
+  #character-command-bar .backpack-map-quick {
+    left:100px;
+    bottom:0;
     width:94px;
     height:94px;
   }
   #character-command-bar .terminal-hud-info {
-    position:absolute;
-    left:12px;
-    right:112px;
-    bottom:104px;
-    width:auto;
+    position:absolute !important;
+    left:2px !important;
+    right:auto;
+    bottom:98px !important;
+    width:92px !important;
+    min-width:92px;
     min-height:62px;
     margin:0;
     padding:10px 11px;

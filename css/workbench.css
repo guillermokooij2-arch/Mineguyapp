@@ -158,9 +158,15 @@
   background:
     radial-gradient(ellipse at 50% 45%,rgba(255,132,33,0.12),transparent 42%),
     linear-gradient(180deg,rgba(13,8,5,0.28),rgba(8,5,4,0.78)),
-    url('../images/workbench/forge-workstation-bg.png') center/cover no-repeat;
+    #090604;
   box-shadow:inset 0 0 0 2px rgba(255,175,72,0.13),0 30px 80px rgba(0,0,0,0.74);
   transform:translate(-50%,-46%) scale(.94);
+}
+#workbench-panel.assets-ready {
+  background:
+    radial-gradient(ellipse at 50% 45%,rgba(255,132,33,0.12),transparent 42%),
+    linear-gradient(180deg,rgba(13,8,5,0.28),rgba(8,5,4,0.78)),
+    url('../images/workbench/forge-workstation-bg.png') center/cover no-repeat;
 }
 #workbench-panel.open { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto; }
 #workbench-panel::before {
@@ -233,21 +239,18 @@
   width:100%;
   min-height:470px;
   display:grid;
-  grid-template-columns:minmax(300px,390px) minmax(320px,1fr);
-  grid-template-rows:auto auto auto auto auto auto;
+  grid-template-columns:minmax(270px,350px) minmax(390px,1fr) minmax(300px,420px);
+  grid-template-rows:auto auto minmax(170px,1fr);
   grid-template-areas:
-    "top anvil"
-    "cost anvil"
-    "offer anvil"
-    "tier anvil"
-    "rar anvil"
-    "chance anvil";
-  align-items:center;
-  gap:9px 34px;
+    "top anvil cost"
+    "offer anvil cost"
+    "chance anvil cost";
+  align-items:start;
+  gap:10px 22px;
   padding:16px 20px;
   border:0;
   border-radius:0;
-  background:linear-gradient(90deg,rgba(28,15,8,0.88),rgba(65,36,17,0.74) 38%,rgba(0,0,0,0) 39%);
+  background:linear-gradient(90deg,rgba(28,15,8,0.9),rgba(52,29,14,0.72) 30%,rgba(0,0,0,0) 31%);
   box-shadow:none;
 }
 #workbench-panel .craft-card-locked { opacity:.74; }
@@ -255,7 +258,6 @@
 #workbench-panel .craft-cost-row,
 #workbench-panel .craft-offer-row,
 #workbench-panel .craft-tier-row,
-#workbench-panel .craft-rar-row,
 #workbench-panel .craft-chance-row {
   border:18px solid transparent;
   border-image:url('../images/market/market-box-forged.png') 74 fill / 18px / 0 stretch;
@@ -269,23 +271,118 @@
   padding:6px 10px;
   border-radius:0;
 }
+#workbench-panel .craft-tier-inline {
+  display:grid;
+  grid-template-columns:minmax(76px,.42fr) minmax(0,1fr);
+  gap:7px;
+  margin-top:10px;
+}
+#workbench-panel .craft-tier-inline span {
+  min-width:0;
+  display:grid;
+  gap:3px;
+  padding:7px 8px;
+  border:1px solid rgba(214,168,95,0.22);
+  border-radius:5px;
+  background:rgba(9,5,3,0.42);
+}
+#workbench-panel .craft-tier-inline em {
+  color:#8f6b3d;
+  font-size:9px;
+  font-style:normal;
+  font-weight:900;
+  letter-spacing:1px;
+  line-height:1;
+  text-transform:uppercase;
+}
+#workbench-panel .craft-tier-inline strong {
+  color:#ffe2a3;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
 #workbench-panel .craft-cost-row {
   grid-area:cost;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  grid-template-columns:1fr;
+  align-content:start;
   gap:8px;
-  padding:10px 12px;
-  border-radius:8px;
-  min-height:118px;
-  max-height:230px;
+  align-self:stretch;
+  padding:12px 14px;
+  border-radius:0;
+  min-height:0;
+  max-height:none;
   overflow-y:auto;
 }
-#workbench-panel .craft-offer-row { grid-area:offer; display:grid; grid-template-columns:1fr 1fr; gap:7px; min-height:62px; padding:10px 12px; color:#b99362; font-size:11px; }
-#workbench-panel .craft-tier-row { grid-area:tier; display:grid; gap:5px; min-height:58px; padding:10px 12px; color:#c89a58; font-size:11px; }
-#workbench-panel .craft-rar-row { grid-area:rar; display:flex; flex-wrap:wrap; gap:6px; min-height:58px; padding:10px 12px; }
-#workbench-panel .craft-chance-row { grid-area:chance; display:flex; flex-wrap:wrap; gap:7px 10px; min-height:62px; padding:9px 12px; font-size:10px; }
+#workbench-panel .craft-offer-row { grid-area:offer; display:grid; grid-template-columns:1fr 1fr; gap:7px; min-height:112px; padding:10px 12px; color:#b99362; font-size:11px; }
+#workbench-panel .craft-tier-row { grid-area:tier; display:grid; gap:6px; min-height:76px; padding:10px 12px; color:#c89a58; font-size:11px; }
+#workbench-panel .craft-rar-row { display:none; }
+#workbench-panel .craft-chance-row { grid-area:chance; display:grid; grid-template-columns:1fr 1fr; align-content:start; gap:7px; min-height:116px; margin-top:-10px; padding:10px 12px; font-size:10px; }
+#workbench-panel .craft-offer-row span,
+#workbench-panel .craft-tier-row span {
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+#workbench-panel .craft-offer-row em,
+#workbench-panel .craft-tier-row em {
+  color:#8f6b3d;
+  font-style:normal;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1px;
+  line-height:1;
+  text-transform:uppercase;
+}
 #workbench-panel .craft-offer-row strong,
 #workbench-panel .craft-tier-row strong { color:#ffe2a3; }
+#workbench-panel .craft-selected-ores {
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  min-width:0;
+}
+#workbench-panel .craft-selected-ores span,
+#workbench-panel .craft-selected-ores em {
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:22px;
+  padding:4px 7px;
+  border:1px solid color-mix(in srgb,var(--ore-col,#d6a85f),transparent 52%);
+  border-radius:5px;
+  background:rgba(12,7,3,0.42);
+  color:#f1c887;
+  font-size:10px;
+  line-height:1;
+  box-shadow:0 0 10px color-mix(in srgb,var(--ore-glow,#ffd27a),transparent 84%);
+}
+#workbench-panel .craft-selected-ores em {
+  border-color:rgba(214,168,95,0.22);
+  color:#8f6b3d;
+  font-style:normal;
+}
+#workbench-panel .craft-chance-entry {
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:6px 7px;
+  border:1px solid color-mix(in srgb,var(--rarity-col,#d6a85f),transparent 60%);
+  border-radius:5px;
+  background:rgba(13,8,4,0.48);
+  color:var(--rarity-col,#d6a85f);
+  line-height:1;
+}
+#workbench-panel .craft-chance-entry b,
+#workbench-panel .craft-chance-entry strong {
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
 #workbench-panel .craft-card-icon {
   width:54px;
   height:54px;
@@ -326,10 +423,11 @@
   justify-self:center;
   align-self:center;
   position:relative;
-  width:min(430px,36vw);
+  width:min(470px,34vw);
   display:grid;
   justify-items:center;
   gap:8px;
+  margin:0;
   filter:drop-shadow(0 22px 22px rgba(0,0,0,0.68));
 }
 .craft-anvil-button {
@@ -375,18 +473,7 @@
   text-shadow:0 2px 5px rgba(0,0,0,0.95),0 0 14px rgba(255,126,32,0.5);
 }
 #workbench-panel .craft-offering-section {
-  position:absolute;
-  right:34px;
-  bottom:20px;
-  z-index:4;
-  width:min(286px,26%);
-  margin:0;
-  padding:15px 18px;
-  border:18px solid transparent;
-  border-image:url('../images/market/market-box-ore.png') 74 fill / 18px / 0 stretch;
-  border-radius:0;
-  background:none;
-  box-shadow:0 12px 18px rgba(0,0,0,0.38);
+  display:none;
 }
 #workbench-panel .craft-forge,
 #workbench-panel .craft-result {
@@ -497,6 +584,8 @@
 #workbench-panel .forge-result-hint { position:relative; z-index:1; }
 .item-tooltip {
   position:fixed;
+  left:0;
+  top:0;
   z-index:295;
   max-width:286px;
   padding:13px 14px;
@@ -506,6 +595,7 @@
   color:#e6c895;
   box-shadow:inset 0 1px rgba(255,220,145,0.14),0 14px 24px rgba(0,0,0,0.54),0 0 18px rgba(255,163,58,0.16);
   pointer-events:none;
+  will-change:transform;
 }
 .item-tooltip-name { font-size:15px; font-weight:bold; margin-bottom:3px; }
 .item-tooltip-rarity { font-size:10px; letter-spacing:1px; text-transform:uppercase; margin-bottom:9px; }

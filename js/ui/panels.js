@@ -13,12 +13,55 @@ let terminalUiWired=false;
 function setDestination(destination){
   currentDestination=destination;
   document.body.dataset.destination=destination;
+  if(typeof syncMinerJournalButton==='function')syncMinerJournalButton();
+}
+const DESTINATION_ASSET_GROUPS={
+  marketplace:'marketplace',
+  workbench:'workbench',
+  trader:'trader',
+  terminal:'terminal',
+  tavern:'tavern',
+  'deep-lift':'deep-lift',
+};
+function detailPanelAssetGroup(panel){
+  if(panel===marketplacePanel)return 'marketplace';
+  if(panel===workbenchPanel)return 'workbench';
+  if(panel===traderPanel)return 'trader';
+  return '';
+}
+function assetGroupRoot(group){
+  if(group==='marketplace')return marketplacePanel;
+  if(group==='workbench')return workbenchPanel;
+  if(group==='trader')return traderPanel;
+  if(group==='terminal')return backpackMapPanel;
+  if(group==='tavern')return tavernPanel;
+  return null;
+}
+function activateAssetGroup(group){
+  const root=assetGroupRoot(group);
+  if(!root)return;
+  root.classList.add('assets-ready');
+  if(window.GameAssets&&GameAssets.hydrateDeferredAssets)GameAssets.hydrateDeferredAssets(root);
 }
 function closeAllPanels(){
+  if(typeof closeMinerJournal==='function')closeMinerJournal({keepFocus:true});
+  if(window.deepLiftBackpackOverlayActive&&deepLiftPanel&&deepLiftPanel.classList.contains('open')){
+    if(typeof hideItemTooltip==='function')hideItemTooltip();
+    window.deepLiftBackpackOverlayActive=false;
+    document.body.classList.remove('deep-lift-inventory-open','panel-open');
+    if(backpackMapPanel)backpackMapPanel.classList.remove('open','instant-open','map-mode','terminal-mode');
+    if(backpackToggle)backpackToggle.classList.remove('open');
+    setCursorLayerMode('ui');
+    if(typeof renderInventory==='function')renderInventory();
+    return;
+  }
   if(typeof hideItemTooltip==='function')hideItemTooltip();
+  if(typeof resetTraderInteraction==='function')resetTraderInteraction();
+  else if(typeof closeTraderTurnInPanel==='function')closeTraderTurnInPanel();
   if(tavernPanel&&tavernPanel.classList.contains('open')&&window.GameAudio)GameAudio.setTavernAmbience(false);
   ALL_PANEL_ELS.forEach(p=>p&&p.classList.remove('open','instant-open'));
-  document.body.classList.remove('panel-open','map-detail-open','deep-lift-active');
+  document.body.classList.remove('panel-open','map-detail-open','deep-lift-active','deep-lift-inventory-open');
+  window.deepLiftBackpackOverlayActive=false;
   if(backpackMapPanel)backpackMapPanel.style.pointerEvents='';
   backpackToggle.classList.remove('open');
   mapDetailOpen=false;
@@ -64,6 +107,7 @@ function openWorldMap(options={}){
 }
 function openTerminalScreen(options={}){
   const {returnTo='map',instant=false}=options;
+  activateAssetGroup('terminal');
   setDestination('terminal');
   if(typeof hideItemTooltip==='function')hideItemTooltip();
   if(typeof resetTavernStationUi==='function')resetTavernStationUi(true);
@@ -95,19 +139,82 @@ function setTraderState(index=0){
   if(traderCharacterBtn)traderCharacterBtn.dataset.state=state.id;
   if(traderSpeech)traderSpeech.textContent=state.text;
 }
+function traderStateById(id){
+  return TRADER_STATES.find(state=>state.id===id)||TRADER_STATES[0];
+}
+function setTraderDialogue(key='idle',stateId='idle',autoReset=true){
+  const line=(typeof TRADER_DIALOGUE==='object'&&TRADER_DIALOGUE[key])||key||'';
+  const state=traderStateById(stateId);
+  if(traderCharacterImg&&state)traderCharacterImg.src=state.image;
+  if(traderCharacterBtn&&state)traderCharacterBtn.dataset.state=state.id;
+  if(traderSpeech)traderSpeech.textContent=line;
+  if(traderResetTimer)clearTimeout(traderResetTimer);
+  if(autoReset&&key!=='idle'){
+    traderResetTimer=setTimeout(()=>setTraderDialogue('idle','idle',false),6500);
+  }
+}
 function advanceTraderState(){
   setTraderState(traderStateIndex+1);
+}
+function syncTraderInteractionUi(){
+  if(!traderPanel)return;
+  traderPanel.classList.toggle('trader-actions-unlocked',!!traderInteractionUnlocked);
+  traderPanel.classList.toggle('trader-show-upgrades',traderMode==='upgrades');
+  traderPanel.classList.toggle('trader-combine-active',traderMode==='combine');
+  if(traderActions)traderActions.hidden=!traderInteractionUnlocked;
+  if(traderList)traderList.hidden=traderMode!=='upgrades';
+  if(traderCombineResult)traderCombineResult.hidden=traderMode!=='combine';
+}
+function resetTraderInteraction(){
+  traderInteractionUnlocked=false;
+  traderMode='intro';
+  if(typeof closeTraderTurnInPanel==='function')closeTraderTurnInPanel();
+  if(traderCombineResult){
+    traderCombineResult.innerHTML='';
+    traderCombineResult.hidden=true;
+  }
+  if(traderResetTimer)clearTimeout(traderResetTimer);
+  setTraderState(0);
+  setTraderDialogue('idle','idle',false);
+  syncTraderInteractionUi();
+}
+function unlockTraderActions(){
+  traderInteractionUnlocked=true;
+  syncTraderInteractionUi();
+}
+function handleTraderCharacterInteract(){
+  unlockTraderActions();
+  setTraderDialogue('clicked','interested');
+}
+function handleTraderCharacterHover(){
+  if(!traderInteractionUnlocked&&traderCharacterImg){
+    const state=traderStateById('interested');
+    if(state){
+      traderCharacterImg.src=state.image;
+      traderCharacterBtn.dataset.state=state.id;
+    }
+  }
+}
+function openTraderUpgradeShelf(){
+  unlockTraderActions();
+  traderMode='upgrades';
+  if(typeof closeTraderTurnInPanel==='function')closeTraderTurnInPanel();
+  if(traderCombineResult)traderCombineResult.hidden=true;
+  renderUpgradePanel('trader',traderList);
+  syncTraderInteractionUi();
+  setTraderDialogue('tradeOpen','persuasive');
 }
 function toggleTrader(open=!traderPanel.classList.contains('open')){
   if(open){
     setDestination('trader');
     openMapDetail(traderPanel);
-    setTraderState(0);
+    resetTraderInteraction();
     renderUpgradePanel('trader',traderList);
     if(traderAutoTimer)clearInterval(traderAutoTimer);
-    traderAutoTimer=setInterval(advanceTraderState,15000);
+    traderAutoTimer=setInterval(()=>setTraderDialogue('idle','idle',false),15000);
   }
   else {
+    resetTraderInteraction();
     if(traderResetTimer)clearTimeout(traderResetTimer);
     if(traderAutoTimer)clearInterval(traderAutoTimer);
     traderAutoTimer=null;
@@ -217,7 +324,7 @@ function terminalDetailedStatRows(){
   const stats={...(typeof DEFAULT_STATS==='object'?DEFAULT_STATS:{}),...(player.stats||{})};
   const progress=typeof xpProgress==='function'?xpProgress():{cur:0,needed:20,pct:0};
   const level=typeof playerLevel==='function'?playerLevel():1;
-  const oreCount=Array.isArray(player.inventory)?player.inventory.reduce((sum,slot)=>sum+(slot&&slot.kind!=='item'?slot.count:0),0):0;
+  const oreCount=Array.isArray(player.inventory)?player.inventory.reduce((sum,slot)=>sum+(typeof isOreSlot==='function'&&isOreSlot(slot)?slot.count:0),0):0;
   const activeBuffs=player.tavern&&Array.isArray(player.tavern.activeBuffs)?player.tavern.activeBuffs:[];
   const bestRarity=stats.bestForgedRarity||'common';
   const cm=typeof coinMultBonus==='function'?Math.round(coinMultBonus()*100):0;
@@ -349,6 +456,7 @@ function wireTerminalUi(){
 }
 function openMapDetail(panel){
   closeAllPanels();
+  activateAssetGroup(detailPanelAssetGroup(panel));
   mapDetailOpen=true;
   backpackMapPanel.classList.remove('open','instant-open');
   backpackMapPanel.style.pointerEvents='';
@@ -468,6 +576,30 @@ function resolveMapLocationSub(loc){
   return loc.sub;
 }
 
+function travelLocationName(action){
+  const loc=typeof MAP_LOCATIONS!=='undefined'&&MAP_LOCATIONS.find(item=>item.action===action);
+  return loc?loc.name:'destination';
+}
+function setTravelLoader(active,action='',progress={loaded:0,total:0}){
+  const loader=document.getElementById('travel-loader');
+  if(!loader)return;
+  loader.hidden=!active;
+  if(!active)return;
+  const label=document.getElementById('travel-loader-label');
+  const fill=document.getElementById('travel-loader-fill');
+  const loaded=Math.max(0,Number(progress.loaded)||0);
+  const total=Math.max(0,Number(progress.total)||0);
+  if(label)label.textContent=total?`Preparing ${travelLocationName(action)} ${loaded}/${total}`:`Preparing ${travelLocationName(action)}`;
+  if(fill)fill.style.width=`${Math.round(total?Math.max(0.05,Math.min(1,loaded/total))*100:5)}%`;
+}
+function preloadTravelDestination(action){
+  const group=DESTINATION_ASSET_GROUPS[action];
+  if(!group||!window.GameAssets||!GameAssets.loadGroup)return Promise.resolve();
+  setTravelLoader(true,action);
+  return GameAssets.loadGroup(group,{onProgress:progress=>setTravelLoader(true,action,progress)})
+    .then(()=>activateAssetGroup(group))
+    .finally(()=>setTravelLoader(false));
+}
 function travelToLocation(action, nodeEl){
   if(!action)return;
   const handler=MAP_DESTINATION_HANDLERS[action];
@@ -481,14 +613,15 @@ function travelToLocation(action, nodeEl){
   }
   nodeEl.classList.add('traveling');
   setTimeout(()=>{
-    try{
+    Promise.resolve(preloadTravelDestination(action)).then(()=>{
       nodeEl.classList.remove('traveling');
       handler();
-    }catch(err){
+    }).catch(err=>{
       console.error('Map travel failed:',err);
       if(nodeEl)nodeEl.classList.remove('traveling');
+      setTravelLoader(false);
       returnToBackpackMap();
-    }
+    });
   },180);
 }
 

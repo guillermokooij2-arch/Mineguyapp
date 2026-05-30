@@ -39,14 +39,15 @@ body.map-detail-open #deep-lift-panel.open {
 body.map-detail-open #marketplace-panel.open,
 body.map-detail-open #workbench-panel.open,
 body.map-detail-open #trader-panel.open {
-  left:0;
-  top:0;
-  right:0;
-  bottom:0;
+  left:50%;
+  top:50%;
+  right:auto;
+  bottom:auto;
   width:100vw;
   height:100vh;
   max-height:none;
   border-radius:0;
-  transform:none;
+  transform:translate(-50%,-50%) scale(1);
+  transform-origin:center;
 }
 

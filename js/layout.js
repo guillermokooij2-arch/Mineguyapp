@@ -82,7 +82,9 @@ function chooseDepth(){
   return {layer:'foreground',scale:1.1,dark:1.08};
 }
 function makeOreLayout(){
-  const count=LAYOUT.minOres+Math.floor(Math.random()*(LAYOUT.maxOres-LAYOUT.minOres+1));
+  const rareFinderNodes=Math.floor((player.upgrades.rareFinder||0)/2)*2;
+  const count=LAYOUT.minOres+rareFinderNodes+Math.floor(Math.random()*(LAYOUT.maxOres-LAYOUT.minOres+1));
+  const minOreDist=Math.max(96,LAYOUT.minOreDist-rareFinderNodes*4);
   const clusterCount=2+Math.floor(Math.random()*2);
   const minX=W*LAYOUT.oreMinFx,maxX=W*LAYOUT.oreMaxFx;
   const minY=H*LAYOUT.oreMinFy,maxY=H*LAYOUT.oreMaxFy;
@@ -106,17 +108,17 @@ function makeOreLayout(){
     const radius=52+Math.random()*26;
     const visualRadius=radius*depth.scale;
     if(Math.sqrt((x-playerX)**2+(y-playerY)**2)<cleanRadius)continue;
-    if(spots.some(s=>Math.sqrt((x-s.x)**2+(y-s.y)**2)<Math.max(LAYOUT.minOreDist,visualRadius+s.visualRadius+18)))continue;
+    if(spots.some(s=>Math.sqrt((x-s.x)**2+(y-s.y)**2)<Math.max(minOreDist,visualRadius+s.visualRadius+18)))continue;
     spots.push({x,y,afx:x/W,afy:y/H,depth,radius,visualRadius,embed:rand(0.10,0.30)});
   }
-  while(spots.length<LAYOUT.minOres&&attempts<1200){
+  while(spots.length<count&&attempts<1400){
     attempts++;
     const x=rand(minX,maxX),y=rand(minY,maxY);
     const depth=chooseDepth();
     const radius=52+Math.random()*26;
     const visualRadius=radius*depth.scale;
     if(Math.sqrt((x-playerX)**2+(y-playerY)**2)<cleanRadius)continue;
-    if(spots.some(s=>Math.sqrt((x-s.x)**2+(y-s.y)**2)<Math.max(LAYOUT.minOreDist,visualRadius+s.visualRadius+18)))continue;
+    if(spots.some(s=>Math.sqrt((x-s.x)**2+(y-s.y)**2)<Math.max(minOreDist*0.82,visualRadius+s.visualRadius+10)))continue;
     spots.push({x,y,afx:x/W,afy:y/H,depth,radius,visualRadius,embed:rand(0.10,0.30)});
   }
   return spots;
